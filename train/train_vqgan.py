@@ -1,5 +1,6 @@
 "Adapted from https://github.com/SongweiGe/TATS"
-
+import sys
+sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
 import os
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
