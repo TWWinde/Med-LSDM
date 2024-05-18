@@ -1,4 +1,4 @@
-from dataset import MRNetDataset, BRATSDataset, ADNIDataset, DUKEDataset, LIDCDataset, DEFAULTDataset, SynthRAD2023Dataset
+from dataset import MRNetDataset, BRATSDataset, ADNIDataset, DUKEDataset, LIDCDataset, DEFAULTDataset, SynthRAD2023Dataset, AutoPETDataset
 from torch.utils.data import WeightedRandomSampler
 
 
@@ -53,4 +53,13 @@ def get_dataset(cfg):
             root_dir=cfg.root_dir)
         sampler = None
         return train_dataset, val_dataset, sampler
+
+    if cfg.dataset_name == 'AutoPET':
+        train_dataset = AutoPETDataset(
+            root_dir=cfg.root_dir)
+        val_dataset = AutoPETDataset(
+            root_dir=cfg.root_dir)
+        sampler = None
+        return train_dataset, val_dataset, sampler
+
     raise ValueError(f'{cfg.dataset.name} Dataset is not available')
