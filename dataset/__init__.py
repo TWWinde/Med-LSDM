@@ -6,3 +6,4 @@ from dataset.duke import DUKEDataset
 from dataset.lidc import LIDCDataset
 from dataset.default import DEFAULTDataset
 from dataset.synthrad2023 import SynthRAD2023Dataset
+from dataset.autopet import AutoPETDataset
