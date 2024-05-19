@@ -4,7 +4,7 @@ num_workers: 30
 
 gpus: 1
 accumulate_grad_batches: 1
-default_root_dir: /data/home/firas/Desktop/work/other_groups/medicaldiffusion/checkpoints/vq_gan/
+default_root_dir: /misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/
 default_root_dir_postfix: ''
 resume_from_checkpoint:
 max_steps: -1
