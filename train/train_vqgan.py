@@ -13,7 +13,7 @@ import hydra
 from omegaconf import DictConfig, open_dict
 
 
-@hydra.main(config_path='../config', config_name='base_cfg', version_base=None)
+@hydra.main(config_path='/misc/no_backups/d1502/medicaldiffusion/config', config_name='base_cfg', version_base=None)
 def run(cfg: DictConfig):
     pl.seed_everything(cfg.model.seed)
 
