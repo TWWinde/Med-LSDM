@@ -24,6 +24,8 @@
 module load cuda
 pyenv activate myenv #venv
 pip uninstall nvidia_cublas_cu11
+nvcc --version
+
 # Run your python code
 
 PL_TORCH_DISTRIBUTED_BACKEND=gloo python train/train_vqgan.py dataset=autopet \
