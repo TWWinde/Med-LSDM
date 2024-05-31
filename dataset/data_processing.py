@@ -26,8 +26,9 @@ def save_cropped(files, folder, crop_size, crop_2_block=False, length=32, stride
             for i in range(0, data.shape[2]-length, stride):
                 cropped_data = crop_block(data, *crop_size, i, length)
                 cropped_img = nib.Nifti1Image(cropped_data, affine=img.affine)
-                output_path = os.path.join(folder, os.path.basename(file_path) + f'{i//length}')
+                output_path = os.path.join(folder, os.path.basename(file_path).split('.')[0]+f'_{i}'+os.path.basename(file_path).split('.')[1]+os.path.basename(file_path).split('.')[2])
                 nib.save(cropped_img, output_path)
+                print('finished', )
         else:
             cropped_data = crop_center(data, *crop_size)
             cropped_img = nib.Nifti1Image(cropped_data, affine=img.affine)
