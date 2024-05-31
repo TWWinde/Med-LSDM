@@ -67,7 +67,7 @@ def run(cfg: DictConfig):
                                   os.path.join(ckpt_folder, ckpt_file))
             except:
                 print('no checkpoint')
-                
+
             if len(ckpt_file) > 0:
                 cfg.model.resume_from_checkpoint = os.path.join(
                     ckpt_folder, ckpt_file)
