@@ -59,11 +59,15 @@ def run(cfg: DictConfig):
                 log_folder = folder
         if len(log_folder) > 0:
             ckpt_folder = os.path.join(base_dir, log_folder, 'checkpoints')
-            for fn in os.listdir(ckpt_folder):
-                if fn == 'latest_checkpoint.ckpt':
-                    ckpt_file = 'latest_checkpoint_prev.ckpt'
-                    os.rename(os.path.join(ckpt_folder, fn),
-                              os.path.join(ckpt_folder, ckpt_file))
+            try:
+                for fn in os.listdir(ckpt_folder):
+                    if fn == 'latest_checkpoint.ckpt':
+                        ckpt_file = 'latest_checkpoint_prev.ckpt'
+                        os.rename(os.path.join(ckpt_folder, fn),
+                                  os.path.join(ckpt_folder, ckpt_file))
+            except:
+                print('no checkpoint')
+                
             if len(ckpt_file) > 0:
                 cfg.model.resume_from_checkpoint = os.path.join(
                     ckpt_folder, ckpt_file)
