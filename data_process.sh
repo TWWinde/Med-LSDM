@@ -14,7 +14,7 @@
 
 # Activate everything you need
 
-#conda activate /anaconda3/envs/myenv
+
 module load cuda
 pyenv activate venv
 pip uninstall nvidia_cublas_cu11

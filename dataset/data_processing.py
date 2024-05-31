@@ -28,7 +28,7 @@ def save_cropped(files, folder, crop_size, crop_2_block=False, length=32, stride
                 cropped_img = nib.Nifti1Image(cropped_data, affine=img.affine)
                 output_path = os.path.join(folder, os.path.basename(file_path).split('.')[0]+f'_{i}'+os.path.basename(file_path).split('.')[1]+os.path.basename(file_path).split('.')[2])
                 nib.save(cropped_img, output_path)
-                print('finished', )
+                print('finished', output_path)
         else:
             cropped_data = crop_center(data, *crop_size)
             cropped_img = nib.Nifti1Image(cropped_data, affine=img.affine)
@@ -59,6 +59,7 @@ def process_images(source_folder, train_folder, test_folder, crop_size=(256, 256
     save_cropped(ct_test_files, ct_test_folder, crop_size, crop_2_block=crop_2_block)
     save_cropped(label_train_files, label_train_folder, crop_size, crop_2_block=crop_2_block)
     save_cropped(label_test_files, label_test_folder, crop_size, crop_2_block=crop_2_block)
+    print('all finished')
 
 
 if __name__ == '__main__':
