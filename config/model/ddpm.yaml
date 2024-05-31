@@ -9,8 +9,8 @@ results_folder: /data/home/firas/Desktop/work/other_groups/medicaldiffusion/chec
 results_folder_postfix: ''
 load_milestone: False
 
-batch_size: 40
-num_workers: 20
+batch_size: 4
+num_workers: 4
 logger: wandb
 objective: pred_x0
 save_and_sample_every: 1000
