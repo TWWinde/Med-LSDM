@@ -202,7 +202,7 @@ class VQGAN(pl.LightningModule):
             discloss = disc_factor * \
                 (self.image_gan_weight*d_image_loss +
                  self.video_gan_weight*d_video_loss)
-            '''
+
             self.log("train/logits_image_real", logits_image_real.mean().detach(),
                      logger=True, on_step=True, on_epoch=True)
             self.log("train/logits_image_fake", logits_image_fake.mean().detach(),
@@ -217,7 +217,6 @@ class VQGAN(pl.LightningModule):
                      logger=True, on_step=True, on_epoch=True)
             self.log("train/discloss", discloss, prog_bar=True,
                      logger=True, on_step=True, on_epoch=True)
-            '''
 
             return discloss
 
