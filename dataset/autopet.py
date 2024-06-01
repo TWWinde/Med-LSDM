@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data import Dataset
 import torchio as tio
 import os
@@ -6,6 +7,7 @@ import os
 PREPROCESSING_TRANSORMS = tio.Compose([
     tio.CropOrPad(target_shape=(256, 256, 32)),
     tio.RescaleIntensity(out_min_max=(-1, 1)),
+    tio.Lambda(lambda x: x.to(torch.float16))
 ])
 
 TRAIN_TRANSFORMS = tio.Compose([
