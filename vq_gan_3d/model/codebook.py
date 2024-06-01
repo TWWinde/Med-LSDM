@@ -96,7 +96,8 @@ class Codebook(nn.Module):
 
         embeddings_st = (embeddings - z).detach() + z
 
-        avg_probs = torch.mean(encode_onehot, dim=0)
+        avg_probs = torch.mean(encode_onehot.float(), dim=0)  #
+        avg_probs = avg_probs / avg_probs.sum()   #
         perplexity = torch.exp(-torch.sum(avg_probs *
                                torch.log(avg_probs + 1e-10)))
 
