@@ -169,7 +169,6 @@ def save_video_as_nii(video, fname, nrow=None, nib=None):
     print(f'Saved video as NIfTI to {fname}')
 
 
-
 def comp_getattr(args, attr_name, default=None):
     if hasattr(args, attr_name):
         return getattr(args, attr_name)
