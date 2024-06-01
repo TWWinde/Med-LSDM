@@ -4,7 +4,7 @@
 import warnings
 import torch
 import imageio
-
+import nibabel as nib
 import math
 import numpy as np
 import skvideo.io
@@ -143,7 +143,7 @@ def save_video_grid(video, fname, nrow=None, fps=6):
     #print('saved videos to', fname)
 
 
-def save_video_as_nii(video, fname, nrow=None, nib=None):
+def save_video_as_nii(video, fname, nrow=None):
     b, c, t, h, w = video.shape
     video = video.permute(0, 2, 3, 4, 1)
     video = (video.cpu().numpy() * 255).astype('uint8')
