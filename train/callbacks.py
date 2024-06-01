@@ -9,7 +9,7 @@ import torchvision
 from pytorch_lightning.callbacks import Callback
 from pytorch_lightning.utilities.distributed import rank_zero_only
 
-from vq_gan_3d.utils import save_video_grid
+from vq_gan_3d.utils import save_video_grid, save_video_as_nii
 
 
 class ImageLogger(Callback):
@@ -121,9 +121,18 @@ class VideoLogger(Callback):
                 global_step,
                 current_epoch,
                 batch_idx)
+            filename_nii = "{}_gs-{:06}_e-{:06}_b-{:06}.nii.gz".format(
+                k,
+                global_step,
+                current_epoch,
+                batch_idx)
+
             path = os.path.join(root, filename)
+            path_nii = os.path.join(root, filename_nii)
             os.makedirs(os.path.split(path)[0], exist_ok=True)
+            os.makedirs(os.path.split(path_nii)[0], exist_ok=True)
             save_video_grid(grid, path)
+            save_video_as_nii(grid, path_nii)
 
     def log_vid(self, pl_module, batch, batch_idx, split="train"):
         # print(batch_idx, self.batch_freq, self.check_frequency(batch_idx) and hasattr(pl_module, "log_videos") and callable(pl_module.log_videos) and self.max_videos > 0)

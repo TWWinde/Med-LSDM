@@ -143,6 +143,33 @@ def save_video_grid(video, fname, nrow=None, fps=6):
     #print('saved videos to', fname)
 
 
+def save_video_as_nii(video, fname, nrow=None, nib=None):
+    b, c, t, h, w = video.shape
+    video = video.permute(0, 2, 3, 4, 1)
+    video = (video.cpu().numpy() * 255).astype('uint8')
+
+    if nrow is None:
+        nrow = math.ceil(math.sqrt(b))
+    ncol = math.ceil(b / nrow)
+
+    padding = 1
+    video_grid = np.zeros((t, (padding + h) * nrow + padding,
+                           (padding + w) * ncol + padding, c), dtype='uint8')
+    for I in range(b):
+        r = I // ncol
+        c = I % ncol
+        start_r = (padding + h) * r
+        start_c = (padding + w) * c
+        video_grid[:, start_r:start_r + h, start_c:start_c + w] = video[I]
+
+    affine = np.eye(4)
+    nifti_img = nib.Nifti1Image(video_grid, affine)
+
+    nib.save(nifti_img, fname)
+    print(f'Saved video as NIfTI to {fname}')
+
+
+
 def comp_getattr(args, attr_name, default=None):
     if hasattr(args, attr_name):
         return getattr(args, attr_name)
