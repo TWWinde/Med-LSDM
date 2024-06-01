@@ -89,7 +89,6 @@ def run(cfg: DictConfig):
         precision=cfg.model.precision,
         gradient_clip_val=cfg.model.gradient_clip_val,
         accelerator=accelerator,
-        log_every_n_steps=200,
     )
 
     trainer.fit(model, train_dataloader, val_dataloader)
