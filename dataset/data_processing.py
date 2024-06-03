@@ -97,7 +97,7 @@ def iterator(in_path, out_path):
     files = [os.path.join(in_path, f) for f in os.listdir(source_folder) if f.endswith('0001.nii.gz')]
     for file_path in files:
         remove_artifacts(file_path, out_path)
-        print('finished' file_path)
+        print('finished', file_path)
 
 
 if __name__ == '__main__':
