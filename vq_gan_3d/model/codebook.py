@@ -7,11 +7,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
-
+import pytorch_lightning as pl
 from vq_gan_3d.utils import shift_dim
 
 
-class Codebook(nn.Module):
+class Codebook(pl.LightningModule):
     def __init__(self, n_codes, embedding_dim, no_random_restart=False, restart_thres=1.0):
         super().__init__()
         self.register_buffer('embeddings', torch.randn(n_codes, embedding_dim))
