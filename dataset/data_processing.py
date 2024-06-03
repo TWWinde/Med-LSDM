@@ -1,6 +1,8 @@
 import os
 import nibabel as nib
 from sklearn.model_selection import train_test_split
+import SimpleITK as sitk
+import numpy as np
 
 
 def crop_center(img, new_x, new_y):
@@ -62,11 +64,50 @@ def process_images(source_folder, train_folder, test_folder, crop_size=(256, 256
     print('all finished')
 
 
+def remove_artifacts(in_file, out_path):
+    image = sitk.ReadImage(in_file)
+    img_3d = sitk.GetArrayFromImage(image)
+    blurred_image = sitk.SmoothingRecursiveGaussian(image, sigma=[7.0, 7.0, 7.0])
+    image_array = sitk.GetArrayFromImage(blurred_image)
+    binary_image_array = (image_array > -800).astype(np.uint8)
+
+    binary_image = sitk.GetImageFromArray(binary_image_array)
+    binary_image.CopyInformation(image)
+
+    label_image = sitk.ConnectedComponent(binary_image)
+    label_stats = sitk.LabelShapeStatisticsImageFilter()
+    label_stats.Execute(label_image)
+    largest_label = max(label_stats.GetLabels(), key=lambda l: label_stats.GetPhysicalSize(l))
+    largest_component = sitk.BinaryThreshold(label_image, lowerThreshold=largest_label, upperThreshold=largest_label)
+    largest_component_array = sitk.GetArrayFromImage(largest_component)
+
+    img_3d[largest_component_array == 0] = -1024
+
+    modified_image = sitk.GetImageFromArray(img_3d)
+    modified_image.CopyInformation(image)
+
+    name = os.path.basename(in_file)
+    out_file = os.path.join(out_path, name)
+    sitk.WriteImage(modified_image, out_file)
+
+
+def iterator(in_path, out_path):
+
+    os.makedirs(out_path, exist_ok=True)
+    files = [os.path.join(in_path, f) for f in os.listdir(source_folder) if f.endswith('0001.nii.gz')]
+    for file_path in files:
+        remove_artifacts(file_path, out_path)
+
+
 if __name__ == '__main__':
 
     source_folder = '/data/private/autoPET/imagesTr'
     train_folder = '/data/private/autoPET/autopet_3d/train'
     test_folder = '/data/private/autoPET/autopet_3d/test'
+    out_folder = '/data/private/autoPET/imagesTr_wo_artifacts'
 
-    process_images(source_folder, train_folder, test_folder)
+    iterator(source_folder, out_folder)
+
+
+    #process_images(source_folder, train_folder, test_folder)
 
