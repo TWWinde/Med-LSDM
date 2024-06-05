@@ -55,6 +55,8 @@ def process_images(source_folder, train_folder, test_folder, crop_size=(256, 256
     ct_train_files, ct_test_files = train_test_split(ct_files, test_size=0.1, random_state=42)
     label_train_files = [path.replace('0001.nii.gz', '0002.nii.gz') for path in ct_train_files]
     label_test_files = [path.replace('0001.nii.gz', '0002.nii.gz') for path in ct_test_files]
+    label_train_files = [path.replace('imagesTr_wo_artifacts', 'imagesTr') for path in label_train_files]
+    label_test_files = [path.replace('imagesTr_wo_artifacts', 'imagesTr') for path in label_test_files]
 
     crop_2_block = True
     save_cropped(ct_train_files, ct_train_folder, crop_size, crop_2_block=crop_2_block)
@@ -102,13 +104,16 @@ def iterator(in_path, out_path):
 
 if __name__ == '__main__':
 
-    source_folder = '/data/private/autoPET/imagesTr'
-    train_folder = '/data/private/autoPET/autopet_3d/train'
-    test_folder = '/data/private/autoPET/autopet_3d/test'
+    #source_folder = '/data/private/autoPET/imagesTr'
+    #train_folder = '/data/private/autoPET/autopet_3d/train'
+    #test_folder = '/data/private/autoPET/autopet_3d/test'
     out_folder = '/data/private/autoPET/imagesTr_wo_artifacts'
 
-    iterator(source_folder, out_folder)
+    source_folder = '/data/private/autoPET/imagesTr_wo_artifacts'
+    train_folder = '/data/private/autoPET/autopet_3d_wo_artifacts/train'
+    test_folder = '/data/private/autoPET/autopet_3d_wo_artifacts/test'
 
+    #iterator(source_folder, out_folder)
 
-    #process_images(source_folder, train_folder, test_folder)
+    process_images(source_folder, train_folder, test_folder)
 
