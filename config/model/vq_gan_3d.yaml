@@ -1,4 +1,4 @@
-seed: 1234
+seed: 520
 batch_size: 2
 num_workers: 4
 
