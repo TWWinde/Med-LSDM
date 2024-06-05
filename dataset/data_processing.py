@@ -82,8 +82,9 @@ def remove_artifacts(in_file, out_path):
     largest_label = max(label_stats.GetLabels(), key=lambda l: label_stats.GetPhysicalSize(l))
     largest_component = sitk.BinaryThreshold(label_image, lowerThreshold=largest_label, upperThreshold=largest_label)
     largest_component_array = sitk.GetArrayFromImage(largest_component)
+    random_noise = np.random.uniform(-1, 1, img_3d.shape)
 
-    img_3d[largest_component_array == 0] = -1024
+    img_3d[largest_component_array == 0] = -1023.0 + random_noise[largest_component_array == 0]
 
     modified_image = sitk.GetImageFromArray(img_3d)
     modified_image.CopyInformation(image)
@@ -96,7 +97,7 @@ def remove_artifacts(in_file, out_path):
 def iterator(in_path, out_path):
 
     os.makedirs(out_path, exist_ok=True)
-    files = [os.path.join(in_path, f) for f in os.listdir(source_folder) if f.endswith('0001.nii.gz')]
+    files = [os.path.join(in_path, f) for f in os.listdir(in_path) if f.endswith('0001.nii.gz')]
     for file_path in files:
         remove_artifacts(file_path, out_path)
         print('finished', file_path)
@@ -104,16 +105,14 @@ def iterator(in_path, out_path):
 
 if __name__ == '__main__':
 
-    #source_folder = '/data/private/autoPET/imagesTr'
-    #train_folder = '/data/private/autoPET/autopet_3d/train'
-    #test_folder = '/data/private/autoPET/autopet_3d/test'
+    source_folder1 = '/data/private/autoPET/imagesTr'
     out_folder = '/data/private/autoPET/imagesTr_wo_artifacts'
 
-    source_folder = '/data/private/autoPET/imagesTr_wo_artifacts'
+    source_folder2 = '/data/private/autoPET/imagesTr_wo_artifacts'
     train_folder = '/data/private/autoPET/autopet_3d_wo_artifacts/train'
     test_folder = '/data/private/autoPET/autopet_3d_wo_artifacts/test'
 
-    #iterator(source_folder, out_folder)
+    iterator(source_folder1, out_folder)
 
-    process_images(source_folder, train_folder, test_folder)
+    process_images(source_folder2, train_folder, test_folder)
 
