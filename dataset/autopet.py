@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 import torchio as tio
@@ -10,11 +11,31 @@ PREPROCESSING_TRANSORMS = tio.Compose([
     tio.Lambda(lambda x: x.float())
 ])
 
+
+data_type = tio.Compose([
+    tio.Lambda(lambda x: x.float())
+])
+
+
 TRAIN_TRANSFORMS = tio.Compose([
     # tio.RandomAffine(scales=(0.03, 0.03, 0), degrees=(
     # 0, 0, 3), translation=(4, 4, 0)),
     tio.RandomFlip(axes=(1), flip_probability=0.5),
 ])
+
+
+def is_all_zero(image):
+    image_array = image.data.numpy()
+    return np.all(image_array == 0)
+
+
+def rescale_image_if_not_all_zero(tio_image):
+    if is_all_zero(tio_image):
+        print("Array is all zeros. Skipping rescaling.")
+        return tio_image
+    else:
+        rescale_transform = tio.RescaleIntensity(out_min_max=(-1, 1))
+        return rescale_transform(tio_image)
 
 
 class AutoPETDataset(Dataset):

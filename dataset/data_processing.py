@@ -12,30 +12,44 @@ def crop_center(img, new_x, new_y):
     return img[start_x:start_x + new_x, start_y:start_y + new_y, :]
 
 
-def crop_block(img, new_x, new_y, start_z, length):
+def crop_block(img, label, new_x, new_y, start_z, length):
     x, y, z = img.shape
     start_x = x // 2 - new_x // 2
     start_y = y // 2 - new_y // 2
-    return img[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length]
+    return img[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length], \
+        label[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length]
 
 
-def save_cropped(files, folder, crop_size, crop_2_block=False, length=32, stride=16):
-    for file_path in files:
-        img = nib.load(file_path)
-        data = img.get_fdata()
-        print(data.shape)
+def is_all_zero(array1, array2):
+
+    return np.all(array1 == 0) or np.all(array2 == 0)
+
+
+def save_cropped(image_files, image_folder, crop_size, crop_2_block=False, length=32, stride=16):
+    label_folder = image_folder.replace('image', 'label')
+    for image_path in image_files:
+        label_path = image_path.replace('0001.nii.gz', '0002.nii.gz')
+        img = nib.load(image_path)
+        label = nib.load(label_path)
+        img_data = img.get_fdata()
+        label_data = label.get_fdata()
+        assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
         if crop_2_block:
-            for i in range(0, data.shape[2]-length, stride):
-                cropped_data = crop_block(data, *crop_size, i, length)
-                cropped_img = nib.Nifti1Image(cropped_data, affine=img.affine)
-                output_path = os.path.join(folder, os.path.basename(file_path).split('.')[0]+f'_{i//length}.'+os.path.basename(file_path).split('.')[1]+'.' + os.path.basename(file_path).split('.')[2])
-                nib.save(cropped_img, output_path)
-                print('finished', output_path)
-        else:
-            cropped_data = crop_center(data, *crop_size)
-            cropped_img = nib.Nifti1Image(cropped_data, affine=img.affine)
-            output_path = os.path.join(folder, os.path.basename(file_path))
-            nib.save(cropped_img, output_path)
+            for i in range(0, img_data.shape[2]-length, stride):
+                cropped_image, cropped_label = crop_block(img_data, *crop_size, i, length)
+                if is_all_zero(cropped_image, cropped_label):
+                    print("Array is all zeros. Skipping rescaling.")
+                    continue
+                cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
+                img_output_path = os.path.join(image_folder, os.path.basename(image_path).split('.')[0]+f'_{i//length}.'+os.path.basename(image_path).split('.')[1]+'.' + os.path.basename(image_path).split('.')[2])
+                nib.save(cropped_img, img_output_path)
+                cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
+                label_output_path = os.path.join(label_folder,
+                                               os.path.basename(label_path).split('.')[0] + f'_{i // length}.' +
+                                               os.path.basename(label_path).split('.')[1] + '.' +
+                                               os.path.basename(label_path).split('.')[2])
+                nib.save(cropped_label, label_output_path)
+                print('finished', img_output_path)
 
 
 def process_images(source_folder, train_folder, test_folder, crop_size=(256, 256)):
@@ -53,16 +67,10 @@ def process_images(source_folder, train_folder, test_folder, crop_size=(256, 256
     ct_files = [os.path.join(source_folder, f) for f in os.listdir(source_folder) if f.endswith('0001.nii.gz')]
 
     ct_train_files, ct_test_files = train_test_split(ct_files, test_size=0.1, random_state=42)
-    label_train_files = [path.replace('0001.nii.gz', '0002.nii.gz') for path in ct_train_files]
-    label_test_files = [path.replace('0001.nii.gz', '0002.nii.gz') for path in ct_test_files]
-    label_train_files = [path.replace('imagesTr_wo_artifacts', 'imagesTr') for path in label_train_files]
-    label_test_files = [path.replace('imagesTr_wo_artifacts', 'imagesTr') for path in label_test_files]
 
     crop_2_block = True
     save_cropped(ct_train_files, ct_train_folder, crop_size, crop_2_block=crop_2_block)
     save_cropped(ct_test_files, ct_test_folder, crop_size, crop_2_block=crop_2_block)
-    save_cropped(label_train_files, label_train_folder, crop_size, crop_2_block=crop_2_block)
-    save_cropped(label_test_files, label_test_folder, crop_size, crop_2_block=crop_2_block)
     print('all finished')
 
 
@@ -109,10 +117,10 @@ if __name__ == '__main__':
     out_folder = '/data/private/autoPET/imagesTr_wo_artifacts'
 
     source_folder2 = '/data/private/autoPET/imagesTr_wo_artifacts'
-    train_folder = '/data/private/autoPET/autopet_3d_wo_artifacts/train'
-    test_folder = '/data/private/autoPET/autopet_3d_wo_artifacts/test'
+    train_folder = '/data/private/autoPET/autopet_3d/train'
+    test_folder = '/data/private/autoPET/autopet_3d/test'
 
-    iterator(source_folder1, out_folder)
+    #iterator(source_folder1, out_folder)
 
-    process_images(source_folder2, train_folder, test_folder)
+    process_images(source_folder1, train_folder, test_folder)
 
