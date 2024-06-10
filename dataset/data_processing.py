@@ -43,7 +43,7 @@ def save_cropped(image_in_files, image_out_files, crop_size, crop_2_block=False,
                 name = os.path.basename(image_path).split('.')[0]
                 name = name.split('_')[0]
                 img_output_path = os.path.join(image_out_files, name + f'_{i//length}.' + 'nii.gz')
-                label_output_path = img_output_path.replace('image', 'label')
+                label_output_path = img_output_path.replace('ct', 'label')
                 nib.save(cropped_img, img_output_path)
                 cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
                 nib.save(cropped_label, label_output_path)
