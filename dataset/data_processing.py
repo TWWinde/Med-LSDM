@@ -25,9 +25,8 @@ def is_all_zero(array1, array2):
     return np.all(array1 == 0) or np.all(array2 == 0)
 
 
-def save_cropped(image_files, image_folder, crop_size, crop_2_block=False, length=32, stride=16):
-    label_folder = image_folder.replace('image', 'label')
-    for image_path in image_files:
+def save_cropped(image_in_files, image_out_files, crop_size, crop_2_block=False, length=32, stride=16):
+    for image_path in image_in_files:
         label_path = image_path.replace('0001.nii.gz', '0002.nii.gz')
         img = nib.load(image_path)
         label = nib.load(label_path)
@@ -41,15 +40,15 @@ def save_cropped(image_files, image_folder, crop_size, crop_2_block=False, lengt
                     print("Array is all zeros. Skipping rescaling.")
                     continue
                 cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
-                img_output_path = os.path.join(image_folder, os.path.basename(image_path).split('.')[0]+f'_{i//length}.'+os.path.basename(image_path).split('.')[1]+'.' + os.path.basename(image_path).split('.')[2])
+                name = os.path.basename(image_path).split('.')[0]
+                name = name.split('_')[0]
+                img_output_path = os.path.join(image_out_files, name + f'_{i//length}.' + 'nii.gz')
+                label_output_path = img_output_path.replace('image', 'label')
                 nib.save(cropped_img, img_output_path)
                 cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
-                label_output_path = os.path.join(label_folder,
-                                               os.path.basename(label_path).split('.')[0] + f'_{i // length}.' +
-                                               os.path.basename(label_path).split('.')[1] + '.' +
-                                               os.path.basename(label_path).split('.')[2])
                 nib.save(cropped_label, label_output_path)
                 print('finished', img_output_path)
+                print('finished', label_output_path)
 
 
 def process_images(source_folder, train_folder, test_folder, crop_size=(256, 256)):
