@@ -189,7 +189,4 @@ if __name__ == '__main__':
     train_folder = '/data/private/autoPET/autopet_3d/train'
     test_folder = '/data/private/autoPET/autopet_3d/test'
 
-    #iterator(source_folder1, out_folder)
-
-    process_images(source_folder1, train_folder, test_folder)
 
