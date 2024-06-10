@@ -36,7 +36,7 @@ def save_cropped(image_files, image_folder, crop_size, crop_2_block=False, lengt
         assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
         if crop_2_block:
             for i in range(0, img_data.shape[2]-length, stride):
-                cropped_image, cropped_label = crop_block(img_data, *crop_size, i, length)
+                cropped_image, cropped_label = crop_block(img_data, label_data,  *crop_size, i, length)
                 if is_all_zero(cropped_image, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
                     continue
