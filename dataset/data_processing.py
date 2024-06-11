@@ -145,6 +145,7 @@ def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_s
 
 
 def remove_artifacts(in_file, out_path):
+    os.makedirs(out_path, exist_ok=True)
     image = sitk.ReadImage(in_file)
     img_3d = sitk.GetArrayFromImage(image)
     blurred_image = sitk.SmoothingRecursiveGaussian(image, sigma=[7.0, 7.0, 7.0])
