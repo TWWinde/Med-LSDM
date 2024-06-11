@@ -28,6 +28,7 @@ def is_all_zero(array1, array2):
 def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_block=False, length=32, stride=16):
     for image_path in image_in_files:
         label_path = image_path.replace('0001.nii.gz', '0002.nii.gz')
+        label_path = label_path.replace('imagesTr_wo_artifacts', 'imagesTr')  # only for data remove artifacts
         img = nib.load(image_path)
         label = nib.load(label_path)
         img_data = img.get_fdata()
