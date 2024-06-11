@@ -159,9 +159,9 @@ def remove_artifacts(in_file, out_path):
     largest_label = max(label_stats.GetLabels(), key=lambda l: label_stats.GetPhysicalSize(l))
     largest_component = sitk.BinaryThreshold(label_image, lowerThreshold=largest_label, upperThreshold=largest_label)
     largest_component_array = sitk.GetArrayFromImage(largest_component)
-    random_noise = np.random.uniform(-1, 1, img_3d.shape)
+    # random_noise = np.random.uniform(-1, 1, img_3d.shape)
 
-    img_3d[largest_component_array == 0] = -1023.0 + random_noise[largest_component_array == 0]
+    img_3d[largest_component_array == 0] = -1024.0
 
     modified_image = sitk.GetImageFromArray(img_3d)
     modified_image.CopyInformation(image)
@@ -184,9 +184,15 @@ if __name__ == '__main__':
 
     source_folder1 = '/data/private/autoPET/imagesTr'
     out_folder = '/data/private/autoPET/imagesTr_wo_artifacts'
-
-    source_folder2 = '/data/private/autoPET/imagesTr_wo_artifacts'
     train_folder = '/data/private/autoPET/autopet_3d/train'
     test_folder = '/data/private/autoPET/autopet_3d/test'
+
+    source_folder2 = '/data/private/autoPET/imagesTr_wo_artifacts'
+    train_folder2 = '/data/private/autoPET/autopet_3d_wo_artifacts/train'
+    test_folder2 = '/data/private/autoPET/autopet_3d_wo_artifacts/test'
+
+    iterator(source_folder1, source_folder2)
+    process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
+
 
 
