@@ -160,6 +160,7 @@ def remove_artifacts(in_file, out_path):
     os.makedirs(out_path, exist_ok=True)
     image = sitk.ReadImage(in_file)
     img_3d = sitk.GetArrayFromImage(image)
+    min = img_3d.min()
     blurred_image = sitk.SmoothingRecursiveGaussian(image, sigma=[7.0, 7.0, 7.0])
     image_array = sitk.GetArrayFromImage(blurred_image)
     binary_image_array = (image_array > -800).astype(np.uint8)
@@ -175,7 +176,7 @@ def remove_artifacts(in_file, out_path):
     largest_component_array = sitk.GetArrayFromImage(largest_component)
     # random_noise = np.random.uniform(-1, 1, img_3d.shape)
 
-    img_3d[largest_component_array == 0] = -1024.0
+    img_3d[largest_component_array == 0] = min
 
     modified_image = sitk.GetImageFromArray(img_3d)
     modified_image.CopyInformation(image)
