@@ -1,6 +1,5 @@
 import os
 import nibabel as nib
-from sklearn.model_selection import train_test_split
 import SimpleITK as sitk
 import numpy as np
 
@@ -66,7 +65,7 @@ def process_images_autopet(source_folder, train_folder, test_folder, crop_size=(
 
     ct_files = [os.path.join(source_folder, f) for f in os.listdir(source_folder) if f.endswith('0001.nii.gz')]
 
-    ct_train_files, ct_test_files = train_test_split(ct_files, test_size=0.1, random_state=42)
+    ct_train_files, ct_test_files = train_test_split(ct_files)
 
     crop_2_block = True
     save_cropped_autopet(ct_train_files, ct_train_folder, crop_size, crop_2_block=crop_2_block)
@@ -89,7 +88,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
     for ct_path in ct_in_files:
         name = ct_path.split('/')[-2]
         mr_path = ct_path.replace('ct.nii.gz', 'mr.nii.gz')
-        label_path = os.path.join('root path', name + '.nii.gz')  # To Do add label
+        label_path = os.path.join('/data/private/autoPET/synth2023_label', name + '_ct_label.nii.gz')  # To Do add label
         ct = nib.load(ct_path)
         mr = nib.load(mr_path)
         label = nib.load(label_path)
@@ -136,12 +135,25 @@ def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_s
 
     ct_files = [os.path.join(source_folder, f, 'ct.nii.gz') for f in os.listdir(source_folder)]
 
-    ct_train_files, ct_test_files = train_test_split(ct_files, test_size=0.1, random_state=42)
+    ct_train_files, ct_test_files = train_test_split(ct_files)
 
     crop_2_block = True
     save_cropped_synthrad2023(ct_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
     save_cropped_synthrad2023(ct_test_files, test_folder, crop_size, crop_2_block=crop_2_block)
     print('all finished')
+
+
+def train_test_split(path, test_proportion=0.1):
+    train_path = []
+    test_path = []
+    for i in range(int(test_proportion * len(path))):
+        test_path.append(path[i])
+    print('test length', len(test_path))
+    for i in range(int(test_proportion * len(path)), len(path)):
+        train_path.append(path[i])
+    print('train length', len(train_path))
+
+    return train_path, test_path
 
 
 def remove_artifacts(in_file, out_path):
