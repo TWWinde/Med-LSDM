@@ -1,0 +1,3 @@
+name: AutoPET_wo_artifacts
+root_dir: /misc/data/private/autoPET/autopet_3d_wo_artifacts/train/ct  #/misc/data/private/autoPET/autopet_3d_wo_artifacts/train/ct # /misc/data/private/autoPET/autopet_3d/train/ct
+image_channels: 1

@@ -62,4 +62,14 @@ def get_dataset(cfg):
         sampler = None
         return train_dataset, val_dataset, sampler
 
+    if cfg.dataset.name == 'AutoPET_wo_artifacts':
+        train_dataset = AutoPETDataset(
+            root_dir=cfg.dataset.root_dir)
+        val_dataset = AutoPETDataset(
+            root_dir=cfg.dataset.root_dir)
+        sampler = None
+        return train_dataset, val_dataset, sampler
+
+
+
     raise ValueError(f'{cfg.dataset.name} Dataset is not available')
