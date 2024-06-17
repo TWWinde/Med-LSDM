@@ -33,6 +33,7 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
         img_data = img.get_fdata()
         label_data = label.get_fdata()
         assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
+        n = 0
         if crop_2_block:
             for i in range(0, img_data.shape[2]-length, stride):
                 cropped_image, cropped_label = crop_block(img_data, label_data,  *crop_size, i, length)
@@ -42,13 +43,29 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
                 cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
                 name = os.path.basename(image_path).split('.')[0]
                 name = name.split('_')[0]
-                img_output_path = os.path.join(image_out_files, name + f'_{i//length}.' + 'nii.gz')
+                img_output_path = os.path.join(image_out_files, name + f'_{n}.' + 'nii.gz')
                 label_output_path = img_output_path.replace('ct', 'label')
                 nib.save(cropped_img, img_output_path)
                 cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
                 nib.save(cropped_label, label_output_path)
                 print('finished', img_output_path)
                 print('finished', label_output_path)
+                n+=1
+            cropped_image, cropped_label = crop_block(img_data, label_data, *crop_size, img_data.shape[2]-length, length)
+
+            if is_all_zero(cropped_image, cropped_label):
+                print("Array is all zeros. Skipping rescaling.")
+                continue
+            cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
+            name = os.path.basename(image_path).split('.')[0]
+            name = name.split('_')[0]
+            img_output_path = os.path.join(image_out_files, name + f'_{n}.' + 'nii.gz')
+            label_output_path = img_output_path.replace('ct', 'label')
+            nib.save(cropped_img, img_output_path)
+            cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
+            nib.save(cropped_label, label_output_path)
+            print('finished', img_output_path)
+            print('finished', label_output_path)
 
 
 def process_images_autopet(source_folder, train_folder, test_folder, crop_size=(256, 256)):
@@ -116,7 +133,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
                 print('finished', ct_output_path)
                 print('finished', mr_output_path)
                 print('finished', mr_output_path)
-                n+=1
+                n += 1
             cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size, ct_data.shape[2]-length, length)
             if is_all_zero(cropped_mr, cropped_label):
                 print("Array is all zeros. Skipping rescaling.")
