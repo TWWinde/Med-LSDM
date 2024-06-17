@@ -88,7 +88,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
     for ct_path in ct_in_files:
         name = ct_path.split('/')[-2]
         mr_path = ct_path.replace('ct.nii.gz', 'mr.nii.gz')
-        label_path = os.path.join('/data/private/autoPET/synth2023_label', name + '_ct_label.nii.gz')  # To Do add label
+        label_path = ct_path.replace('ct.nii.gz', 'label.nii.gz')
         ct = nib.load(ct_path)
         mr = nib.load(mr_path)
         label = nib.load(label_path)
@@ -284,7 +284,7 @@ def pad_and_rescale(image):
     return resampled_image
 
 
-def image_process_synthrad2024(in_file, out_path):
+def image_process_synthrad2023(in_file, out_path):
 
     os.makedirs(os.path.join(out_path, os.path.basename(in_file)), exist_ok=True)
     ct_path = os.path.join(in_file, 'ct.nii.gz')
@@ -308,12 +308,12 @@ def image_process_synthrad2024(in_file, out_path):
     # print('finish', os.path.join(out_path, os.path.basename(in_file), 'mr.nii.gz'))
 
 
-def iterator_synthrad2024(in_path, out_path):
+def iterator_synthrad2023(in_path, out_path):
 
     os.makedirs(out_path, exist_ok=True)
     files = [os.path.join(in_path, f) for f in os.listdir(in_path)]
     for file_path in files:
-        image_process_synthrad2024(file_path, out_path)
+        image_process_synthrad2023(file_path, out_path)
         print('finished', file_path)
 
 
@@ -330,9 +330,12 @@ if __name__ == '__main__':
 
     source_folder3 = '/misc/data/private/autoPET/Task1/pelvis'
     out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024'
+    train_folder3 = '/data/private/autoPET/SynthRad2024/train'
+    test_folder3 = '/data/private/autoPET/SynthRad2024/test'
     #iterator(source_folder1, source_folder2)
     #process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
-    iterator_synthrad2024(source_folder3, out_folder2)
+    iterator_synthrad2023(source_folder3, out_folder2)
+    process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
 
 
 
