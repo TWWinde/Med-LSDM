@@ -186,12 +186,134 @@ def remove_artifacts(in_file, out_path):
     sitk.WriteImage(modified_image, out_file)
 
 
+def pad_and_concatenate_image(input_image_path, output_image_path):
+
+    image = sitk.ReadImage(input_image_path)
+    array = sitk.GetArrayFromImage(image)
+
+    c, a, b = array.shape[0], array.shape[1], array.shape[2]
+
+    max_length = max(a, b)
+
+    if a < max_length:
+        pad1 = np.tile(array[:, 0:1, :], (1, (max_length - a) // 2, 1))
+        pad2 = np.tile(array[:, -1:, :], (1, (max_length - a) - (max_length - a) // 2, 1))
+        padded_array = np.concatenate((pad1, array, pad2), axis=1)
+    else:
+        padded_array = array
+
+    if b < max_length:
+        pad1 = np.tile(padded_array[:, :, 0:1], (1, 1, (max_length - b) // 2))
+        pad2 = np.tile(padded_array[:, :, -1:], (1, 1, (max_length - b) - (max_length - b) // 2))
+        padded_array = np.concatenate((pad1, padded_array, pad2), axis=2)
+
+    final_image = sitk.GetImageFromArray(padded_array)
+    final_image.SetSpacing(image.GetSpacing())
+    final_image.SetOrigin(image.GetOrigin())
+    final_image.SetDirection(image.GetDirection())
+    sitk.WriteImage(final_image, output_image_path)
+
+
 def iterator(in_path, out_path):
 
     os.makedirs(out_path, exist_ok=True)
     files = [os.path.join(in_path, f) for f in os.listdir(in_path) if f.endswith('0001.nii.gz')]
     for file_path in files:
         remove_artifacts(file_path, out_path)
+        print('finished', file_path)
+
+
+def add_mask_synthrad2024(ct_image, mr_image,  mask):
+
+    ct = sitk.GetArrayFromImage(ct_image)
+    mr = sitk.GetArrayFromImage(mr_image)
+    mask = sitk.GetArrayFromImage(mask)
+    ct[mask == 0.0] = ct.min()
+    mr[mask == 0.0] = mr.min()
+    masked_ct = sitk.GetImageFromArray(ct)
+    masked_mr = sitk.GetImageFromArray(mr)
+    masked_ct.CopyInformation(ct_image)
+    masked_mr.CopyInformation(mr_image)
+
+    return masked_ct, masked_mr
+
+
+def pad_and_rescale(image):
+
+    array = sitk.GetArrayFromImage(image)
+
+    c, a, b = array.shape[0], array.shape[1], array.shape[2]
+    max_length = max(a, b)
+
+    if a < max_length:
+        pad1 = np.tile(array[:, 0:1, :], (1, (max_length - a) // 2, 1))
+        pad2 = np.tile(array[:, -1:, :], (1, (max_length - a) - (max_length - a) // 2, 1))
+        padded_array = np.concatenate((pad1, array, pad2), axis=1)
+    else:
+        padded_array = array
+
+    if b < max_length:
+        pad1 = np.tile(padded_array[:, :, 0:1], (1, 1, (max_length - b) // 2))
+        pad2 = np.tile(padded_array[:, :, -1:], (1, 1, (max_length - b) - (max_length - b) // 2))
+        padded_array = np.concatenate((pad1, padded_array, pad2), axis=2)
+
+    final_image = sitk.GetImageFromArray(padded_array)
+    final_image.SetSpacing(image.GetSpacing())
+    final_image.SetOrigin(image.GetOrigin())
+    final_image.SetDirection(image.GetDirection())
+
+    # rescale
+    shape = padded_array.shape
+    assert shape[1] == shape[2]
+
+    scale_factor = shape[1] / 256.0
+
+    original_spacing = final_image.GetSpacing()
+    original_size = final_image.GetSize()
+
+    new_spacing = [osz * scale_factor for osz in original_spacing]
+    new_size = [int(round(osz / scale_factor)) for osz in original_size]
+    resampler = sitk.ResampleImageFilter()
+    resampler.SetOutputSpacing(new_spacing)
+    resampler.SetSize(new_size)
+    resampler.SetOutputDirection(final_image.GetDirection())
+    resampler.SetOutputOrigin(final_image.GetOrigin())
+    resampler.SetInterpolator(sitk.sitkBSpline)
+    resampled_image = resampler.Execute(final_image)
+
+    return resampled_image
+
+
+def image_process_synthrad2024(in_file, out_path):
+
+    os.makedirs(os.path.join(out_path, os.path.basename(in_file)), exist_ok=True)
+    ct_path = os.path.join(in_file, 'ct.nii.gz')
+    mr_path = os.path.join(in_file, 'mr.nii.gz')
+    mask_path = os.path.join(in_file, 'mask.nii.gz')
+    label_path = os.path.join('/misc/data/private/autoPET/synth2023_label', os.path.basename(in_file) + '_ct_label.nii.gz')
+    ct_image = sitk.ReadImage(ct_path)
+    mr_image = sitk.ReadImage(mr_path)
+    mask = sitk.ReadImage(mask_path)
+    label = sitk.ReadImage(label_path)
+    # add mask
+    masked_ct, masked_mr = add_mask_synthrad2024(ct_image, mr_image, mask)
+    # pad and rescale
+    final_ct = pad_and_rescale(masked_ct)
+    final_mr = pad_and_rescale(masked_mr)
+    final_label = pad_and_rescale(label)
+    sitk.WriteImage(final_ct, os.path.join(out_path, os.path.basename(in_file), 'ct.nii.gz'))
+    # print('finish ', os.path.join(out_path, os.path.basename(in_file), 'ct.nii.gz'))
+    sitk.WriteImage(final_mr, os.path.join(out_path, os.path.basename(in_file), 'mr.nii.gz'))
+    sitk.WriteImage(final_label, os.path.join(out_path, os.path.basename(in_file), 'label.nii.gz'))
+    # print('finish', os.path.join(out_path, os.path.basename(in_file), 'mr.nii.gz'))
+
+
+def iterator_synthrad2024(in_path, out_path):
+
+    os.makedirs(out_path, exist_ok=True)
+    files = [os.path.join(in_path, f) for f in os.listdir(in_path)]
+    for file_path in files:
+        image_process_synthrad2024(file_path, out_path)
         print('finished', file_path)
 
 
@@ -206,8 +328,12 @@ if __name__ == '__main__':
     train_folder2 = '/data/private/autoPET/autopet_3d_wo_artifacts/train'
     test_folder2 = '/data/private/autoPET/autopet_3d_wo_artifacts/test'
 
-    iterator(source_folder1, source_folder2)
-    process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
+    source_folder3 = '/misc/data/private/autoPET/Task1/pelvis'
+    out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024'
+    #iterator(source_folder1, source_folder2)
+    #process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
+    iterator_synthrad2024(source_folder3, out_folder2)
+
 
 
 
