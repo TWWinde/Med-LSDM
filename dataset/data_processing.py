@@ -116,6 +116,24 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
                 print('finished', mr_output_path)
                 print('finished', mr_output_path)
 
+            cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size, ct_data.shape[2]-length, length)
+            if is_all_zero(cropped_mr, cropped_label):
+                print("Array is all zeros. Skipping rescaling.")
+                continue
+            ct_output_path = os.path.join(image_out_files, 'ct', name + f'_{i // length+1}.' + 'nii.gz')
+            mr_output_path = os.path.join(image_out_files, 'mr', name + f'_{i // length+1}.' + 'nii.gz')
+            label_output_path = os.path.join(image_out_files, 'label', name + f'_{i // length+1}.' + 'nii.gz')
+            cropped_ct = nib.Nifti1Image(cropped_ct, affine=ct.affine)
+            cropped_mr = nib.Nifti1Image(cropped_mr, affine=mr.affine)
+            cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
+            nib.save(cropped_ct, ct_output_path)
+            nib.save(cropped_mr, mr_output_path)
+            nib.save(cropped_label, label_output_path)
+            print('finished', ct_output_path)
+            print('finished', mr_output_path)
+            print('finished', mr_output_path)
+
+
 
 def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_size=(256, 256)):
 
