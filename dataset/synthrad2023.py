@@ -6,7 +6,8 @@ import os
 
 PREPROCESSING_TRANSORMS = tio.Compose([
     tio.RescaleIntensity(out_min_max=(-1, 1)),
-    tio.CropOrPad(target_shape=(256, 256, 32))
+    tio.CropOrPad(target_shape=(256, 256, 32)),
+    tio.Lambda(lambda x: x.float())
 ])
 
 TRAIN_TRANSFORMS = tio.Compose([
@@ -27,7 +28,7 @@ class SynthRAD2023Dataset(Dataset):
     def get_data_files(self):
         subfolder_names = os.listdir(self.root_dir)
         folder_names = [os.path.join(
-            self.root_dir, subfolder, 'mr.nii.gz') for subfolder in subfolder_names]
+            self.root_dir, subfolder) for subfolder in subfolder_names if subfolder.endswith('.nii.gz')]
 
         return folder_names
 

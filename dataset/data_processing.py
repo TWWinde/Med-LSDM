@@ -78,12 +78,12 @@ def crop_block_3(array1, array2, array3, new_x, new_y, start_z, length):
     x, y, z = array1.shape
     start_x = x // 2 - new_x // 2
     start_y = y // 2 - new_y // 2
-    return array1[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length], \
-        array2[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length], \
-        array3[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length]
+    return array1[start_x:(start_x + new_x), start_y:(start_y + new_y), start_z:(start_z + length)], \
+        array2[start_x:(start_x + new_x), start_y:(start_y + new_y), start_z:(start_z + length)], \
+        array3[start_x:(start_x + new_x), start_y:(start_y + new_y), start_z:(start_z + length)]
 
 
-def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_block=False, length=32, stride=16):
+def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_block=False, length=32, stride=8):
 
     for ct_path in ct_in_files:
         name = ct_path.split('/')[-2]
@@ -98,7 +98,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
 
         assert ct_data.shape == mr_data.shape == label_data.shape, "Error: The shapes of arrayys do not match."
         if crop_2_block:
-            for i in range(5, ct_data.shape[2]-length, stride):
+            for i in range(3, ct_data.shape[2]-length, stride):
                 cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data,  *crop_size, i, length)
                 if is_all_zero(cropped_mr, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
