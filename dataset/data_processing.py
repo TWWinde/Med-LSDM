@@ -149,7 +149,8 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
             nib.save(cropped_label, label_output_path)
             print('finished', ct_output_path)
             print('finished', mr_output_path)
-            print('finished', mr_output_path)
+            print('finished', label_output_path)
+            print(n)
 
 
 
@@ -368,10 +369,25 @@ if __name__ == '__main__':
     out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024_raw'
     train_folder3 = '/data/private/autoPET/SynthRad2024/train'
     test_folder3 = '/data/private/autoPET/SynthRad2024/test'
-    #iterator(source_folder1, source_folder2)
-    #process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
-    #iterator_synthrad2023(source_folder3, out_folder2)
-    process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
+
+    autopet = False
+    if autopet:
+        preprocess_raw = False
+        cut = True
+        if preprocess_raw:
+            iterator(source_folder1, source_folder2)
+        if cut:
+            process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
+
+    sythrad2023 = True
+    if sythrad2023:
+        preprocess_raw = False
+        cut = True
+        if preprocess_raw:
+            iterator_synthrad2023(source_folder3, out_folder2)
+        if cut:
+            process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
+
 
 
 
