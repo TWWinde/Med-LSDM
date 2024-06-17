@@ -311,7 +311,7 @@ def image_process_synthrad2023(in_file, out_path):
 def iterator_synthrad2023(in_path, out_path):
 
     os.makedirs(out_path, exist_ok=True)
-    files = [os.path.join(in_path, f) for f in os.listdir(in_path)]
+    files = [os.path.join(in_path, f) for f in os.listdir(in_path) if f !='overview']
     for file_path in files:
         image_process_synthrad2023(file_path, out_path)
         print('finished', file_path)
