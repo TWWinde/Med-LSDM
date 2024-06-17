@@ -150,7 +150,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
             print('finished', ct_output_path)
             print('finished', mr_output_path)
             print('finished', label_output_path)
-            print(n)
+            print(n, ct_path)
 
 
 
