@@ -98,7 +98,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
 
         assert ct_data.shape == mr_data.shape == label_data.shape, "Error: The shapes of arrayys do not match."
         if crop_2_block:
-            for i in range(0, ct_data.shape[2]-length, stride):
+            for i in range(5, ct_data.shape[2]-length, stride):
                 cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data,  *crop_size, i, length)
                 if is_all_zero(cropped_mr, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
@@ -133,9 +133,9 @@ def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_s
     os.makedirs(label_test_folder, exist_ok=True)
     os.makedirs(label_train_folder, exist_ok=True)
 
-    ct_files = [os.path.join(source_folder, f, 'ct.nii.gz') for f in os.listdir(source_folder)]
+    ct_files = [os.path.join(source_folder, f, 'ct.nii.gz') for f in os.listdir(source_folder) if f !='overview']
 
-    ct_train_files, ct_test_files = train_test_split(ct_files)
+    ct_train_files, ct_test_files = train_test_split(ct_files,  test_proportion=0.1)
 
     crop_2_block = True
     save_cropped_synthrad2023(ct_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
@@ -329,12 +329,12 @@ if __name__ == '__main__':
     test_folder2 = '/data/private/autoPET/autopet_3d_wo_artifacts/test'
 
     source_folder3 = '/misc/data/private/autoPET/Task1/pelvis'
-    out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024'
+    out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024_raw'
     train_folder3 = '/data/private/autoPET/SynthRad2024/train'
     test_folder3 = '/data/private/autoPET/SynthRad2024/test'
     #iterator(source_folder1, source_folder2)
     #process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
-    iterator_synthrad2023(source_folder3, out_folder2)
+    #iterator_synthrad2023(source_folder3, out_folder2)
     process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
 
 
