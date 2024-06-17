@@ -97,15 +97,16 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
         label_data = label.get_fdata()
 
         assert ct_data.shape == mr_data.shape == label_data.shape, "Error: The shapes of arrayys do not match."
+        n=0
         if crop_2_block:
             for i in range(3, ct_data.shape[2]-length, stride):
                 cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data,  *crop_size, i, length)
                 if is_all_zero(cropped_mr, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
                     continue
-                ct_output_path = os.path.join(image_out_files, 'ct', name + f'_{i//length}.' + 'nii.gz')
-                mr_output_path = os.path.join(image_out_files, 'mr', name + f'_{i // length}.' + 'nii.gz')
-                label_output_path = os.path.join(image_out_files, 'label', name + f'_{i // length}.' + 'nii.gz')
+                ct_output_path = os.path.join(image_out_files, 'ct', name + f'_{n}.' + 'nii.gz')
+                mr_output_path = os.path.join(image_out_files, 'mr', name + f'_{n}.' + 'nii.gz')
+                label_output_path = os.path.join(image_out_files, 'label', name + f'_{n}.' + 'nii.gz')
                 cropped_ct = nib.Nifti1Image(cropped_ct, affine=ct.affine)
                 cropped_mr = nib.Nifti1Image(cropped_mr, affine=mr.affine)
                 cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
@@ -115,14 +116,14 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
                 print('finished', ct_output_path)
                 print('finished', mr_output_path)
                 print('finished', mr_output_path)
-
+                n+=1
             cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size, ct_data.shape[2]-length, length)
             if is_all_zero(cropped_mr, cropped_label):
                 print("Array is all zeros. Skipping rescaling.")
                 continue
-            ct_output_path = os.path.join(image_out_files, 'ct', name + f'_{i // length+1}.' + 'nii.gz')
-            mr_output_path = os.path.join(image_out_files, 'mr', name + f'_{i // length+1}.' + 'nii.gz')
-            label_output_path = os.path.join(image_out_files, 'label', name + f'_{i // length+1}.' + 'nii.gz')
+            ct_output_path = os.path.join(image_out_files, 'ct', name + f'_{n}.' + 'nii.gz')
+            mr_output_path = os.path.join(image_out_files, 'mr', name + f'_{n}.' + 'nii.gz')
+            label_output_path = os.path.join(image_out_files, 'label', name + f'_{n}.' + 'nii.gz')
             cropped_ct = nib.Nifti1Image(cropped_ct, affine=ct.affine)
             cropped_mr = nib.Nifti1Image(cropped_mr, affine=mr.affine)
             cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
