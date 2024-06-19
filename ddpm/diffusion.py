@@ -198,6 +198,7 @@ class PreNorm(nn.Module):
 # building block modules
 
 
+# 3D Conv + Group norm + (scale_shift) + SiLU
 class Block(nn.Module):
     def __init__(self, dim, dim_out, groups=8):
         super().__init__()

@@ -76,7 +76,6 @@ if __name__ == '__main__':
     run()
 
     # wandb.finish()
-
     # Incorporate GAN loss in DDPM training?
     # Incorporate GAN loss in UNET segmentation?
     # Maybe better if I don't use ema updates?
