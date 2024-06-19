@@ -326,17 +326,17 @@ def image_process_synthrad2023(in_file, out_path):
     os.makedirs(os.path.join(out_path, os.path.basename(in_file)), exist_ok=True)
     ct_path = os.path.join(in_file, 'ct.nii.gz')
     mr_path = os.path.join(in_file, 'mr.nii.gz')
-    mask_path = os.path.join(in_file, 'mask.nii.gz')
+    #mask_path = os.path.join(in_file, 'mask.nii.gz')
     label_path = os.path.join('/misc/data/private/autoPET/synth2023_label', os.path.basename(in_file) + '_ct_label.nii.gz')
     ct_image = sitk.ReadImage(ct_path)
     mr_image = sitk.ReadImage(mr_path)
-    mask = sitk.ReadImage(mask_path)
+    #mask = sitk.ReadImage(mask_path)
     label = sitk.ReadImage(label_path)
     # add mask
-    masked_ct, masked_mr = add_mask_synthrad2024(ct_image, mr_image, mask)
+    #masked_ct, masked_mr = add_mask_synthrad2024(ct_image, mr_image, mask)
     # pad and rescale
-    final_ct = pad_and_rescale(masked_ct)
-    final_mr = pad_and_rescale(masked_mr)
+    final_ct = pad_and_rescale(ct_image)
+    final_mr = pad_and_rescale(mr_image)
     final_label = pad_and_rescale(label)
     sitk.WriteImage(final_ct, os.path.join(out_path, os.path.basename(in_file), 'ct.nii.gz'))
     # print('finish ', os.path.join(out_path, os.path.basename(in_file), 'ct.nii.gz'))
@@ -366,9 +366,9 @@ if __name__ == '__main__':
     test_folder2 = '/data/private/autoPET/autopet_3d_wo_artifacts/test'
 
     source_folder3 = '/misc/data/private/autoPET/Task1/pelvis'
-    out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024_raw'
-    train_folder3 = '/data/private/autoPET/SynthRad2024/train'
-    test_folder3 = '/data/private/autoPET/SynthRad2024/test'
+    out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024_raw_withoutmask'
+    train_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/train'
+    test_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/test'
 
     autopet = False
     if autopet:
@@ -381,7 +381,7 @@ if __name__ == '__main__':
 
     sythrad2023 = True
     if sythrad2023:
-        preprocess_raw = False
+        preprocess_raw = True
         cut = True
         if preprocess_raw:
             iterator_synthrad2023(source_folder3, out_folder2)
