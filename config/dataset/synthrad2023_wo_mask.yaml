@@ -1,0 +1,3 @@
+name: SynthRAD2023_wo_mask
+root_dir: /misc/data/private/autoPET/SynthRad2024_withoutmask/train/mr
+image_channels: 1

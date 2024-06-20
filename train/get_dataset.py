@@ -54,6 +54,14 @@ def get_dataset(cfg):
         sampler = None
         return train_dataset, val_dataset, sampler
 
+    if cfg.dataset.name == 'SynthRAD2023_wo_mask':
+        train_dataset = SynthRAD2023Dataset(
+            root_dir=cfg.dataset.root_dir)
+        val_dataset = SynthRAD2023Dataset(
+            root_dir=cfg.dataset.root_dir)
+        sampler = None
+        return train_dataset, val_dataset, sampler
+
     if cfg.dataset.name == 'AutoPET':
         train_dataset = AutoPETDataset(
             root_dir=cfg.dataset.root_dir)
