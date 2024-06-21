@@ -582,10 +582,10 @@ class Unet3D(nn.Module):
 # gaussian diffusion trainer class
 
 
-def extract(a, t, x_shape):
+def extract(a, t, x_shape):  # get number from list
     b, *_ = t.shape
     out = a.gather(-1, t)
-    return out.reshape(b, *((1,) * (len(x_shape) - 1)))
+    return out.reshape(b, *((1,) * (len(x_shape) - 1)))  # (b, 1, 1, ..., 1)
 
 
 def cosine_beta_schedule(timesteps, s=0.008):
@@ -621,7 +621,7 @@ class GaussianDiffusion(nn.Module):
         self.channels = channels
         self.image_size = image_size
         self.num_frames = num_frames
-        self.denoise_fn = denoise_fn
+        self.denoise_fn = denoise_fn  # Unet3D noise_predictor
 
         if vqgan_ckpt:
             self.vqgan = VQGAN.load_from_checkpoint(vqgan_ckpt).cuda()
@@ -645,20 +645,20 @@ class GaussianDiffusion(nn.Module):
             name, val.to(torch.float32))
 
         register_buffer('betas', betas)
-        register_buffer('alphas_cumprod', alphas_cumprod)
-        register_buffer('alphas_cumprod_prev', alphas_cumprod_prev)
+        register_buffer('alphas_cumprod', alphas_cumprod)  # alphas_t_bar
+        register_buffer('alphas_cumprod_prev', alphas_cumprod_prev)  # alphas_t-1_bar
 
         # calculations for diffusion q(x_t | x_{t-1}) and others
 
-        register_buffer('sqrt_alphas_cumprod', torch.sqrt(alphas_cumprod))
+        register_buffer('sqrt_alphas_cumprod', torch.sqrt(alphas_cumprod))  # sqrt(alphas_t_bar)
         register_buffer('sqrt_one_minus_alphas_cumprod',
-                        torch.sqrt(1. - alphas_cumprod))
+                        torch.sqrt(1. - alphas_cumprod))   # sqrt(1-alphas_t_bar)
         register_buffer('log_one_minus_alphas_cumprod',
-                        torch.log(1. - alphas_cumprod))
+                        torch.log(1. - alphas_cumprod))  # log(1-alphas_t_bar)
         register_buffer('sqrt_recip_alphas_cumprod',
-                        torch.sqrt(1. / alphas_cumprod))
+                        torch.sqrt(1. / alphas_cumprod))   # sqrt(1/alphas_t_bar)
         register_buffer('sqrt_recipm1_alphas_cumprod',
-                        torch.sqrt(1. / alphas_cumprod - 1))
+                        torch.sqrt(1. / alphas_cumprod - 1))   # sqrt((1/alphas_t_bar)-1)
 
         # calculations for posterior q(x_{t-1} | x_t, x_0)
 
@@ -687,20 +687,52 @@ class GaussianDiffusion(nn.Module):
         self.use_dynamic_thres = use_dynamic_thres
         self.dynamic_thres_percentile = dynamic_thres_percentile
 
-    def q_mean_variance(self, x_start, t):
+    def q_sample(self, x_start, t, noise=None):   # x_{t}
+        """
+            Diffuse the data for a given number of diffusion steps.
+
+            In other words, sample from q(x_t | x_0).
+
+            :param x_start: the initial data batch.
+            :param t: the number of diffusion steps (minus 1). Here, 0 means one step.
+            :param noise: if specified, the split-out normal noise.
+            :return: A noisy version of x_start.
+        """
+        noise = default(noise, lambda: torch.randn_like(x_start))
+
+        return (
+            extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
+            extract(self.sqrt_one_minus_alphas_cumprod,
+                    t, x_start.shape) * noise
+        )
+
+    def q_mean_variance(self, x_start, t):   # q(x_{t} | x_0)
+        """
+        Get the distribution q(x_t | x_0).
+
+        :param x_start: the [N x C x ...] tensor of noiseless inputs.
+        :param t: the number of diffusion steps (minus 1). Here, 0 means one step.
+        """
         mean = extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start
         variance = extract(1. - self.alphas_cumprod, t, x_start.shape)
         log_variance = extract(
             self.log_one_minus_alphas_cumprod, t, x_start.shape)
         return mean, variance, log_variance
 
-    def predict_start_from_noise(self, x_t, t, noise):
+    def predict_start_from_noise(self, x_t, t, noise):  # x_{0} = f(x_{t}, noise, t)
+
         return (
             extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t -
             extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * noise
         )
 
     def q_posterior(self, x_start, x_t, t):
+        """
+        Compute the mean and variance of the diffusion posterior:
+
+                 q(x_{t-1} | x_t, x_0)
+
+        """
         posterior_mean = (
             extract(self.posterior_mean_coef1, t, x_t.shape) * x_start +
             extract(self.posterior_mean_coef2, t, x_t.shape) * x_t
@@ -711,9 +743,25 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
     def p_mean_variance(self, x, t, clip_denoised: bool, cond=None, cond_scale=1.):
+        """
+        Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
+        the initial x, x_0.
+
+        :param x: the [N x C x ...] tensor at time t.
+        :param t: a 1-D Tensor of timesteps.
+        :param clip_denoised: if True, clip the denoised signal into [-1, 1].
+        :param denoised_fn: if not None, a function which applies to the
+                   x_start prediction before it is used to sample. Applies before
+                   clip_denoised.
+
+        :return: a dict with the following keys:
+                    - 'mean': the model mean output.
+                    - 'variance': the model variance output.
+                    - 'log_variance': the log of 'variance'.
+         """
         x_recon = self.predict_start_from_noise(
             x, t=t, noise=self.denoise_fn.forward_with_cond_scale(x, t, cond=cond, cond_scale=cond_scale))
-
+        # elf.denoise_fn == Unet3D   x_recon == x_{0}
         if clip_denoised:
             s = 1.
             if self.use_dynamic_thres:
@@ -730,11 +778,21 @@ class GaussianDiffusion(nn.Module):
             x_recon = x_recon.clamp(-s, s) / s
 
         model_mean, posterior_variance, posterior_log_variance = self.q_posterior(
-            x_start=x_recon, x_t=x, t=t)
+            x_start=x_recon, x_t=x, t=t)  # q(x_{t-1} |x_{t}, x_0)
         return model_mean, posterior_variance, posterior_log_variance
 
-    @torch.inference_mode()
+    @torch.inference_mode()  # add noise
     def p_sample(self, x, t, cond=None, cond_scale=1., clip_denoised=True):
+        """
+        Sample x_{t-1} from the model at the given timestep. from noise
+
+        :param model: the model to sample from.
+        :param x: the current tensor at x_{t-1}.
+        :param t: the value of t, starting at 0 for the first diffusion step.
+        :param denoised_fn: if not None, a function which applies to the
+            x_start prediction before it is used to sample.
+
+        """
         b, *_, device = *x.shape, x.device
         model_mean, _, model_log_variance = self.p_mean_variance(
             x=x, t=t, clip_denoised=clip_denoised, cond=cond, cond_scale=cond_scale)
@@ -746,6 +804,11 @@ class GaussianDiffusion(nn.Module):
 
     @torch.inference_mode()
     def p_sample_loop(self, shape, cond=None, cond_scale=1.):
+        """
+            Generate samples from the model. From noise to x_{t}
+
+        """
+
         device = self.betas.device
 
         b = shape[0]
@@ -759,6 +822,10 @@ class GaussianDiffusion(nn.Module):
 
     @torch.inference_mode()
     def sample(self, cond=None, cond_scale=1., batch_size=16):
+        """
+           from latent space to image space
+
+        """
         device = next(self.denoise_fn.parameters()).device
 
         if is_list_str(cond):
@@ -799,27 +866,18 @@ class GaussianDiffusion(nn.Module):
 
         return img
 
-    def q_sample(self, x_start, t, noise=None):
-        noise = default(noise, lambda: torch.randn_like(x_start))
-
-        return (
-            extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
-            extract(self.sqrt_one_minus_alphas_cumprod,
-                    t, x_start.shape) * noise
-        )
-
     def p_losses(self, x_start, t, cond=None, noise=None, **kwargs):
         b, c, f, h, w, device = *x_start.shape, x_start.device
         noise = default(noise, lambda: torch.randn_like(x_start))
 
-        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
+        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)  # x_{t}
 
         if is_list_str(cond):
             cond = bert_embed(
                 tokenize(cond), return_cls_repr=self.text_use_bert_cls)
             cond = cond.to(device)
 
-        x_recon = self.denoise_fn(x_noisy, t, cond=cond, **kwargs)
+        x_recon = self.denoise_fn(x_noisy, t, cond=cond, **kwargs)  # predicted noise
 
         if self.loss_type == 'l1':
             loss = F.l1_loss(noise, x_recon)
@@ -841,7 +899,7 @@ class GaussianDiffusion(nn.Module):
                       self.vqgan.codebook.embeddings.min())) * 2.0 - 1.0
         else:
             print("Hi")
-            x = normalize_img(x)
+            x = normalize_img(x)  # (-1,1)
 
         b, device, img_size, = x.shape[0], x.device, self.image_size
         check_shape(x, 'b c f h w', c=self.channels,
@@ -895,14 +953,6 @@ def gif_to_tensor(path, channels=3, transform=T.ToTensor()):
 
 def identity(t, *args, **kwargs):
     return t
-
-
-def normalize_img(t):
-    return t * 2 - 1
-
-
-def unnormalize_img(t):
-    return (t + 1) * 0.5
 
 
 def cast_num_frames(t, *, frames):
