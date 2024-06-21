@@ -1,7 +1,6 @@
-
-from ddpm import Unet3D, GaussianDiffusion, Trainer
 import sys
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
+from ddpm import Unet3D, GaussianDiffusion, Trainer
 import hydra
 from omegaconf import DictConfig, open_dict
 from train.get_dataset import get_dataset
