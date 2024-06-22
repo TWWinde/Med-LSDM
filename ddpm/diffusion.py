@@ -198,8 +198,12 @@ class PreNorm(nn.Module):
 # building block modules
 
 
-# 3D Conv + Group norm + (scale_shift) + SiLU
 class Block(nn.Module):
+    """
+     block = 3D Conv + Group norm + (scale_shift) + SiLU
+     scale_shift for time embedding
+
+    """
     def __init__(self, dim, dim_out, groups=8):
         super().__init__()
         self.proj = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
@@ -218,6 +222,10 @@ class Block(nn.Module):
 
 
 class ResnetBlock(nn.Module):
+    """
+     block = 3D Conv + Group norm + (scale_shift) + SiLU
+     ResnetBlock = 2* block + residual connection
+    """
     def __init__(self, dim, dim_out, *, time_emb_dim=None, groups=8):
         super().__init__()
         self.mlp = nn.Sequential(
@@ -525,8 +533,7 @@ class Unet3D(nn.Module):
         # probability at which a given batch sample will focus on the present (0. is all off, 1. is completely arrested attention across time)
         prob_focus_present=0.
     ):
-        assert not (self.has_cond and not exists(cond)
-                    ), 'cond must be passed in if cond_dim specified'
+        assert not (self.has_cond and not exists(cond) ), 'cond must be passed in if cond_dim specified'
         batch, device = x.shape[0], x.device
 
         focus_present_mask = default(focus_present_mask, lambda: prob_mask_like(
@@ -953,6 +960,14 @@ def gif_to_tensor(path, channels=3, transform=T.ToTensor()):
 
 def identity(t, *args, **kwargs):
     return t
+
+
+def normalize_img(t):
+    return t * 2 - 1
+
+
+def unnormalize_img(t):
+    return (t + 1) * 0.5
 
 
 def cast_num_frames(t, *, frames):
