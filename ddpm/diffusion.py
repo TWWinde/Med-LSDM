@@ -578,8 +578,7 @@ class Unet3D(nn.Module):
             x = block1(x, t)
             x = block2(x, t)
             x = spatial_attn(x)
-            x = temporal_attn(x, pos_bias=time_rel_pos_bias,
-                              focus_present_mask=focus_present_mask)
+            x = temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
             x = upsample(x)
 
         x = torch.cat((x, r), dim=1)
