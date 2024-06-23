@@ -389,11 +389,11 @@ class Attention(nn.Module):
 class Unet3D(nn.Module):
     def __init__(
         self,
-        dim,
+        dim,    # 64
         cond_dim=None,
         out_dim=None,
         dim_mults=(1, 2, 4, 8),
-        channels=3,
+        channels=3,  # 8
         attn_heads=8,
         attn_dim_head=32,
         use_bert_text_cond=False,
@@ -430,9 +430,9 @@ class Unet3D(nn.Module):
             PreNorm(init_dim, temporal_attn(init_dim)))
 
         # dimensions
-
-        dims = [init_dim, *map(lambda m: dim * m, dim_mults)]
-        in_out = list(zip(dims[:-1], dims[1:]))
+        # [64, 64, 128, 256]  ,  [64, 128, 256, 512]
+        dims = [init_dim, *map(lambda m: dim * m, dim_mults)]  # [64, 64, 128, 256, 512]
+        in_out = list(zip(dims[:-1], dims[1:]))  # [(64, 64), (64, 128), (128, 256), (256, 512)]
 
         # time conditioning
 
@@ -468,7 +468,7 @@ class Unet3D(nn.Module):
 
         # modules for all layers
 
-        for ind, (dim_in, dim_out) in enumerate(in_out):
+        for ind, (dim_in, dim_out) in enumerate(in_out):  # [(64, 64), (64, 128), (128, 256), (256, 512)]
             is_last = ind >= (num_resolutions - 1)
 
             self.downs.append(nn.ModuleList([
@@ -563,8 +563,7 @@ class Unet3D(nn.Module):
             x = block1(x, t)
             x = block2(x, t)
             x = spatial_attn(x)
-            x = temporal_attn(x, pos_bias=time_rel_pos_bias,
-                              focus_present_mask=focus_present_mask)
+            x = temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
             h.append(x)
             x = downsample(x)
 
