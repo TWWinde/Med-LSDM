@@ -1,3 +1,3 @@
 name: SynthRAD2023_wo_mask
-root_dir: /data/private/autoPET/Processed_SynthRad2024_raw
+root_dir: /data/private/autoPET/Processed_SynthRad2024_raw_withoutmask
 image_channels: 1
