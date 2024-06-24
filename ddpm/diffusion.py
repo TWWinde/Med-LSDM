@@ -236,7 +236,8 @@ class SDDResBlock(nn.Module):
         ) if exists(time_emb_dim) else None
         self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
         self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
-        self.spade_norm = SPADEGroupNorm3D(dim_out, label_nc=32, eps=1e-5, groups=groups)
+        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=32, eps=1e-5, groups=groups)
+        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=32, eps=1e-5, groups=groups)
         self.act = nn.SiLU()
         self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
 
@@ -249,10 +250,10 @@ class SDDResBlock(nn.Module):
             time_emb = rearrange(time_emb, 'b c -> b c 1 1 1')
             scale_shift = time_emb.chunk(2, dim=1)
 
-        h = self.spade_norm(x, seg)
+        h = self.spade_norm1(x, seg)
         h = self.act(h)
         h = self.conv1(h)
-        h = self.spade_norm(h, seg)
+        h = self.spade_norm2(h, seg)
 
         if exists(scale_shift):
             scale, shift = scale_shift
@@ -278,7 +279,8 @@ class SDEResBlock(nn.Module):
         ) if exists(time_emb_dim) else None
         self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
         self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
-        self.norm = nn.GroupNorm(groups, dim_out)
+        self.norm1 = nn.GroupNorm(groups, dim)
+        self.norm2 = nn.GroupNorm(groups, dim_out)
         self.act = nn.SiLU()
         self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
 
@@ -291,10 +293,10 @@ class SDEResBlock(nn.Module):
             time_emb = rearrange(time_emb, 'b c -> b c 1 1 1')
             scale_shift = time_emb.chunk(2, dim=1)
 
-        h = self.norm(x)
+        h = self.norm1(x)
         h = self.act(h)
         h = self.conv1(h)
-        h = self.norm(h)
+        h = self.norm2(h)
         if exists(scale_shift):
             scale, shift = scale_shift
             h = h * (scale + 1) + shift
