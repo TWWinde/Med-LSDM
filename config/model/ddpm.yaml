@@ -1,12 +1,12 @@
 vqgan_ckpt: /misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/BRATS/flair/lightning_logs/version_0/checkpoints/latest_checkpoint.ckpt'
 
 # Have to be derived from VQ-GAN Latent space dimensions
-diffusion_img_size: ???
-diffusion_depth_size: ???
-diffusion_num_channels: ???
+diffusion_img_size: 64
+diffusion_depth_size: 64
+diffusion_num_channels: 8
 dim_mults: ???
 results_folder: /data/home/firas/Desktop/work/other_groups/medicaldiffusion/checkpoints/ddpm/
-results_folder_postfix: ''
+results_folder_postfix: 'diff'
 load_milestone: False
 
 batch_size: 4
@@ -25,4 +25,3 @@ ema_decay: 0.995 # exponential moving average decay
 amp: False # turn on mixed precision
 num_sample_rows: 1
 gpus: 0
-

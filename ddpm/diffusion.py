@@ -185,6 +185,32 @@ class LayerNorm(nn.Module):
         return (x - mean) / (var + self.eps).sqrt() * self.gamma
 
 
+class SPADEGroupNorm3D(nn.Module):
+    def __init__(self, dim_out, label_nc=32, eps=1e-5, groups=8, dim_hidden=128):   # dim_hidden ????
+        super().__init__()
+
+        self.norm = nn.GroupNorm(groups, dim_out, affine=False)
+        self.eps = eps
+
+        self.mlp_shared = nn.Sequential(
+            nn.Conv3d(label_nc, dim_hidden, (1, 3, 3), padding=(0, 1, 1)),
+            nn.ReLU()
+        )
+
+        self.mlp_gamma = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.mlp_beta = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
+
+    def forward(self, x, segmap):
+        x = self.norm(x)
+
+        segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
+        actv = self.mlp_shared(segmap)
+        gamma = self.mlp_gamma(actv)
+        beta = self.mlp_beta(actv)
+
+        return x * (1 + gamma) + beta
+
+
 class PreNorm(nn.Module):
     def __init__(self, dim, fn):
         super().__init__()
@@ -194,6 +220,36 @@ class PreNorm(nn.Module):
     def forward(self, x, **kwargs):
         x = self.norm(x)
         return self.fn(x, **kwargs)
+
+
+class SpadeBlock(nn.Module):
+    """
+     SpadeBlock = SPADE + SiLU + 3D Conv + SPADE + (scale_shift) + SiLU
+     scale_shift for time embedding
+
+    """
+    def __init__(self, dim, dim_out, groups=8):
+        super().__init__()
+        self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.spade_norm = SPADEGroupNorm3D(dim_out, label_nc=32, eps=1e-5, groups=groups)
+        self.act = nn.SiLU()
+
+    def forward(self, x, seg, scale_shift=None):
+        x = self.spade_norm(x, seg)
+        self.act(x)
+        x = self.conv1(x)
+        x = self.spade_norm(x, seg)
+
+        if exists(scale_shift):
+            scale, shift = scale_shift
+            x = x * (scale + 1) + shift
+
+        self.act(x)
+        x = self.conv2(x)
+
+        return x
+
 
 # building block modules
 
