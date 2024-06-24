@@ -53,8 +53,3 @@ python -c "import torch; print(torch.__version__)"
 #model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
 #model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
-# diffusion
-python train/train_ddpm.py model=ddpm dataset=autpet model.results_folder_postfix='flair' \
-model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/flair/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
-model.diffusion_img_size=64 model.diffusion_depth_size=64 \
-model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=10 model.gpus=1
