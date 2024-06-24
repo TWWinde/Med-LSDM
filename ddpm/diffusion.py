@@ -587,7 +587,10 @@ class Unet3D(nn.Module):
 # gaussian diffusion trainer class
 
 
-def extract(a, t, x_shape):  # get number from list
+def extract(a, t, x_shape):
+    """
+    get elements from list
+    """
     b, *_ = t.shape
     out = a.gather(-1, t)
     return out.reshape(b, *((1,) * (len(x_shape) - 1)))  # (b, 1, 1, ..., 1)
