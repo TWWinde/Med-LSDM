@@ -44,7 +44,7 @@ class SynthRAD2023Dataset(Dataset):
     def get_data_files(self):
         subfolder_names = os.listdir(self.root_dir)
         folder_names = [os.path.join(
-            self.root_dir, subfolder) for subfolder in subfolder_names if subfolder.endswith('.nii.gz')]
+            self.root_dir, subfolder, 'mr.nii.gz') for subfolder in subfolder_names ] # if subfolder.endswith('.nii.gz')]
         return folder_names
 
     def __len__(self):
