@@ -26,7 +26,7 @@ python -c "import torch; print(torch.__version__)"
 # Run your python code
 
 # diffusion
-PL_TORCH_DISTRIBUTED_BACKEND=gloo python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='flair' \
+python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='flair' \
 model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/flair/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
 model.diffusion_img_size=64 model.diffusion_depth_size=64 \
 model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=10 model.gpus=1
