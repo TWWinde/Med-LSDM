@@ -1,12 +1,28 @@
-from torch.utils.data import Dataset
+import numpy as np
+from torch.utils.data import Dataset, DataLoader
 import torchio as tio
 import os
 
 
+class RandomDepthCrop:
+    def __init__(self, target_depth):
+        self.target_depth = target_depth
+
+    def __call__(self, img):
+        _, d, h, w = img.shape
+        target_d = self.target_depth
+
+        d_start = np.random.randint(0, d - target_d + 1)
+        cropped_img = img[:, d_start:d_start + target_d, :, :]
+
+        return cropped_img
+
 
 PREPROCESSING_TRANSORMS = tio.Compose([
     tio.RescaleIntensity(out_min_max=(-1, 1)),
+    RandomDepthCrop(target_depth=32),
     tio.CropOrPad(target_shape=(256, 256, 32)),
+
     tio.Lambda(lambda x: x.float())
 ])
 
@@ -29,7 +45,6 @@ class SynthRAD2023Dataset(Dataset):
         subfolder_names = os.listdir(self.root_dir)
         folder_names = [os.path.join(
             self.root_dir, subfolder) for subfolder in subfolder_names if subfolder.endswith('.nii.gz')]
-
         return folder_names
 
     def __len__(self):
@@ -40,3 +55,8 @@ class SynthRAD2023Dataset(Dataset):
         img = self.preprocessing(img)
         img = self.transforms(img)
         return {'data': img.data.permute(0, -1, 1, 2)}
+
+
+if __name__ == '__main__':
+    dataset = SynthRAD2023Dataset(root_dir = '')
+    dataloader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=2)
