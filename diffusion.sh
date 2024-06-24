@@ -18,7 +18,7 @@
 
 #conda activate /anaconda3/envs/myenv
 module load cuda
-pyenv activate myenv38 #myenv #venv
+pyenv activate myenv #myenv #venv
 pip uninstall nvidia_cublas_cu11
 nvcc --version
 python -c "import torch; print(torch.__version__)"
