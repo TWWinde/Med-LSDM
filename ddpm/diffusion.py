@@ -222,33 +222,86 @@ class PreNorm(nn.Module):
         return self.fn(x, **kwargs)
 
 
-class SpadeBlock(nn.Module):
+class SDDResBlock(nn.Module):
     """
-     SpadeBlock = SPADE + SiLU + 3D Conv + SPADE + (scale_shift) + SiLU
-     scale_shift for time embedding
+    Semantic Diffusion Decoder Resnet Block
+    scale_shift for time embedding
 
     """
-    def __init__(self, dim, dim_out, groups=8):
+    def __init__(self, dim, dim_out, time_emb_dim=None, groups=8):
         super().__init__()
+        self.mlp = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(time_emb_dim, dim_out * 2)
+        ) if exists(time_emb_dim) else None
         self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
         self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
         self.spade_norm = SPADEGroupNorm3D(dim_out, label_nc=32, eps=1e-5, groups=groups)
         self.act = nn.SiLU()
+        self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
 
-    def forward(self, x, seg, scale_shift=None):
-        x = self.spade_norm(x, seg)
-        self.act(x)
-        x = self.conv1(x)
-        x = self.spade_norm(x, seg)
+    def forward(self, x, seg, time_emb=None):
+
+        scale_shift = None
+        if exists(self.mlp):
+            assert exists(time_emb), 'time emb must be passed in'
+            time_emb = self.mlp(time_emb)
+            time_emb = rearrange(time_emb, 'b c -> b c 1 1 1')
+            scale_shift = time_emb.chunk(2, dim=1)
+
+        h = self.spade_norm(x, seg)
+        h = self.act(h)
+        h = self.conv1(h)
+        h = self.spade_norm(h, seg)
 
         if exists(scale_shift):
             scale, shift = scale_shift
-            x = x * (scale + 1) + shift
+            h = h * (scale + 1) + shift
 
-        self.act(x)
-        x = self.conv2(x)
+        h = self.act(h)
+        h = self.conv2(h)
+        return h + self.res_conv(x)
 
-        return x
+
+class SDEResBlock(nn.Module):
+    """
+     Semantic Diffusion Encoder Resnet Block
+     scale_shift for time embedding
+
+    """
+
+    def __init__(self, dim, dim_out, time_emb_dim=None, groups=8):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(time_emb_dim, dim_out * 2)
+        ) if exists(time_emb_dim) else None
+        self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.norm = nn.GroupNorm(groups, dim_out)
+        self.act = nn.SiLU()
+        self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
+
+    def forward(self, x, time_emb=None):
+
+        scale_shift = None
+        if exists(self.mlp):
+            assert exists(time_emb), 'time emb must be passed in'
+            time_emb = self.mlp(time_emb)
+            time_emb = rearrange(time_emb, 'b c -> b c 1 1 1')
+            scale_shift = time_emb.chunk(2, dim=1)
+
+        h = self.norm(x)
+        h = self.act(h)
+        h = self.conv1(h)
+        h = self.norm(h)
+        if exists(scale_shift):
+            scale, shift = scale_shift
+            h = h * (scale + 1) + shift
+
+        h = self.act(h)
+        h = self.conv2(h)
+        return h + self.res_conv(x)
 
 
 # building block modules
