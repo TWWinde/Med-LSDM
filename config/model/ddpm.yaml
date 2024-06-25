@@ -2,7 +2,7 @@ vqgan_ckpt: /misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/BRATS/fla
 
 # Have to be derived from VQ-GAN Latent space dimensions
 diffusion_img_size: 64
-diffusion_depth_size: 64
+diffusion_depth_size: 8
 diffusion_num_channels: 8
 dim_mults: ???
 results_folder: /misc/no_backups/d1502/medicaldiffusion/checkpoints/ddpm/
