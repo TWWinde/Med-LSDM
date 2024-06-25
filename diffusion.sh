@@ -10,6 +10,7 @@
 #SBATCH --nodes=1
 #SBATCH --gpus=1
 #SBATCH --qos=batch
+# SBATCH --gpus=rtx_a5000:1
 #SBATCH --nodelist=linse21
 #SBATCH --qos=shortbatch
 #SBATCH --partition=highperf
@@ -33,7 +34,7 @@ model.diffusion_img_size=64 model.diffusion_depth_size=8 \
 model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=10 model.gpus=0
 
 # diffusion without condition
-python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output' \
-model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/flair/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
-model.diffusion_img_size=64 model.diffusion_depth_size=8 \
-model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=10 model.gpus=0
+#python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output' \
+#model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/flair/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
+#model.diffusion_img_size=64 model.diffusion_depth_size=8 \
+#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=10 model.gpus=0
