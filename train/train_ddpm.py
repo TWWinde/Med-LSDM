@@ -1,6 +1,7 @@
 import sys
+
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
-from ddpm import Unet3D, GaussianDiffusion, Trainer
+from ddpm import Unet3D, GaussianDiffusion, Trainer, Unet3D_SPADE
 import hydra
 from omegaconf import DictConfig, open_dict
 from train.get_dataset import get_dataset
@@ -20,6 +21,12 @@ def run(cfg: DictConfig):
 
     if cfg.model.denoising_fn == 'Unet3D':
         model = Unet3D(
+            dim=cfg.model.diffusion_img_size,
+            dim_mults=cfg.model.dim_mults,
+            channels=cfg.model.diffusion_num_channels,
+        ).cuda()
+    elif cfg.model.denoising_fn == 'Unet3D_SPADE':
+        model = Unet3D_SPADE(
             dim=cfg.model.diffusion_img_size,
             dim_mults=cfg.model.dim_mults,
             channels=cfg.model.diffusion_num_channels,

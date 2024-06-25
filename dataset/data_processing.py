@@ -12,6 +12,7 @@ def crop_center(img, label, new_x, new_y):
 
 
 def crop_block(img, label, new_x, new_y, start_z, length):
+    assert img.shape == label.shape
     x, y, z = img.shape
     start_x = x // 2 - new_x // 2
     start_y = y // 2 - new_y // 2
@@ -20,14 +21,13 @@ def crop_block(img, label, new_x, new_y, start_z, length):
 
 
 def is_all_zero(array1, array2):
-
     return np.all(array1 == 0) or np.all(array2 == 0)
 
 
 def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_block=False, length=32, stride=16):
     for image_path in image_in_files:
         label_path = image_path.replace('0001.nii.gz', '0002.nii.gz')
-        label_path = label_path.replace('imagesTr_wo_artifacts', 'imagesTr')  # only for data remove artifacts
+        # label_path = label_path.replace('imagesTr_wo_artifacts', 'imagesTr')  # only for data remove artifacts
         img = nib.load(image_path)
         label = nib.load(label_path)
         img_data = img.get_fdata()
@@ -35,8 +35,8 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
         assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
         n = 0
         if crop_2_block:
-            for i in range(0, img_data.shape[2]-length, stride):
-                cropped_image, cropped_label = crop_block(img_data, label_data,  *crop_size, i, length)
+            for i in range(0, img_data.shape[2] - length, stride):
+                cropped_image, cropped_label = crop_block(img_data, label_data, *crop_size, i, length)
                 if is_all_zero(cropped_image, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
                     continue
@@ -50,8 +50,9 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
                 nib.save(cropped_label, label_output_path)
                 print('finished', img_output_path)
                 print('finished', label_output_path)
-                n+=1
-            cropped_image, cropped_label = crop_block(img_data, label_data, *crop_size, img_data.shape[2]-length, length)
+                n += 1
+            cropped_image, cropped_label = crop_block(img_data, label_data, *crop_size, img_data.shape[2] - length,
+                                                      length)
 
             if is_all_zero(cropped_image, cropped_label):
                 print("Array is all zeros. Skipping rescaling.")
@@ -67,50 +68,42 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
             print('finished', img_output_path)
             print('finished', label_output_path)
         else:
-            cropped_image, cropped_label = crop_center(img_data, label_data,  *crop_size)
+            cropped_image, cropped_label = crop_center(img_data, label_data, *crop_size)
             if is_all_zero(cropped_image, cropped_label):
                 print("Array is all zeros. Skipping rescaling.")
                 continue
             cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
             name = os.path.basename(image_path).split('.')[0]
             name = name.split('_')[0]
-            img_output_path = os.path.join(image_out_files, name + f'_{n}.' + 'nii.gz')
-            label_output_path = img_output_path.replace('ct', 'label')
+            os.makedirs(os.path.join(image_out_files, name))
+            img_output_path = os.path.join(image_out_files, name, 'ct.nii.gz')
+            label_output_path = img_output_path.replace(image_out_files, name, 'label.nii.gz')
             nib.save(cropped_img, img_output_path)
             cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
             nib.save(cropped_label, label_output_path)
             print('finished', img_output_path)
             print('finished', label_output_path)
-            n += 1
 
 
-
-
-def process_images_autopet(source_folder, train_folder, test_folder, crop_size=(256, 256)):
-
-    ct_train_folder = os.path.join(train_folder, 'ct')
-    ct_test_folder = os.path.join(test_folder, 'ct')
-    label_train_folder = os.path.join(train_folder, 'label')
-    label_test_folder = os.path.join(test_folder, 'label')
+def process_autopet_onlycrop(source_folder, train_folder, test_folder, crop_size=(256, 256)):
+    ct_train_folder = os.path.join(train_folder)
+    ct_test_folder = os.path.join(test_folder)
 
     os.makedirs(ct_train_folder, exist_ok=True)
     os.makedirs(ct_test_folder, exist_ok=True)
-    os.makedirs(label_test_folder, exist_ok=True)
-    os.makedirs(label_train_folder, exist_ok=True)
 
     ct_files = [os.path.join(source_folder, f) for f in os.listdir(source_folder) if f.endswith('0001.nii.gz')]
 
     ct_train_files, ct_test_files = train_test_split(ct_files)
 
-    crop_2_block = True
+    crop_2_block = False
     save_cropped_autopet(ct_train_files, ct_train_folder, crop_size, crop_2_block=crop_2_block)
     save_cropped_autopet(ct_test_files, ct_test_folder, crop_size, crop_2_block=crop_2_block)
+
     print('all finished')
 
 
-
 def process_images_autopet(source_folder, train_folder, test_folder, crop_size=(256, 256)):
-
     ct_train_folder = os.path.join(train_folder, 'ct')
     ct_test_folder = os.path.join(test_folder, 'ct')
     label_train_folder = os.path.join(train_folder, 'label')
@@ -142,7 +135,6 @@ def crop_block_3(array1, array2, array3, new_x, new_y, start_z, length):
 
 
 def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_block=False, length=32, stride=8):
-
     for ct_path in ct_in_files:
         name = ct_path.split('/')[-2]
         mr_path = ct_path.replace('ct.nii.gz', 'mr.nii.gz')
@@ -155,10 +147,11 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
         label_data = label.get_fdata()
 
         assert ct_data.shape == mr_data.shape == label_data.shape, "Error: The shapes of arrayys do not match."
-        n=0
+        n = 0
         if crop_2_block:
-            for i in range(3, ct_data.shape[2]-length, stride):
-                cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data,  *crop_size, i, length)
+            for i in range(3, ct_data.shape[2] - length, stride):
+                cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size, i,
+                                                                     length)
                 if is_all_zero(cropped_mr, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
                     continue
@@ -175,7 +168,8 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
                 print('finished', mr_output_path)
                 print('finished', mr_output_path)
                 n += 1
-            cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size, ct_data.shape[2]-length, length)
+            cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size,
+                                                                 ct_data.shape[2] - length, length)
             if is_all_zero(cropped_mr, cropped_label):
                 print("Array is all zeros. Skipping rescaling.")
                 continue
@@ -194,9 +188,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
             print(n, ct_path)
 
 
-
 def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_size=(256, 256)):
-
     ct_train_folder = os.path.join(train_folder, 'ct')
     ct_test_folder = os.path.join(test_folder, 'ct')
     mr_train_folder = os.path.join(train_folder, 'mr')
@@ -211,9 +203,9 @@ def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_s
     os.makedirs(label_test_folder, exist_ok=True)
     os.makedirs(label_train_folder, exist_ok=True)
 
-    ct_files = [os.path.join(source_folder, f, 'ct.nii.gz') for f in os.listdir(source_folder) if f !='overview']
+    ct_files = [os.path.join(source_folder, f, 'ct.nii.gz') for f in os.listdir(source_folder) if f != 'overview']
 
-    ct_train_files, ct_test_files = train_test_split(ct_files,  test_proportion=0.1)
+    ct_train_files, ct_test_files = train_test_split(ct_files, test_proportion=0.1)
 
     crop_2_block = True
     save_cropped_synthrad2023(ct_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
@@ -265,7 +257,6 @@ def remove_artifacts(in_file, out_path):
 
 
 def pad_and_concatenate_image(input_image_path, output_image_path):
-
     image = sitk.ReadImage(input_image_path)
     array = sitk.GetArrayFromImage(image)
 
@@ -293,7 +284,6 @@ def pad_and_concatenate_image(input_image_path, output_image_path):
 
 
 def iterator(in_path, out_path):
-
     os.makedirs(out_path, exist_ok=True)
     files = [os.path.join(in_path, f) for f in os.listdir(in_path) if f.endswith('0001.nii.gz')]
     for file_path in files:
@@ -301,8 +291,7 @@ def iterator(in_path, out_path):
         print('finished', file_path)
 
 
-def add_mask_synthrad2024(ct_image, mr_image,  mask):
-
+def add_mask_synthrad2024(ct_image, mr_image, mask):
     ct = sitk.GetArrayFromImage(ct_image)
     mr = sitk.GetArrayFromImage(mr_image)
     mask = sitk.GetArrayFromImage(mask)
@@ -317,7 +306,6 @@ def add_mask_synthrad2024(ct_image, mr_image,  mask):
 
 
 def pad_and_rescale(image):
-
     array = sitk.GetArrayFromImage(image)
 
     c, a, b = array.shape[0], array.shape[1], array.shape[2]
@@ -363,18 +351,18 @@ def pad_and_rescale(image):
 
 
 def image_process_synthrad2023(in_file, out_path):
-
     os.makedirs(os.path.join(out_path, os.path.basename(in_file)), exist_ok=True)
     ct_path = os.path.join(in_file, 'ct.nii.gz')
     mr_path = os.path.join(in_file, 'mr.nii.gz')
-    #mask_path = os.path.join(in_file, 'mask.nii.gz')
-    label_path = os.path.join('/misc/data/private/autoPET/synth2023_label', os.path.basename(in_file) + '_ct_label.nii.gz')
+    # mask_path = os.path.join(in_file, 'mask.nii.gz')
+    label_path = os.path.join('/misc/data/private/autoPET/synth2023_label',
+                              os.path.basename(in_file) + '_ct_label.nii.gz')
     ct_image = sitk.ReadImage(ct_path)
     mr_image = sitk.ReadImage(mr_path)
-    #mask = sitk.ReadImage(mask_path)
+    # mask = sitk.ReadImage(mask_path)
     label = sitk.ReadImage(label_path)
     # add mask
-    #masked_ct, masked_mr = add_mask_synthrad2024(ct_image, mr_image, mask)
+    # masked_ct, masked_mr = add_mask_synthrad2024(ct_image, mr_image, mask)
     # pad and rescale
     final_ct = pad_and_rescale(ct_image)
     final_mr = pad_and_rescale(mr_image)
@@ -387,9 +375,8 @@ def image_process_synthrad2023(in_file, out_path):
 
 
 def iterator_synthrad2023(in_path, out_path):
-
     os.makedirs(out_path, exist_ok=True)
-    files = [os.path.join(in_path, f) for f in os.listdir(in_path) if f !='overview']
+    files = [os.path.join(in_path, f) for f in os.listdir(in_path) if f != 'overview']
     for file_path in files:
         image_process_synthrad2023(file_path, out_path)
         print('finished', file_path)
@@ -410,15 +397,17 @@ if __name__ == '__main__':
     out_folder2 = '/misc/data/private/autoPET/Processed_SynthRad2024_raw_withoutmask'
     train_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/train'
     test_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/test'
+    train_folder4 = '/data/private/autoPET/autopet_3d_only_crop/train'
+    test_folder4 = '/data/private/autoPET/autopet_3d_only_crop/test'
 
     autopet = True
     if autopet:
         preprocess_raw = False
-        cut = True
+        crop = True
         if preprocess_raw:
             iterator(source_folder1, source_folder2)
-        if cut:
-            process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
+        if crop:
+            process_autopet_onlycrop(source_folder1, train_folder4, test_folder4, crop_size=(256, 256))
 
     sythrad2023 = False
     if sythrad2023:
@@ -428,8 +417,3 @@ if __name__ == '__main__':
             iterator_synthrad2023(source_folder3, out_folder2)
         if cut:
             process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
-
-
-
-
-
