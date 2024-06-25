@@ -4,11 +4,11 @@ import SimpleITK as sitk
 import numpy as np
 
 
-def crop_center(img, new_x, new_y):
+def crop_center(img, label, new_x, new_y):
     x, y, z = img.shape
     start_x = x // 2 - new_x // 2
     start_y = y // 2 - new_y // 2
-    return img[start_x:start_x + new_x, start_y:start_y + new_y, :]
+    return img[start_x:start_x + new_x, start_y:start_y + new_y, :], label[start_x:start_x + new_x, start_y:start_y + new_y, :]
 
 
 def crop_block(img, label, new_x, new_y, start_z, length):
@@ -66,6 +66,47 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
             nib.save(cropped_label, label_output_path)
             print('finished', img_output_path)
             print('finished', label_output_path)
+        else:
+            cropped_image, cropped_label = crop_center(img_data, label_data,  *crop_size)
+            if is_all_zero(cropped_image, cropped_label):
+                print("Array is all zeros. Skipping rescaling.")
+                continue
+            cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
+            name = os.path.basename(image_path).split('.')[0]
+            name = name.split('_')[0]
+            img_output_path = os.path.join(image_out_files, name + f'_{n}.' + 'nii.gz')
+            label_output_path = img_output_path.replace('ct', 'label')
+            nib.save(cropped_img, img_output_path)
+            cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
+            nib.save(cropped_label, label_output_path)
+            print('finished', img_output_path)
+            print('finished', label_output_path)
+            n += 1
+
+
+
+
+def process_images_autopet(source_folder, train_folder, test_folder, crop_size=(256, 256)):
+
+    ct_train_folder = os.path.join(train_folder, 'ct')
+    ct_test_folder = os.path.join(test_folder, 'ct')
+    label_train_folder = os.path.join(train_folder, 'label')
+    label_test_folder = os.path.join(test_folder, 'label')
+
+    os.makedirs(ct_train_folder, exist_ok=True)
+    os.makedirs(ct_test_folder, exist_ok=True)
+    os.makedirs(label_test_folder, exist_ok=True)
+    os.makedirs(label_train_folder, exist_ok=True)
+
+    ct_files = [os.path.join(source_folder, f) for f in os.listdir(source_folder) if f.endswith('0001.nii.gz')]
+
+    ct_train_files, ct_test_files = train_test_split(ct_files)
+
+    crop_2_block = True
+    save_cropped_autopet(ct_train_files, ct_train_folder, crop_size, crop_2_block=crop_2_block)
+    save_cropped_autopet(ct_test_files, ct_test_folder, crop_size, crop_2_block=crop_2_block)
+    print('all finished')
+
 
 
 def process_images_autopet(source_folder, train_folder, test_folder, crop_size=(256, 256)):
@@ -370,7 +411,7 @@ if __name__ == '__main__':
     train_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/train'
     test_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/test'
 
-    autopet = False
+    autopet = True
     if autopet:
         preprocess_raw = False
         cut = True
@@ -379,7 +420,7 @@ if __name__ == '__main__':
         if cut:
             process_images_autopet(source_folder2, train_folder2, test_folder2, crop_size=(256, 256))
 
-    sythrad2023 = True
+    sythrad2023 = False
     if sythrad2023:
         preprocess_raw = True
         cut = True

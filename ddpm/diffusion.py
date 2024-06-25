@@ -186,7 +186,7 @@ class LayerNorm(nn.Module):
 
 
 class SPADEGroupNorm3D(nn.Module):
-    def __init__(self, dim_out, label_nc=32, eps=1e-5, groups=8, dim_hidden=128):   # dim_hidden ????
+    def __init__(self, dim_out, label_nc=32, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
         super().__init__()
 
         self.norm = nn.GroupNorm(groups, dim_out, affine=False)
