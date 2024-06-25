@@ -17,7 +17,7 @@
 
 
 module load cuda
-pyenv activate myenv38
+pyenv activate myenv
 pip uninstall nvidia_cublas_cu11
 
 # Run your python code
