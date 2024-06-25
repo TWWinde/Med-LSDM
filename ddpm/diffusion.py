@@ -494,8 +494,6 @@ class Attention(nn.Module):
         return self.to_out(out)
 
 
-
-
 class Unet3D_SPADE(nn.Module):
     def __init__(
         self,
@@ -570,7 +568,7 @@ class Unet3D_SPADE(nn.Module):
 
         num_resolutions = len(in_out)
 
-        # block type
+        # block type  replaced by SDEResBlock and SDDResBlock
 
         block_klass = partial(ResnetBlock, groups=resnet_groups)
         block_klass_cond = partial(block_klass, time_emb_dim=cond_dim)
@@ -581,7 +579,7 @@ class Unet3D_SPADE(nn.Module):
             is_last = ind >= (num_resolutions - 1)
 
             self.downs.append(nn.ModuleList([
-                SDEResBlock(dim_in, dim_out),
+                SDEResBlock(dim_in, dim_out, time_emb_dim=cond_dim, groups=resnet_groups),
                 Residual(PreNorm(dim_out, SpatialLinearAttention(
                     dim_out, heads=attn_heads))) if use_sparse_linear_attn else nn.Identity(),
                 Residual(PreNorm(dim_out, temporal_attn(dim_out))),
@@ -589,7 +587,7 @@ class Unet3D_SPADE(nn.Module):
             ]))
 
         mid_dim = dims[-1]
-        self.mid_block1 = block_klass_cond(mid_dim, mid_dim)
+        self.mid_block1 = SDDResBlock(mid_dim, mid_dim)
 
         spatial_attn = EinopsToAndFrom(
             'b c f h w', 'b f (h w) c', Attention(mid_dim, heads=attn_heads))
@@ -598,13 +596,13 @@ class Unet3D_SPADE(nn.Module):
         self.mid_temporal_attn = Residual(
             PreNorm(mid_dim, temporal_attn(mid_dim)))
 
-        self.mid_block2 = block_klass_cond(mid_dim, mid_dim)
+        self.mid_block2 = SDDResBlock(mid_dim, mid_dim)
 
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out)):
             is_last = ind >= (num_resolutions - 1)
 
             self.ups.append(nn.ModuleList([
-                SDDResBlock(dim_in, dim_out),
+                SDDResBlock(dim_out * 2, dim_in, time_emb_dim=cond_dim, groups=resnet_groups),
                 Residual(PreNorm(dim_in, SpatialLinearAttention(
                     dim_in, heads=attn_heads))) if use_sparse_linear_attn else nn.Identity(),
                 Residual(PreNorm(dim_in, temporal_attn(dim_in))),
@@ -638,7 +636,6 @@ class Unet3D_SPADE(nn.Module):
         cond=None,
         null_cond_prob=0.,
         focus_present_mask=None,
-        # probability at which a given batch sample will focus on the present (0. is all off, 1. is completely arrested attention across time)
         prob_focus_present=0.
     ):
         assert not (self.has_cond and not exists(cond) ), 'cond must be passed in if cond_dim specified'
@@ -691,8 +688,6 @@ class Unet3D_SPADE(nn.Module):
 
         x = torch.cat((x, r), dim=1)
         return self.final_conv(x)
-
-
 
 
 # model
