@@ -75,7 +75,7 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
             cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
             name = os.path.basename(image_path).split('.')[0]
             name = name.split('_')[0]
-            os.makedirs(os.path.join(image_out_files, name))
+            os.makedirs(os.path.join(image_out_files, name), exist_ok=True)
             img_output_path = os.path.join(image_out_files, name, 'ct.nii.gz')
             label_output_path = img_output_path.replace(image_out_files, name, 'label.nii.gz')
             nib.save(cropped_img, img_output_path)
