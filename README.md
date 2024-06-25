@@ -1,9 +1,8 @@
-# Medical Diffusion
+# 3D Semantic Medical Images Synthesis via Latent Diffusion 
 
-This repository contains the code to our paper "Medical Diffusion: Denoising Diffusion Probabilistic Models for 3D Medical Image Synthesis"
-(see https://arxiv.org/abs/2211.03364).
+This repository contains the code to my Master Thesis
 
-![Generated Samples by our Medical Diffusion model](assets/generated_samples.gif)
+
 
 # System Requirements
 This code has been tested on Ubuntu 20.04 and an NVIDIA Quadro RTX 6000 GPU. Furthermore it was developed using Python v3.8.
@@ -61,25 +60,3 @@ python train/train_ddpm.py model=ddpm dataset=default model.results_folder_postf
 Where you again need to specify the path to the VQ-GAN checkpoint from before (e.g. ```model.vqgan_ckpt='/home/<user>/Desktop/medicaldiffusion/checkpoints/vq_gan/DEFAULT/own_dataset/lightning_logs/version_0/checkpoints/latest_checkpoint.ckpt'```)
 
 
-# Citation
-To cite our work, please use
-```
-@misc{https://doi.org/10.48550/arxiv.2211.03364,
-  doi = {10.48550/ARXIV.2211.03364},
-  url = {https://arxiv.org/abs/2211.03364},
-  author = {Khader, Firas and Mueller-Franzes, Gustav and Arasteh, Soroosh Tayebi and Han, Tianyu and Haarburger, Christoph and Schulze-Hagen, Maximilian and Schad, Philipp and Engelhardt, Sandy and Baessler, Bettina and Foersch, Sebastian and Stegmaier, Johannes and Kuhl, Christiane and Nebelung, Sven and Kather, Jakob Nikolas and Truhn, Daniel},
-  title = {Medical Diffusion - Denoising Diffusion Probabilistic Models for 3D Medical Image Generation},
-  publisher = {arXiv},
-  year = {2022},
-}
-```
-
-
-# Acknowledgement
-This code is heavily build on the following repositories:
-
-(1) https://github.com/SongweiGe/TATS
-
-(2) https://github.com/lucidrains/denoising-diffusion-pytorch
-
-(3) https://github.com/lucidrains/video-diffusion-pytorch
