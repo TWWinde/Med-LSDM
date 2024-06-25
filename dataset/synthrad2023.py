@@ -60,7 +60,7 @@ class Transform:
             target_d = self.target_depth
 
             d_start = np.random.randint(0, d - target_d + 1)
-            cropped_img = img[:, d_start:d_start + target_d, :, :]
+            cropped_img = img[:, :, d_start:d_start + target_d]
 
             return cropped_img
 
