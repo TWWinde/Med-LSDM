@@ -5,7 +5,7 @@ This repository contains the code to my Master Thesis
 
 
 # System Requirements
-This code has been tested on Ubuntu 20.04 and an NVIDIA Quadro RTX 6000 GPU. Furthermore it was developed using Python v3.8.
+This code has been tested on Ubuntu 20.04 and an NVIDIA A6000 GPU. Furthermore it was developed using Python v3.8.
 
 # Setup
 In order to run our model, we suggest you create a virtual environment 
