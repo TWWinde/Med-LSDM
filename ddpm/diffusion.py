@@ -664,24 +664,22 @@ class Unet3D_SPADE(nn.Module):
 
         h = []
 
-        for block1, block2, spatial_attn, temporal_attn, downsample in self.downs:
-            x = block1(x, t)
-            x = block2(x, t)
+        for block, spatial_attn, temporal_attn, downsample in self.downs:
+
+            x = block(x, t)
             x = spatial_attn(x)
             x = temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
             h.append(x)
             x = downsample(x)
 
-        x = self.mid_block1(x, t)
+        x = self.mid_block1(x, seg, t)
         x = self.mid_spatial_attn(x)
-        x = self.mid_temporal_attn(
-            x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
-        x = self.mid_block2(x, t)
+        x = self.mid_temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
+        x = self.mid_block2(x, seg, t)
 
-        for block1, block2, spatial_attn, temporal_attn, upsample in self.ups:
+        for block, spatial_attn, temporal_attn, upsample in self.ups:
             x = torch.cat((x, h.pop()), dim=1)
-            x = block1(x, t)
-            x = block2(x, t)
+            x = block(x, seg, t)
             x = spatial_attn(x)
             x = temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
             x = upsample(x)
