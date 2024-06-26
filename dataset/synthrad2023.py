@@ -4,7 +4,8 @@ from torch.utils.data import Dataset, DataLoader
 import torchio as tio
 import os
 import nibabel as nib
-
+import random
+from torchvision import transforms as TR
 
 def preprocess_input(opt, data, test=False):
     data['label'] = data['label'].long()
@@ -35,7 +36,6 @@ class Transform:
         self.label = label
 
     def normalization(self, data):
-        print('datasize', data.shape)
         arr_min = data.min()
         arr_max = data.max()
         data_normalized = (data - arr_min) / (arr_max - arr_min)
@@ -46,8 +46,6 @@ class Transform:
         h, w, d = img.shape
 
         if self.label:
-            print(img.shape)
-            print(seg.shape)
             assert img.shape == seg.shape
             target_d = self.target_depth
 
@@ -156,15 +154,20 @@ class SynthRAD2023Dataset(Dataset):
             img = img.get_fdata()
             label = label.get_fdata()
             img, label = self.transform(img, label)
-            img = torch.from_numpy(img).float().permute(-1, 0, 1)
-            label = torch.from_numpy(label).float().permute(-1, 0, 1)
+            img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
+            label = torch.from_numpy(label).unsqueeze(0).float().permute(0, -1, 1, 2)
+            if random.random() < 0.5:
+                img = TR.functional.hflip(img)
+                label = TR.functional.hflip(label)
 
             return {'image': img, 'label': label}
         else:
             img = nib.load(self.mr_paths[idx])
             img = img.get_fdata()
             img = self.transform(img)
-            img = torch.from_numpy(img).float().permute(-1, 0, 1)
+            img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
+            if random.random() < 0.5:
+                img = TR.functional.hflip(img)
 
             return {'image': img}
 
