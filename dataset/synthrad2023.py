@@ -159,6 +159,10 @@ class SynthRAD2023Dataset(Dataset):
             if random.random() < 0.5:
                 img = TR.functional.hflip(img)
                 label = TR.functional.hflip(label)
+            if random.random() < 0.5:
+                angle = random.choice([90, 180, 270])
+                img = TR.functional.rotate(img, angle)
+                label = TR.functional.rotate(label, angle)
 
             return {'image': img, 'label': label}
         else:
@@ -168,6 +172,9 @@ class SynthRAD2023Dataset(Dataset):
             img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
             if random.random() < 0.5:
                 img = TR.functional.hflip(img)
+            if random.random() < 0.5:
+                angle = random.choice([90, 180, 270])
+                img = TR.functional.rotate(img, angle)
 
             return {'image': img}
 
