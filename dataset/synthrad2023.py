@@ -7,6 +7,7 @@ import nibabel as nib
 import random
 from torchvision import transforms as TR
 
+
 def preprocess_input(opt, data, test=False):
     data['label'] = data['label'].long()
     if opt.gpu_ids != "-1":
@@ -28,6 +29,7 @@ def preprocess_input(opt, data, test=False):
         return data['image'], data['ct_image'], input_semantics
     else:
         return data['image'], input_semantics
+
 
 
 class Transform:
@@ -62,6 +64,26 @@ class Transform:
 
             return cropped_img
 
+    def pad_and_concatenate_image(self, array):
+
+        c, a, b = array.shape[0], array.shape[1], array.shape[2]
+
+        max_length = max(a, b)
+
+        if a < max_length:
+            pad1 = np.tile(array[:, 0:1, :], (1, (max_length - a) // 2, 1))
+            pad2 = np.tile(array[:, -1:, :], (1, (max_length - a) - (max_length - a) // 2, 1))
+            padded_array = np.concatenate((pad1, array, pad2), axis=1)
+        else:
+            padded_array = array
+
+        if b < max_length:
+            pad1 = np.tile(padded_array[:, :, 0:1], (1, 1, (max_length - b) // 2))
+            pad2 = np.tile(padded_array[:, :, -1:], (1, 1, (max_length - b) - (max_length - b) // 2))
+            padded_array = np.concatenate((pad1, padded_array, pad2), axis=2)
+
+        return padded_array
+
     def __call__(self, img, seg=None):
         if self.label:
             img, seg = self.randomdepthcrop(img, seg)
@@ -73,44 +95,6 @@ class Transform:
             final_img = self.normalization(img)
 
             return final_img
-
-
-PREPROCESSING_TRANSORMS = tio.Compose([
-    tio.RescaleIntensity(out_min_max=(-1, 1)),
-    tio.CropOrPad(target_shape=(256, 256, 32)),
-
-    tio.Lambda(lambda x: x.float())
-])
-
-TRAIN_TRANSFORMS = tio.Compose([
-    # tio.RandomAffine(scales=(0.03, 0.03, 0), degrees=(
-    # 0, 0, 3), translation=(4, 4, 0)),
-    tio.RandomFlip(axes=(1), flip_probability=0.5),
-])
-
-
-class SynthRAD2023Dataset1(Dataset):
-    def __init__(self, root_dir: str):
-        super().__init__()
-        self.root_dir = root_dir
-        self.preprocessing = PREPROCESSING_TRANSORMS
-        self.transforms = TRAIN_TRANSFORMS
-        self.file_paths = self.get_data_files()
-
-    def get_data_files(self):
-        subfolder_names = os.listdir(self.root_dir)
-        folder_names = [os.path.join(
-            self.root_dir, subfolder, 'mr.nii.gz') for subfolder in subfolder_names ] # if subfolder.endswith('.nii.gz')]
-        return folder_names
-
-    def __len__(self):
-        return len(self.file_paths)
-
-    def __getitem__(self, idx: int):
-        img = tio.ScalarImage(self.file_paths[idx])
-        img = self.preprocessing(img)
-        img = self.transforms(img)
-        return {'data': img.data.permute(0, -1, 1, 2)}
 
 
 class SynthRAD2023Dataset(Dataset):
@@ -147,6 +131,19 @@ class SynthRAD2023Dataset(Dataset):
     def __len__(self):
         return len(self.mr_paths)
 
+    def resize(self, img, label=None):
+
+        if self.sem_map:
+            assert img.shape == label.shape
+            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
+
+            return img, label
+
+        else:
+            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
+
+            return img
+
     def __getitem__(self, idx: int):
         if self.sem_map:
             img = nib.load(self.mr_paths[idx])
@@ -170,6 +167,7 @@ class SynthRAD2023Dataset(Dataset):
             img = img.get_fdata()
             img = self.transform(img)
             img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
+
             if random.random() < 0.5:
                 img = TR.functional.hflip(img)
             if random.random() < 0.5:
