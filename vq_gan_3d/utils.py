@@ -119,6 +119,7 @@ def adopt_weight(global_step, threshold=0, value=0.):
     return weight
 
 
+###########
 def save_video_grid(video, fname, nrow=None, fps=6):
     b, c, t, h, w = video.shape
     video = video.permute(0, 2, 3, 4, 1)
