@@ -96,7 +96,7 @@ class Transform:
             return final_img
 
 
-class AutoPET(Dataset):
+class AutoPETDataset(Dataset):
     def __init__(self, root_dir: str, sem_map=False):
         super().__init__()
         self.root_dir = root_dir
