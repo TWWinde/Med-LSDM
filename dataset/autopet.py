@@ -63,6 +63,21 @@ class Transform:
 
             return cropped_img
 
+    def crop_center(self, img, seg=None):
+
+        new_x = self.size[0]
+        new_y = self.size[1]
+        x, y, z = img.shape
+        start_x = x // 2 - new_x // 2
+        start_y = y // 2 - new_y // 2
+        if self.label:
+            assert img.shape == seg.shape
+            return img[start_x:(start_x + new_x), start_y:(start_y + new_y), :], seg[start_x:(start_x + new_x),
+                                                                                 start_y:(start_y + new_y), :]
+        else:
+
+            return img[start_x:(start_x + new_x), start_y:(start_y + new_y), :]
+
     def resize_3d(self, img, label=None):
 
         if self.sem_map:
@@ -77,29 +92,10 @@ class Transform:
 
             return img
 
-    def pad_and_concatenate_image(self, array):
-
-        c, a, b = array.shape[0], array.shape[1], array.shape[2]
-
-        max_length = max(a, b)
-
-        if a < max_length:
-            pad1 = np.tile(array[:, 0:1, :], (1, (max_length - a) // 2, 1))
-            pad2 = np.tile(array[:, -1:, :], (1, (max_length - a) - (max_length - a) // 2, 1))
-            padded_array = np.concatenate((pad1, array, pad2), axis=1)
-        else:
-            padded_array = array
-
-        if b < max_length:
-            pad1 = np.tile(padded_array[:, :, 0:1], (1, 1, (max_length - b) // 2))
-            pad2 = np.tile(padded_array[:, :, -1:], (1, 1, (max_length - b) - (max_length - b) // 2))
-            padded_array = np.concatenate((pad1, padded_array, pad2), axis=2)
-
-        return padded_array
-
     def __call__(self, img, seg=None):
         if self.label:
             img, seg = self.randomdepthcrop(img, seg)
+            img, seg = self.crop_center(img, seg)
             if img.shape != self.size:
                 img, seg = self.resize_3d(img, seg)
             final_img = self.normalization(img)
@@ -107,6 +103,7 @@ class Transform:
             return final_img, seg
         else:
             img = self.randomdepthcrop(img)
+            img = self.crop_center(img)
             if img.shape != self.size:
                 img = self.resize_3d(img)
 
@@ -141,8 +138,8 @@ class AutoPETDataset(Dataset):
             return ct_names, label_names
         else:
             subfolder_names = os.listdir(self.root_dir)
-            ct_names = [os.path.join(self.root_dir, subfolder, 'ct.nii.gz') for subfolder in subfolder_names
-                        if os.path.exists(os.path.join(self.root_dir, subfolder, 'ct.nii.gz'))]
+            ct_names = [os.path.join(self.root_dir, subfolder) for subfolder in subfolder_names
+                        if subfolder.endswith('0001.nii.gz')]
 
             return ct_names
 
@@ -150,10 +147,10 @@ class AutoPETDataset(Dataset):
         return len(self.ct_paths)
 
     def __getitem__(self, idx: int):
+        img = nib.load(self.ct_paths[idx])
+        img = img.get_fdata()
         if self.sem_map:
-            img = nib.load(self.ct_paths[idx])
             label = nib.load(self.label_paths[idx])
-            img = img.get_fdata()
             label = label.get_fdata()
             img, label = self.transform(img, label)
             img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
@@ -168,8 +165,6 @@ class AutoPETDataset(Dataset):
 
             return {'image': img, 'label': label}
         else:
-            img = nib.load(self.ct_paths[idx])
-            img = img.get_fdata()
             img = self.transform(img)
             img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
 
