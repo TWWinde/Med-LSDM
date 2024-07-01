@@ -10,6 +10,7 @@
 #SBATCH --nodes=1
 #SBATCH --gpus=1
 #SBATCH --qos=batch
+#SBATCH --nodelist=linse20
 # SBATCH --nodelist=linse21
 # SBATCH --qos=shortbatch
 # SBATCH --partition=highperf
