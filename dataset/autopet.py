@@ -32,9 +32,10 @@ def preprocess_input(opt, data, test=False):
 
 
 class Transform:
-    def __init__(self, target_depth=32, label=False):
+    def __init__(self, target_depth=32, label=False, size=(256, 256, 32)):
         self.target_depth = target_depth
         self.label = label
+        self.size = size
 
     def normalization(self, data):
         arr_min = data.min()
@@ -50,7 +51,7 @@ class Transform:
             assert img.shape == seg.shape
             target_d = self.target_depth
 
-            d_start = np.random.randint(2, d - target_d + 1)
+            d_start = np.random.randint(2, d - target_d - 1)
             cropped_img = img[:, :, d_start:d_start + target_d]
             cropped_seg = seg[:, :, d_start:d_start + target_d]
 
@@ -58,10 +59,24 @@ class Transform:
         else:
             target_d = self.target_depth
 
-            d_start = np.random.randint(0, d - target_d + 1)
+            d_start = np.random.randint(2, d - target_d - 1)
             cropped_img = img[:, :, d_start:d_start + target_d]
 
             return cropped_img
+
+    def resize_3d(self, img, label=None):
+
+        if self.sem_map:
+            assert img.shape == label.shape
+            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
+            torch.nn.functional.interpolate(label, size=(32, 256, 256), mode='bilinear', align_corners=False)
+
+            return img, label
+
+        else:
+            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
+
+            return img
 
     def pad_and_concatenate_image(self, array):
 
@@ -86,11 +101,16 @@ class Transform:
     def __call__(self, img, seg=None):
         if self.label:
             img, seg = self.randomdepthcrop(img, seg)
+            if img.shape != self.size:
+                img, seg = self.resize_3d(img, seg)
             final_img = self.normalization(img)
 
             return final_img, seg
         else:
             img = self.randomdepthcrop(img)
+            if img.shape != self.size:
+                img = self.resize_3d(img)
+
             final_img = self.normalization(img)
 
             return final_img
@@ -130,19 +150,6 @@ class AutoPETDataset(Dataset):
     def __len__(self):
         return len(self.ct_paths)
 
-    def resize(self, img, label=None):
-
-        if self.sem_map:
-            assert img.shape == label.shape
-            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
-
-            return img, label
-
-        else:
-            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
-
-            return img
-
     def __getitem__(self, idx: int):
         if self.sem_map:
             img = nib.load(self.ct_paths[idx])
@@ -169,6 +176,8 @@ class AutoPETDataset(Dataset):
 
             if random.random() < 0.5:
                 img = TR.functional.hflip(img)
+            if random.random() > 0.5:
+                img = TR.functional.vflip(img)
             if random.random() < 0.5:
                 angle = random.choice([90, 180, 270])
                 img = TR.functional.rotate(img, angle)
