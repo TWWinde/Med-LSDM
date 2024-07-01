@@ -30,7 +30,6 @@ def preprocess_input(opt, data, test=False):
         return data['image'], input_semantics
 
 
-
 class Transform:
     def __init__(self, target_depth=32, label=False, size=(256, 256, 32)):
         self.target_depth = target_depth
