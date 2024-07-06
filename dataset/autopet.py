@@ -106,6 +106,7 @@ class Transform:
             final_img = self.normalization(img)
             seg = self.one_hot_encode(seg)
             final_img = torch.tensor(final_img).unsqueeze(0).permute(0, -1, 1, 2)
+            print(seg.shape)
             seg = seg.unsqueeze(0).permute(0, -1, 1, 2)
             print(seg.shape)
 
