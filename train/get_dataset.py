@@ -3,6 +3,8 @@ from torch.utils.data import WeightedRandomSampler
 
 
 def get_dataset(cfg):
+    print(cfg.dataset.name)
+    print(cfg.model)
     if cfg.dataset.name == 'MRNet':
         train_dataset = MRNetDataset(
             root_dir=cfg.dataset.root_dir, task=cfg.dataset.task, plane=cfg.dataset.plane, split='train')
@@ -63,7 +65,7 @@ def get_dataset(cfg):
         return train_dataset, val_dataset, sampler
 
     if cfg.dataset.name == 'AutoPET':
-        print(cfg.model )
+
         if cfg.model == 'vq_gan_3d':
             train_dataset = AutoPETDataset(
                 root_dir=cfg.dataset.root_dir)
