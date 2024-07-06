@@ -94,7 +94,7 @@ class Transform:
 
         label = torch.from_numpy(label).long()
         one_hot = torch.nn.functional.one_hot(label, num_classes=self.num_classes)
-        return one_hot.float()
+        return one_hot
 
     def __call__(self, img, seg=None):
         if self.label:
@@ -104,9 +104,8 @@ class Transform:
                 img, seg = self.resize_3d(img, seg)
             final_img = self.normalization(img)
             seg = self.one_hot_encode(seg)
-            final_img = torch.tensor(final_img).unsqueeze(0).permute(0, -1, 1, 2)
-            seg = seg.permute(0, -1, 1, 2)
-            print(seg.shape)
+            final_img = torch.tensor(final_img).unsqueeze(0).permute(0, -1, 1, 2).float()
+            seg = seg.permute(0, -1, 1, 2).float()
 
             return final_img, seg
         else:
