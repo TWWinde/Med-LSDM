@@ -159,7 +159,6 @@ class AutoPETDataset(Dataset):
         else:
             img = self.transform(img)
             img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
-            print(img.shape)
 
             if random.random() < 0.5:
                 img = TR.functional.hflip(img)
@@ -170,6 +169,13 @@ class AutoPETDataset(Dataset):
                 img = TR.functional.rotate(img, angle)
 
             return {'image': img}
+
+
+
+
+
+
+
 
 
 PREPROCESSING_TRANSORMS = tio.Compose([
