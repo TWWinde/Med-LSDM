@@ -5,7 +5,7 @@ import os
 import nibabel as nib
 import random
 from torchvision import transforms as TR
-
+import torchio as tio
 
 def preprocess_input(opt, data, test=False):
     data['label'] = data['label'].long()
@@ -45,52 +45,47 @@ class Transform:
 
     def randomdepthcrop(self, img, seg=None):
         h, w, d = img.shape
+        target_d = self.target_depth
+
+        if d <= target_d:
+            raise ValueError("目标深度大于输入图像深度。")
+
+        d_start = np.random.randint(2, d - target_d - 1)
+        cropped_img = img[:, :, d_start:d_start + target_d]
 
         if self.label:
             assert img.shape == seg.shape
-            target_d = self.target_depth
-
-            d_start = np.random.randint(2, d - target_d - 1)
-            cropped_img = img[:, :, d_start:d_start + target_d]
             cropped_seg = seg[:, :, d_start:d_start + target_d]
-
             return cropped_img, cropped_seg
         else:
-            target_d = self.target_depth
-
-            d_start = np.random.randint(2, d - target_d - 1)
-            cropped_img = img[:, :, d_start:d_start + target_d]
-
             return cropped_img
 
     def crop_center(self, img, seg=None):
-
-        new_x = self.size[0]
-        new_y = self.size[1]
+        new_x, new_y, new_z = self.size
         x, y, z = img.shape
         start_x = x // 2 - new_x // 2
         start_y = y // 2 - new_y // 2
+        start_z = z // 2 - new_z // 2
+
+        cropped_img = img[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + new_z]
+
         if self.label:
             assert img.shape == seg.shape
-            return img[start_x:(start_x + new_x), start_y:(start_y + new_y), :], seg[start_x:(start_x + new_x),
-                                                                                 start_y:(start_y + new_y), :]
+            cropped_seg = seg[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + new_z]
+            return cropped_img, cropped_seg
         else:
-
-            return img[start_x:(start_x + new_x), start_y:(start_y + new_y), :]
+            return cropped_img
 
     def resize_3d(self, img, label=None):
+        img = torch.tensor(img).unsqueeze(0).unsqueeze(0).float()
+        resized_img = torch.nn.functional.interpolate(img, size=self.size, mode='trilinear', align_corners=False).squeeze(0).squeeze(0)
 
-        if self.sem_map:
-            assert img.shape == label.shape
-            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
-            torch.nn.functional.interpolate(label, size=(32, 256, 256), mode='bilinear', align_corners=False)
-
-            return img, label
-
+        if self.label and label is not None:
+            label = torch.tensor(label).unsqueeze(0).unsqueeze(0).float()
+            resized_label = torch.nn.functional.interpolate(label, size=self.size, mode='nearest').squeeze(0).squeeze(0)
+            return resized_img.numpy(), resized_label.numpy()
         else:
-            torch.nn.functional.interpolate(img, size=(32, 256, 256), mode='bilinear', align_corners=False)
-
-            return img
+            return resized_img.numpy()
 
     def __call__(self, img, seg=None):
         if self.label:
@@ -99,16 +94,13 @@ class Transform:
             if img.shape != self.size:
                 img, seg = self.resize_3d(img, seg)
             final_img = self.normalization(img)
-
             return final_img, seg
         else:
             img = self.randomdepthcrop(img)
             img = self.crop_center(img)
             if img.shape != self.size:
                 img = self.resize_3d(img)
-
             final_img = self.normalization(img)
-
             return final_img
 
 
@@ -167,6 +159,7 @@ class AutoPETDataset(Dataset):
         else:
             img = self.transform(img)
             img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
+            print(img.shape)
 
             if random.random() < 0.5:
                 img = TR.functional.hflip(img)
@@ -179,3 +172,71 @@ class AutoPETDataset(Dataset):
             return {'image': img}
 
 
+PREPROCESSING_TRANSORMS = tio.Compose([
+    tio.RescaleIntensity(out_min_max=(-1, 1)),
+    tio.CropOrPad(target_shape=(256, 256, 32)),
+
+    tio.Lambda(lambda x: x.float())
+])
+
+TRAIN_TRANSFORMS = tio.Compose([
+    # tio.RandomAffine(scales=(0.03, 0.03, 0), degrees=(
+    # 0, 0, 3), translation=(4, 4, 0)),
+    tio.RandomFlip(axes=(1), flip_probability=0.5),
+])
+
+
+
+
+class AutoPETDataset1(Dataset):
+    def __init__(self, root_dir: str, sem_map=False):
+        super().__init__()
+        self.root_dir = root_dir
+        self.sem_map = sem_map
+        if self.sem_map:
+            self.transform = Transform(target_depth=32, label=True)
+            self.mr_paths, self.label_paths = self.get_data_files()
+        else:
+            self.transform = Transform(target_depth=32, label=False)
+            self.mr_paths = self.get_data_files()
+
+    def get_data_files(self):
+        if self.sem_map:
+            mr_names, label_names = [], []
+            subfolder_names = os.listdir(self.root_dir)
+            for item in subfolder_names:
+                mr_path = os.path.join(self.root_dir, item, 'mr.nii.gz')
+                label_path = os.path.join(self.root_dir, item, 'label.nii.gz')
+                if os.path.exists(mr_path) and os.path.exists(label_path):
+                    mr_names.append(mr_path)
+                    label_names.append(label_path)
+
+            return mr_names, label_names
+        else:
+            subfolder_names = os.listdir(self.root_dir)
+            mr_names = [os.path.join(self.root_dir, subfolder, 'mr.nii.gz') for subfolder in subfolder_names
+                        if os.path.exists(os.path.join(self.root_dir, subfolder, 'mr.nii.gz'))]
+
+            return mr_names
+
+    def __len__(self):
+        return len(self.mr_paths)
+
+    def __getitem__(self, idx: int):
+        if self.sem_map:
+            img = nib.load(self.mr_paths[idx])
+            label = nib.load(self.label_paths[idx])
+            img = img.get_fdata()
+            label = label.get_fdata()
+            img, label = self.transform(img, label)
+            img = torch.from_numpy(img).float().permute(-1, 0, 1)
+            label = torch.from_numpy(label).float().permute(-1, 0, 1)
+
+            return {'image': img, 'label': label}
+        else:
+            img = nib.load(self.mr_paths[idx])
+            img = img.get_fdata()
+            img = self.transform(img)
+            img = torch.from_numpy(img).float().permute(-1, 0, 1)
+
+            return {'image': img}

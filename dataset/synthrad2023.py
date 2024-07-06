@@ -10,13 +10,7 @@ from torchvision import transforms as TR
 
 def preprocess_input(opt, data, test=False):
     data['label'] = data['label'].long()
-    if opt.gpu_ids != "-1":
-        data['label'] = data['label'].cuda()
-        if not test:
-            data['image'] = data['image'].cuda()
-        else:
-            data['image'] = data['image'].cuda()
-            data['ct_image'] = data['ct_image'].cuda()
+    data['label'] = data['label'].cuda()
     label_map = data['label']
     bs, _, h, w = label_map.size()
     nc = opt.semantic_nc
@@ -29,7 +23,6 @@ def preprocess_input(opt, data, test=False):
         return data['image'], data['ct_image'], input_semantics
     else:
         return data['image'], input_semantics
-
 
 
 class Transform:
