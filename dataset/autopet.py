@@ -35,6 +35,7 @@ class Transform:
         self.target_depth = target_depth
         self.label = label
         self.size = size
+        self.num_classes = 37
 
     def normalization(self, data):
         arr_min = data.min()
@@ -48,7 +49,7 @@ class Transform:
         target_d = self.target_depth
 
         if d <= target_d:
-            raise ValueError("目标深度大于输入图像深度。")
+            raise ValueError("target depth id bigger than image depth")
 
         d_start = np.random.randint(2, d - target_d - 1)
         cropped_img = img[:, :, d_start:d_start + target_d]
@@ -87,6 +88,15 @@ class Transform:
         else:
             return resized_img.numpy()
 
+    def one_hot_encode(self, label):
+        if self.num_classes is None:
+            raise ValueError("have to apply num_classes")
+
+        label = torch.from_numpy(label).long()
+        one_hot = torch.nn.functional.one_hot(label, num_classes=self.num_classes)
+
+        return one_hot.float()
+
     def __call__(self, img, seg=None):
         if self.label:
             img, seg = self.randomdepthcrop(img, seg)
@@ -94,6 +104,11 @@ class Transform:
             if img.shape != self.size:
                 img, seg = self.resize_3d(img, seg)
             final_img = self.normalization(img)
+            seg = self.one_hot_encode(seg)
+            final_img = torch.tensor(final_img).unsqueeze(0).permute(0, -1, 1, 2)
+            seg = seg.unsqueeze(0).permute(0, -1, 1, 2)
+            print(seg.shape)
+
             return final_img, seg
         else:
             img = self.randomdepthcrop(img)
@@ -101,6 +116,9 @@ class Transform:
             if img.shape != self.size:
                 img = self.resize_3d(img)
             final_img = self.normalization(img)
+
+            final_img = torch.from_numpy(final_img).unsqueeze(0).float().permute(0, -1, 1, 2)
+
             return final_img
 
 
@@ -143,8 +161,7 @@ class AutoPETDataset(Dataset):
             label = nib.load(self.label_paths[idx])
             label = label.get_fdata()
             img, label = self.transform(img, label)
-            img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
-            label = torch.from_numpy(label).unsqueeze(0).float().permute(0, -1, 1, 2)
+
             if random.random() < 0.5:
                 img = TR.functional.hflip(img)
                 label = TR.functional.hflip(label)
