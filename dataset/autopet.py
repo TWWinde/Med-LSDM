@@ -94,13 +94,13 @@ class Transform:
 
         label = torch.from_numpy(label).long()
         one_hot = torch.nn.functional.one_hot(label, num_classes=self.num_classes)
-        print(one_hot.shape)
         return one_hot.float()
 
     def __call__(self, img, seg=None):
         if self.label:
             img, seg = self.randomdepthcrop(img, seg)
             img, seg = self.crop_center(img, seg)
+            print(seg.shape)
             if img.shape != self.size:
                 img, seg = self.resize_3d(img, seg)
             final_img = self.normalization(img)
