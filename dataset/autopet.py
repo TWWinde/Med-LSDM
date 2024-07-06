@@ -117,21 +117,19 @@ class AutoPETDataset(Dataset):
             self.ct_paths = self.get_data_files()
 
     def get_data_files(self):
+        subfolder_names = os.listdir(self.root_dir)
+        ct_names = [os.path.join(self.root_dir, subfolder) for subfolder in subfolder_names
+                    if subfolder.endswith('0001.nii.gz')]
         if self.sem_map:
-            ct_names, label_names = [], []
-            subfolder_names = os.listdir(self.root_dir)
-            for item in subfolder_names:
-                ct_path = os.path.join(self.root_dir, item, 'ct.nii.gz')
-                label_path = os.path.join(self.root_dir, item, 'label.nii.gz')
+            label_names, ct_names_ = [], []
+            for ct_path in ct_names:
+                label_path = ct_path.replace('0001.nii.gz', '0002.nii.gz')
                 if os.path.exists(ct_path) and os.path.exists(label_path):
-                    ct_names.append(ct_path)
+                    ct_names_.append(ct_path)
                     label_names.append(label_path)
 
-            return ct_names, label_names
+            return ct_names_, label_names
         else:
-            subfolder_names = os.listdir(self.root_dir)
-            ct_names = [os.path.join(self.root_dir, subfolder) for subfolder in subfolder_names
-                        if subfolder.endswith('0001.nii.gz')]
 
             return ct_names
 

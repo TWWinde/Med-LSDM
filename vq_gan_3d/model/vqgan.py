@@ -106,8 +106,8 @@ class VQGAN(pl.LightningModule):
         return self.decoder(h)
 
     def forward(self, x, optimizer_idx=None, log_image=False):
-        B, C, T, H, W = x.shape
-        print(x.shape)
+        B, C, T, H, W = x.shape  # ([2, 1, 32, 256, 256])
+
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)
         x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']))
