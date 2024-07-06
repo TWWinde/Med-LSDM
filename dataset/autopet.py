@@ -94,7 +94,7 @@ class Transform:
 
         label = torch.from_numpy(label).long()
         one_hot = torch.nn.functional.one_hot(label, num_classes=self.num_classes)
-
+        print(one_hot.shape)
         return one_hot.float()
 
     def __call__(self, img, seg=None):
