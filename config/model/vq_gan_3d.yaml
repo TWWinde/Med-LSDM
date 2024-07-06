@@ -1,7 +1,7 @@
 seed: 520
 batch_size: 2
 num_workers: 4
-
+name: vq_gan_3d
 gpus: 1
 accumulate_grad_batches: 1
 default_root_dir: /misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/
