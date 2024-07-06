@@ -100,14 +100,12 @@ class Transform:
         if self.label:
             img, seg = self.randomdepthcrop(img, seg)
             img, seg = self.crop_center(img, seg)
-            print(seg.shape)
             if img.shape != self.size:
                 img, seg = self.resize_3d(img, seg)
             final_img = self.normalization(img)
             seg = self.one_hot_encode(seg)
             final_img = torch.tensor(final_img).unsqueeze(0).permute(0, -1, 1, 2)
-            print(seg.shape)
-            seg = seg.unsqueeze(0).permute(0, -1, 1, 2)
+            seg = seg.permute(0, -1, 1, 2)
             print(seg.shape)
 
             return final_img, seg
