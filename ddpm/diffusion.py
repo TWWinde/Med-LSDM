@@ -186,7 +186,7 @@ class LayerNorm(nn.Module):
 
 
 class SPADEGroupNorm3D(nn.Module):
-    def __init__(self, dim_out, label_nc=32, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
+    def __init__(self, dim_out, label_nc=37, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
         super().__init__()
 
         self.norm = nn.GroupNorm(groups, dim_out, affine=False)
@@ -206,6 +206,9 @@ class SPADEGroupNorm3D(nn.Module):
         print(segmap.shape)
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
         print(segmap.shape)
+        #torch.Size([10, 512, 8, 8, 8])
+        #torch.Size([10, 256, 37, 256, 32])
+        #torch.Size([10, 256, 8, 8, 8])
         actv = self.mlp_shared(segmap)
         gamma = self.mlp_gamma(actv)
         beta = self.mlp_beta(actv)

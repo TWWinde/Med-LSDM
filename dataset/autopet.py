@@ -105,7 +105,7 @@ class Transform:
             final_img = self.normalization(img)
             seg = self.one_hot_encode(seg)
             final_img = torch.tensor(final_img).unsqueeze(0).permute(0, -1, 1, 2).float()
-            seg = seg.permute(0, -1, 1, 2).float()
+            seg = seg.float()   # torch.Size([10, 256, 37, 256, 32])
 
             return final_img, seg
         else:
