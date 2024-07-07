@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
-from ddpm import Unet3D, GaussianDiffusion, Trainer, Unet3D_SPADE
+from ddpm import Unet3D, GaussianDiffusion, Trainer, Unet3D_SPADE, SemanticGaussianDiffusion
 import hydra
 from omegaconf import DictConfig, open_dict
 from train.get_dataset import get_dataset
@@ -40,7 +40,7 @@ def run(cfg: DictConfig):
     else:
         raise ValueError(f"Model {cfg.model.denoising_fn} doesn't exist")
 
-    diffusion = GaussianDiffusion(
+    diffusion = SemanticGaussianDiffusion(
         model,
         vqgan_ckpt=cfg.model.vqgan_ckpt,
         image_size=cfg.model.diffusion_img_size,
@@ -51,6 +51,22 @@ def run(cfg: DictConfig):
         loss_type=cfg.model.loss_type,
         # objective=cfg.objective
     ).cuda()
+
+
+    """
+    diffusion = GaussianDiffusion(
+        model,
+        vqgan_ckpt=cfg.model.vqgan_ckpt,
+        image_size=cfg.model.diffusion_img_size,
+        num_frames=cfg.model.diffusion_depth_size,
+        channels=cfg.model.diffusion_num_channels,
+        timesteps=cfg.model.timesteps,
+        # sampling_timesteps=cfg.model.sampling_timesteps,
+        loss_type=cfg.model.loss_type,
+        # objective=cfg.objective
+        ).cuda()
+   
+    """
 
     train_dataset, *_ = get_dataset(cfg)
 
