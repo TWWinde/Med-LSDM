@@ -201,11 +201,10 @@ class SPADEGroupNorm3D(nn.Module):
         self.mlp_beta = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
 
     def forward(self, x, segmap):
-        x = self.norm(x) # torch.Size([10, 512, 8, 8, 8])
-        print(x.shape)
-        print(segmap.shape) # torch.Size([10, 37, 32, 256, 256])
+        x = self.norm(x)
+        # seg torch.Size([10, 37, 32, 256, 256])
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
-        print(segmap.shape)  # torch.Size([10, 37, 8, 8, 8])
+
         torch.Size([10, 512, 8, 8, 8])
         torch.Size([10, 37, 32, 256, 256])
         torch.Size([10, 37, 8, 8, 8])
