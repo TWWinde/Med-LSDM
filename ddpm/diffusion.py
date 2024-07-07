@@ -1509,7 +1509,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
         return loss
 
-    def forward(self, x, *args, **kwargs):
+    def forward(self, x, seg,  *args, **kwargs):
         if isinstance(self.vqgan, VQGAN):
             with torch.no_grad():
                 x = self.vqgan.encode(
@@ -1527,7 +1527,7 @@ class SemanticGaussianDiffusion(nn.Module):
                     f=self.num_frames, h=img_size, w=img_size)
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
 
-        return self.p_losses(x, t, *args, **kwargs)
+        return self.p_losses(x, seg, t, *args, **kwargs)
 
 
 # trainer class
