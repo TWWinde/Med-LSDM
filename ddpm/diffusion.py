@@ -202,8 +202,10 @@ class SPADEGroupNorm3D(nn.Module):
 
     def forward(self, x, segmap):
         x = self.norm(x)
-
+        print(x.shape)
+        print(segmap.shape)
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
+        print(segmap.shape)
         actv = self.mlp_shared(segmap)
         gamma = self.mlp_gamma(actv)
         beta = self.mlp_beta(actv)
