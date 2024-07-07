@@ -1754,11 +1754,15 @@ class Trainer(object):
 
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
-                data = next(self.dl)['image'].cuda()
+                #data = next(self.dl)['image'].cuda()
+                image = next(self.dl)['image'].cuda() #
+                label = next(self.dl)['label'].cuda() #
 
                 with autocast(enabled=self.amp):
                     loss = self.model(
-                        data,
+                        #data,
+                        image,  #
+                        label,  #
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
                     )
