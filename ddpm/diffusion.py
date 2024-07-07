@@ -222,7 +222,7 @@ class SDDResBlock(nn.Module):
     scale_shift for time embedding
 
     """
-    def __init__(self, dim, dim_out, time_emb_dim=None, groups=8):
+    def __init__(self, dim, dim_out, time_emb_dim=None, label_nc=37, groups=8):
         super().__init__()
         self.mlp = nn.Sequential(
             nn.SiLU(),
@@ -230,10 +230,11 @@ class SDDResBlock(nn.Module):
         ) if exists(time_emb_dim) else None
         self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
         self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
-        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=37, eps=1e-5, groups=groups)
-        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=37, eps=1e-5, groups=groups)
+        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=label_nc, eps=1e-5, groups=groups)
+        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=label_nc, eps=1e-5, groups=groups)
         self.act = nn.SiLU()
         self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
+
 
     def forward(self, x, seg, time_emb=None):
 
@@ -513,11 +514,13 @@ class Unet3D_SPADE(nn.Module):
         init_dim=None,
         init_kernel_size=7,
         use_sparse_linear_attn=True,
+        label_nc=37,
         block_type='resnet',
         resnet_groups=8
     ):
         super().__init__()
         self.channels = channels
+        self.label_nc = label_nc
 
         # temporal attention and its relative positional encoding
 
@@ -592,7 +595,7 @@ class Unet3D_SPADE(nn.Module):
             ]))
 
         mid_dim = dims[-1]
-        self.mid_block1 = SDDResBlock(mid_dim, mid_dim)
+        self.mid_block1 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc)
 
         spatial_attn = EinopsToAndFrom(
             'b c f h w', 'b f (h w) c', Attention(mid_dim, heads=attn_heads))
@@ -601,13 +604,13 @@ class Unet3D_SPADE(nn.Module):
         self.mid_temporal_attn = Residual(
             PreNorm(mid_dim, temporal_attn(mid_dim)))
 
-        self.mid_block2 = SDDResBlock(mid_dim, mid_dim)
+        self.mid_block2 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc)
 
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out)):
             is_last = ind >= (num_resolutions - 1)
 
             self.ups.append(nn.ModuleList([
-                SDDResBlock(dim_out * 2, dim_in, time_emb_dim=cond_dim, groups=resnet_groups),
+                SDDResBlock(dim_out * 2, dim_in, time_emb_dim=cond_dim, groups=resnet_groups, label_nc=self.label_nc),
                 Residual(PreNorm(dim_in, SpatialLinearAttention(
                     dim_in, heads=attn_heads))) if use_sparse_linear_attn else nn.Identity(),
                 Residual(PreNorm(dim_in, temporal_attn(dim_in))),

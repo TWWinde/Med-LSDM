@@ -30,6 +30,7 @@ def run(cfg: DictConfig):
             dim=cfg.model.diffusion_img_size,
             dim_mults=cfg.model.dim_mults,
             channels=cfg.model.diffusion_num_channels,
+            label_nc=cfg.dataset.label_nc
         ).cuda()
     elif cfg.model.denoising_fn == 'UNet':
         model = UNet(
