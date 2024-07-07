@@ -201,14 +201,14 @@ class SPADEGroupNorm3D(nn.Module):
         self.mlp_beta = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
 
     def forward(self, x, segmap):
-        x = self.norm(x)
+        x = self.norm(x) # torch.Size([10, 512, 8, 8, 8])
         print(x.shape)
-        print(segmap.shape)
+        print(segmap.shape) # torch.Size([10, 37, 32, 256, 256])
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
-        print(segmap.shape)
-        #torch.Size([10, 512, 8, 8, 8])
-        #torch.Size([10, 256, 37, 256, 32])
-        #torch.Size([10, 256, 8, 8, 8])
+        print(segmap.shape)  # torch.Size([10, 37, 8, 8, 8])
+        torch.Size([10, 512, 8, 8, 8])
+        torch.Size([10, 37, 32, 256, 256])
+        torch.Size([10, 37, 8, 8, 8])
         actv = self.mlp_shared(segmap)
         gamma = self.mlp_gamma(actv)
         beta = self.mlp_beta(actv)
@@ -230,8 +230,8 @@ class SDDResBlock(nn.Module):
         ) if exists(time_emb_dim) else None
         self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
         self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
-        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=32, eps=1e-5, groups=groups)
-        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=32, eps=1e-5, groups=groups)
+        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=37, eps=1e-5, groups=groups)
+        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=37, eps=1e-5, groups=groups)
         self.act = nn.SiLU()
         self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
 
