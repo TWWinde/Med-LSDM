@@ -3,6 +3,7 @@
 import math
 import copy
 import os.path
+
 import torch
 from torch import nn, einsum
 import torch.nn.functional as F
@@ -185,6 +186,119 @@ class LayerNorm(nn.Module):
         mean = torch.mean(x, dim=1, keepdim=True)
         return (x - mean) / (var + self.eps).sqrt() * self.gamma
 
+
+class SPADEGroupNorm3D(nn.Module):
+    def __init__(self, dim_out, label_nc=37, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
+        super().__init__()
+
+        self.norm = nn.GroupNorm(groups, dim_out, affine=False)
+        self.eps = eps
+
+        self.mlp_shared = nn.Sequential(
+            nn.Conv3d(label_nc, dim_hidden, (1, 3, 3), padding=(0, 1, 1)),
+            nn.ReLU()
+        )
+
+        self.mlp_gamma = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.mlp_beta = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
+
+    def forward(self, x, segmap):
+        x = self.norm(x)
+        # seg torch.Size([10, 37, 32, 256, 256])
+        segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
+
+        torch.Size([10, 512, 8, 8, 8])
+        torch.Size([10, 37, 32, 256, 256])
+        torch.Size([10, 37, 8, 8, 8])
+        actv = self.mlp_shared(segmap)
+        gamma = self.mlp_gamma(actv)
+        beta = self.mlp_beta(actv)
+
+        return x * (1 + gamma) + beta
+
+
+class SDDResBlock(nn.Module):
+    """
+    Semantic Diffusion Decoder Resnet Block
+    scale_shift for time embedding
+
+    """
+    def __init__(self, dim, dim_out, time_emb_dim=None, label_nc=37, groups=8):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(time_emb_dim, dim_out * 2)
+        ) if exists(time_emb_dim) else None
+        self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=label_nc, eps=1e-5, groups=groups)
+        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=label_nc, eps=1e-5, groups=groups)
+        self.act = nn.SiLU()
+        self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
+
+
+    def forward(self, x, seg, time_emb=None):
+
+        scale_shift = None
+        if exists(self.mlp):
+            assert exists(time_emb), 'time emb must be passed in'
+            time_emb = self.mlp(time_emb)
+            time_emb = rearrange(time_emb, 'b c -> b c 1 1 1')
+            scale_shift = time_emb.chunk(2, dim=1)
+
+        h = self.spade_norm1(x, seg)
+        h = self.act(h)
+        h = self.conv1(h)
+        h = self.spade_norm2(h, seg)
+
+        if exists(scale_shift):
+            scale, shift = scale_shift
+            h = h * (scale + 1) + shift
+
+        h = self.act(h)
+        h = self.conv2(h)
+        return h + self.res_conv(x)
+
+
+class SDEResBlock(nn.Module):
+    """
+     Semantic Diffusion Encoder Resnet Block
+     scale_shift for time embedding
+
+    """
+    def __init__(self, dim, dim_out, time_emb_dim=None, groups=8):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(time_emb_dim, dim_out * 2)
+        ) if exists(time_emb_dim) else None
+        self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.norm1 = nn.GroupNorm(groups, dim)
+        self.norm2 = nn.GroupNorm(groups, dim_out)
+        self.act = nn.SiLU()
+        self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
+
+    def forward(self, x, time_emb=None):
+
+        scale_shift = None
+        if exists(self.mlp):
+            assert exists(time_emb), 'time emb must be passed in'
+            time_emb = self.mlp(time_emb)
+            time_emb = rearrange(time_emb, 'b c -> b c 1 1 1')
+            scale_shift = time_emb.chunk(2, dim=1)
+
+        h = self.norm1(x)
+        h = self.act(h)
+        h = self.conv1(h)
+        h = self.norm2(h)
+        if exists(scale_shift):
+            scale, shift = scale_shift
+            h = h * (scale + 1) + shift
+
+        h = self.act(h)
+        h = self.conv2(h)
+        return h + self.res_conv(x)
 
 
 class PreNorm(nn.Module):
@@ -387,10 +501,7 @@ class Attention(nn.Module):
         return self.to_out(out)
 
 
-# model
-
-
-class Unet3D(nn.Module):
+class Unet3D_SPADE(nn.Module):
     def __init__(
         self,
         dim,    # 64
@@ -404,11 +515,13 @@ class Unet3D(nn.Module):
         init_dim=None,
         init_kernel_size=7,
         use_sparse_linear_attn=True,
+        label_nc=37,
         block_type='resnet',
         resnet_groups=8
     ):
         super().__init__()
         self.channels = channels
+        self.label_nc = label_nc
 
         # temporal attention and its relative positional encoding
 
@@ -459,13 +572,12 @@ class Unet3D(nn.Module):
         cond_dim = time_dim + int(cond_dim or 0)
 
         # layers
-
         self.downs = nn.ModuleList([])
         self.ups = nn.ModuleList([])
 
         num_resolutions = len(in_out)
 
-        # block type
+        # block type  replaced by SDEResBlock and SDDResBlock
 
         block_klass = partial(ResnetBlock, groups=resnet_groups)
         block_klass_cond = partial(block_klass, time_emb_dim=cond_dim)
@@ -476,8 +588,7 @@ class Unet3D(nn.Module):
             is_last = ind >= (num_resolutions - 1)
 
             self.downs.append(nn.ModuleList([
-                block_klass_cond(dim_in, dim_out),
-                block_klass_cond(dim_out, dim_out),
+                SDEResBlock(dim_in, dim_out, time_emb_dim=cond_dim, groups=resnet_groups),
                 Residual(PreNorm(dim_out, SpatialLinearAttention(
                     dim_out, heads=attn_heads))) if use_sparse_linear_attn else nn.Identity(),
                 Residual(PreNorm(dim_out, temporal_attn(dim_out))),
@@ -485,7 +596,7 @@ class Unet3D(nn.Module):
             ]))
 
         mid_dim = dims[-1]
-        self.mid_block1 = block_klass_cond(mid_dim, mid_dim)
+        self.mid_block1 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc)
 
         spatial_attn = EinopsToAndFrom(
             'b c f h w', 'b f (h w) c', Attention(mid_dim, heads=attn_heads))
@@ -494,14 +605,13 @@ class Unet3D(nn.Module):
         self.mid_temporal_attn = Residual(
             PreNorm(mid_dim, temporal_attn(mid_dim)))
 
-        self.mid_block2 = block_klass_cond(mid_dim, mid_dim)
+        self.mid_block2 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc)
 
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out)):
             is_last = ind >= (num_resolutions - 1)
 
             self.ups.append(nn.ModuleList([
-                block_klass_cond(dim_out * 2, dim_in),
-                block_klass_cond(dim_in, dim_in),
+                SDDResBlock(dim_out * 2, dim_in, time_emb_dim=cond_dim, groups=resnet_groups, label_nc=self.label_nc),
                 Residual(PreNorm(dim_in, SpatialLinearAttention(
                     dim_in, heads=attn_heads))) if use_sparse_linear_attn else nn.Identity(),
                 Residual(PreNorm(dim_in, temporal_attn(dim_in))),
@@ -515,17 +625,18 @@ class Unet3D(nn.Module):
         )
 
     def forward_with_cond_scale(
-        self,
-        *args,
-        cond_scale=2.,
-        **kwargs
+            self,
+            *args,
+            cond_scale=1.5,
+            cond,
+            **kwargs
     ):
-        logits = self.forward(*args, null_cond_prob=0., **kwargs)
-        if cond_scale == 1 or not self.has_cond:
+        logits = self.forward(*args, null_cond_prob=0., cond=cond, **kwargs)
+        if cond_scale == 1:  # or not self.has_cond:
             return logits
-
-        null_logits = self.forward(*args, null_cond_prob=1., **kwargs)
-        return null_logits + (logits - null_logits) * cond_scale
+        all_zero = torch.zeros_like(cond)
+        null_logits = self.forward(*args, null_cond_prob=1., cond=all_zero, **kwargs)
+        return logits + (logits - null_logits) * cond_scale
 
     def forward(
         self,
@@ -534,10 +645,9 @@ class Unet3D(nn.Module):
         cond=None,
         null_cond_prob=0.,
         focus_present_mask=None,
-        # probability at which a given batch sample will focus on the present (0. is all off, 1. is completely arrested attention across time)
         prob_focus_present=0.
     ):
-        assert not (self.has_cond and not exists(cond) ), 'cond must be passed in if cond_dim specified'
+        #assert not (self.has_cond and not exists(cond) ), 'cond must be passed in if cond_dim specified'
         batch, device = x.shape[0], x.device
 
         focus_present_mask = default(focus_present_mask, lambda: prob_mask_like(
@@ -554,33 +664,26 @@ class Unet3D(nn.Module):
 
         # classifier free guidance
 
-        if self.has_cond:
-            batch, device = x.shape[0], x.device
-            mask = prob_mask_like((batch,), null_cond_prob, device=device)
-            cond = torch.where(rearrange(mask, 'b -> b 1'),
-                               self.null_cond_emb, cond)
-            t = torch.cat((t, cond), dim=-1)
+        seg = cond
 
         h = []
 
-        for block1, block2, spatial_attn, temporal_attn, downsample in self.downs:
-            x = block1(x, t)
-            x = block2(x, t)
+        for block, spatial_attn, temporal_attn, downsample in self.downs:
+
+            x = block(x, t)
             x = spatial_attn(x)
             x = temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
             h.append(x)
             x = downsample(x)
 
-        x = self.mid_block1(x, t)
+        x = self.mid_block1(x, seg, t)
         x = self.mid_spatial_attn(x)
-        x = self.mid_temporal_attn(
-            x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
-        x = self.mid_block2(x, t)
+        x = self.mid_temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
+        x = self.mid_block2(x, seg, t)
 
-        for block1, block2, spatial_attn, temporal_attn, upsample in self.ups:
+        for block, spatial_attn, temporal_attn, upsample in self.ups:
             x = torch.cat((x, h.pop()), dim=1)
-            x = block1(x, t)
-            x = block2(x, t)
+            x = block(x, seg, t)
             x = spatial_attn(x)
             x = temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
             x = upsample(x)
@@ -588,6 +691,8 @@ class Unet3D(nn.Module):
         x = torch.cat((x, r), dim=1)
         return self.final_conv(x)
 
+
+# model
 # gaussian diffusion trainer class
 
 
@@ -614,26 +719,28 @@ def cosine_beta_schedule(timesteps, s=0.008):
     return torch.clip(betas, 0, 0.9999)
 
 
-class GaussianDiffusion(nn.Module):
+class SemanticGaussianDiffusion(nn.Module):
     def __init__(
-        self,
-        denoise_fn,
-        *,
-        image_size,
-        num_frames,
-        text_use_bert_cls=False,
-        channels=3,
-        timesteps=1000,
-        loss_type='l1',
-        use_dynamic_thres=False,  # from the Imagen paper
-        dynamic_thres_percentile=0.9,
-        vqgan_ckpt=None,
+            self,
+            denoise_fn,
+            *,
+            image_size,
+            num_frames,
+            text_use_bert_cls=False,
+            channels=3,
+            timesteps=1000,
+            loss_type='l1',
+            use_dynamic_thres=False,  # from the Imagen paper
+            dynamic_thres_percentile=0.9,
+            vqgan_ckpt=None,
+            cond_scale = 1.5
     ):
         super().__init__()
         self.channels = channels
         self.image_size = image_size
         self.num_frames = num_frames
         self.denoise_fn = denoise_fn  # Unet3D noise_predictor
+        self.cond_scale = cond_scale
 
         if vqgan_ckpt:
             self.vqgan = VQGAN.load_from_checkpoint(vqgan_ckpt).cuda()
@@ -653,8 +760,9 @@ class GaussianDiffusion(nn.Module):
 
         # register buffer helper function that casts float64 to float32
 
-        def register_buffer(name, val): return self.register_buffer(
-            name, val.to(torch.float32))
+        def register_buffer(name, val):
+            return self.register_buffer(
+                name, val.to(torch.float32))
 
         register_buffer('betas', betas)
         register_buffer('alphas_cumprod', alphas_cumprod)  # alphas_t_bar
@@ -664,18 +772,18 @@ class GaussianDiffusion(nn.Module):
 
         register_buffer('sqrt_alphas_cumprod', torch.sqrt(alphas_cumprod))  # sqrt(alphas_t_bar)
         register_buffer('sqrt_one_minus_alphas_cumprod',
-                        torch.sqrt(1. - alphas_cumprod))   # sqrt(1-alphas_t_bar)
+                        torch.sqrt(1. - alphas_cumprod))  # sqrt(1-alphas_t_bar)
         register_buffer('log_one_minus_alphas_cumprod',
                         torch.log(1. - alphas_cumprod))  # log(1-alphas_t_bar)
         register_buffer('sqrt_recip_alphas_cumprod',
-                        torch.sqrt(1. / alphas_cumprod))   # sqrt(1/alphas_t_bar)
+                        torch.sqrt(1. / alphas_cumprod))  # sqrt(1/alphas_t_bar)
         register_buffer('sqrt_recipm1_alphas_cumprod',
-                        torch.sqrt(1. / alphas_cumprod - 1))   # sqrt((1/alphas_t_bar)-1)
+                        torch.sqrt(1. / alphas_cumprod - 1))  # sqrt((1/alphas_t_bar)-1)
 
         # calculations for posterior q(x_{t-1} | x_t, x_0)
 
         posterior_variance = betas * \
-            (1. - alphas_cumprod_prev) / (1. - alphas_cumprod)
+                             (1. - alphas_cumprod_prev) / (1. - alphas_cumprod)
 
         # above: equal to 1. / (1. / (1. - alpha_cumprod_tm1) + alpha_t / beta_t)
 
@@ -699,7 +807,7 @@ class GaussianDiffusion(nn.Module):
         self.use_dynamic_thres = use_dynamic_thres
         self.dynamic_thres_percentile = dynamic_thres_percentile
 
-    def q_sample(self, x_start, t, noise=None):   # x_{t}
+    def q_sample(self, x_start, t, noise=None):  # x_{t}
         """
             Diffuse the data for a given number of diffusion steps.
 
@@ -713,12 +821,12 @@ class GaussianDiffusion(nn.Module):
         noise = default(noise, lambda: torch.randn_like(x_start))
 
         return (
-            extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
-            extract(self.sqrt_one_minus_alphas_cumprod,
-                    t, x_start.shape) * noise
+                extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
+                extract(self.sqrt_one_minus_alphas_cumprod,
+                        t, x_start.shape) * noise
         )
 
-    def q_mean_variance(self, x_start, t):   # q(x_{t} | x_0)
+    def q_mean_variance(self, x_start, t):  # q(x_{t} | x_0)
         """
         Get the distribution q(x_t | x_0).
 
@@ -734,8 +842,8 @@ class GaussianDiffusion(nn.Module):
     def predict_start_from_noise(self, x_t, t, noise):  # x_{0} = f(x_{t}, noise, t)
 
         return (
-            extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t -
-            extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * noise
+                extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t -
+                extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * noise
         )
 
     def q_posterior(self, x_start, x_t, t):
@@ -746,15 +854,15 @@ class GaussianDiffusion(nn.Module):
 
         """
         posterior_mean = (
-            extract(self.posterior_mean_coef1, t, x_t.shape) * x_start +
-            extract(self.posterior_mean_coef2, t, x_t.shape) * x_t
+                extract(self.posterior_mean_coef1, t, x_t.shape) * x_start +
+                extract(self.posterior_mean_coef2, t, x_t.shape) * x_t
         )
         posterior_variance = extract(self.posterior_variance, t, x_t.shape)
         posterior_log_variance_clipped = extract(
             self.posterior_log_variance_clipped, t, x_t.shape)
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def p_mean_variance(self, x, t, clip_denoised: bool, cond=None, cond_scale=1.):
+    def p_mean_variance(self, x, t, clip_denoised: bool, cond=None, cond_scale=1.5, seg=None):
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
         the initial x, x_0.
@@ -774,6 +882,7 @@ class GaussianDiffusion(nn.Module):
         x_recon = self.predict_start_from_noise(
             x, t=t, noise=self.denoise_fn.forward_with_cond_scale(x, t, cond=cond, cond_scale=cond_scale))
         # elf.denoise_fn == Unet3D   x_recon == x_{0}
+
         if clip_denoised:
             s = 1.
             if self.use_dynamic_thres:
@@ -791,10 +900,11 @@ class GaussianDiffusion(nn.Module):
 
         model_mean, posterior_variance, posterior_log_variance = self.q_posterior(
             x_start=x_recon, x_t=x, t=t)  # q(x_{t-1} |x_{t}, x_0)
+
         return model_mean, posterior_variance, posterior_log_variance
 
     @torch.inference_mode()  # add noise
-    def p_sample(self, x, t, cond=None, cond_scale=1., clip_denoised=True):
+    def p_sample(self, x, t, cond=None, cond_scale=1., clip_denoised=True, seg=None):
         """
         Sample x_{t-1} from the model at the given timestep. from noise
 
@@ -806,13 +916,12 @@ class GaussianDiffusion(nn.Module):
 
         """
         b, *_, device = *x.shape, x.device
-        model_mean, _, model_log_variance = self.p_mean_variance(
-            x=x, t=t, clip_denoised=clip_denoised, cond=cond, cond_scale=cond_scale)
+        model_mean, _, model_log_variance = \
+            self.p_mean_variance(x=x,  t=t, clip_denoised=clip_denoised, cond=cond, cond_scale=cond_scale, seg=seg)
         noise = torch.randn_like(x)
         # no noise when t == 0
-        nonzero_mask = (1 - (t == 0).float()).reshape(b,
-                                                      *((1,) * (len(x.shape) - 1)))
-        return model_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise
+        nonzero_mask = (1 - (t == 0).float()).reshape(b, *((1,) * (len(x.shape) - 1)))
+        return model_mean + nonzero_mask * torch.exp(0.5 * model_log_variance) * noise   # x_{t-1}
 
     @torch.inference_mode()
     def p_sample_loop(self, shape, cond=None, cond_scale=1.):
@@ -833,22 +942,22 @@ class GaussianDiffusion(nn.Module):
         return img
 
     @torch.inference_mode()
-    def sample(self, cond=None, cond_scale=1., batch_size=16):
+    def sample(self, cond=None, batch_size=16):
         """
            from latent space to image space
 
         """
-        device = next(self.denoise_fn.parameters()).device
+        #device = next(self.denoise_fn.parameters()).device
 
-        if is_list_str(cond):
-            cond = bert_embed(tokenize(cond)).to(device)
+        #if is_list_str(cond):
+            #cond = bert_embed(tokenize(cond)).to(device)
 
         batch_size = cond.shape[0] if exists(cond) else batch_size
         image_size = self.image_size
         channels = self.channels
         num_frames = self.num_frames
         _sample = self.p_sample_loop(
-            (batch_size, channels, num_frames, image_size, image_size), cond=cond, cond_scale=cond_scale)
+            (batch_size, channels, num_frames, image_size, image_size), cond=cond, cond_scale=self.cond_scale)
 
         if isinstance(self.vqgan, VQGAN):
             # denormalize TODO: Remove eventually
@@ -879,28 +988,29 @@ class GaussianDiffusion(nn.Module):
         return img
 
     def p_losses(self, x_start, t, cond=None, noise=None, **kwargs):
-        b, c, f, h, w, device = *x_start.shape, x_start.device
+        # b, c, f, h, w, device = *x_start.shape, x_start.device
         noise = default(noise, lambda: torch.randn_like(x_start))
 
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)  # x_{t}
-
-        if is_list_str(cond):
+        """
+         if is_list_str(cond):
             cond = bert_embed(
                 tokenize(cond), return_cls_repr=self.text_use_bert_cls)
             cond = cond.to(device)
-
-        x_recon = self.denoise_fn(x_noisy, t, cond=cond, **kwargs)  # predicted noise
+        
+        """
+        noise_predicted = self.denoise_fn(x_noisy, t, cond=cond, **kwargs)  # predicted noise
 
         if self.loss_type == 'l1':
-            loss = F.l1_loss(noise, x_recon)
+            loss = F.l1_loss(noise, noise_predicted)
         elif self.loss_type == 'l2':
-            loss = F.mse_loss(noise, x_recon)
+            loss = F.mse_loss(noise, noise_predicted)
         else:
             raise NotImplementedError()
 
         return loss
 
-    def forward(self, x, *args, **kwargs):
+    def forward(self, x,  *args, **kwargs):
         if isinstance(self.vqgan, VQGAN):
             with torch.no_grad():
                 x = self.vqgan.encode(
@@ -919,8 +1029,6 @@ class GaussianDiffusion(nn.Module):
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
 
         return self.p_losses(x, t, *args, **kwargs)
-
-
 
 
 # trainer class
@@ -1148,14 +1256,14 @@ class Trainer(object):
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
                 #data = next(self.dl)['image'].cuda()
-                image = next(self.dl)['image'].cuda() #
-                label = next(self.dl)['label'].cuda() #
+                image = next(self.dl)['image'].cuda()  #
+                label = next(self.dl)['label'].cuda()  #
 
                 with autocast(enabled=self.amp):
                     loss = self.model(
                         #data,
                         image,  #
-                        label,  #
+                        cond=label,  #
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
                     )
