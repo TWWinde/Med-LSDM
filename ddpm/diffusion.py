@@ -1212,8 +1212,8 @@ class Trainer(object):
                     plt.axis('off')
                     plt.imshow(frame[0], cmap='gray')
                     plt.savefig(path)
-                if self.step != 0 and self.step % self.save_and_sample_every == 0:
-                self.save(milestone)
+                if self.step != 0 and self.step % (self.save_and_sample_every*5) == 0:
+                    self.save(milestone)
 
             log_fn(log)
             self.step += 1
