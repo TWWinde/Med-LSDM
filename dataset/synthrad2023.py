@@ -112,10 +112,10 @@ class SynthRAD2023Dataset(Dataset):
         self.preprocessing = PREPROCESSING_TRANSORMS
         self.transforms = TRAIN_TRANSFORMS
         if self.sem_map:
-            self.transform = Transform(target_depth=32, label=True)
+            #self.transform = Transform(target_depth=32, label=True)
             self.mr_paths, self.label_paths = self.get_data_files()
         else:
-            self.transform = Transform(target_depth=32, label=False)
+            #self.transform = Transform(target_depth=32, label=False)
             self.mr_paths = self.get_data_files()
 
     def get_data_files(self):
@@ -171,6 +171,13 @@ class SynthRAD2023Dataset(Dataset):
 
             return {'image': img, 'label': label}
         else:
+            img = tio.ScalarImage(self.mr_paths[idx])
+            img = self.preprocessing(img)
+            img = self.transforms(img)
+
+            return {'image': img.data.permute(0, -1, 1, 2)}
+
+            """
             img = nib.load(self.mr_paths[idx])
             img = img.get_fdata()
             img = self.transform(img)
@@ -183,6 +190,10 @@ class SynthRAD2023Dataset(Dataset):
                 img = TR.functional.rotate(img, angle)
 
             return {'image': img}
+            
+            
+            """
+
 
 # old vision dataset
 

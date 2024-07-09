@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
-from ddpm import Unet3D, GaussianDiffusion, Trainer, Unet3D_SPADE, SemanticGaussianDiffusion
+from ddpm import Unet3D, GaussianDiffusion, Trainer, Unet3D_SPADE, SemanticGaussianDiffusion, Semantic_Trainer
 import hydra
 from omegaconf import DictConfig, open_dict
 from train.get_dataset import get_dataset
@@ -71,22 +71,44 @@ def run(cfg: DictConfig):
 
     train_dataset, *_ = get_dataset(cfg)
 
-    trainer = Trainer(
-        diffusion,
-        cfg=cfg,
-        dataset=train_dataset,
-        train_batch_size=cfg.model.batch_size,
-        save_and_sample_every=cfg.model.save_and_sample_every,
-        train_lr=cfg.model.train_lr,
-        train_num_steps=cfg.model.train_num_steps,
-        gradient_accumulate_every=cfg.model.gradient_accumulate_every,
-        ema_decay=cfg.model.ema_decay,
-        amp=cfg.model.amp,
-        num_sample_rows=cfg.model.num_sample_rows,
-        results_folder=cfg.model.results_folder,
-        num_workers=cfg.model.num_workers,
-        # logger=cfg.model.logger
-    )
+    if cfg.model.diffusion == 'SemanticGaussianDiffusion':
+        trainer = Semantic_Trainer(
+            diffusion,
+            cfg=cfg,
+            dataset=train_dataset,
+            train_batch_size=cfg.model.batch_size,
+            save_and_sample_every=cfg.model.save_and_sample_every,
+            train_lr=cfg.model.train_lr,
+            train_num_steps=cfg.model.train_num_steps,
+            gradient_accumulate_every=cfg.model.gradient_accumulate_every,
+            ema_decay=cfg.model.ema_decay,
+            amp=cfg.model.amp,
+            num_sample_rows=cfg.model.num_sample_rows,
+            results_folder=cfg.model.results_folder,
+            num_workers=cfg.model.num_workers,
+            # logger=cfg.model.logger
+        )
+
+    elif cfg.model.diffusion == 'GaussianDiffusion':
+        trainer = Trainer(
+            diffusion,
+            cfg=cfg,
+            dataset=train_dataset,
+            train_batch_size=cfg.model.batch_size,
+            save_and_sample_every=cfg.model.save_and_sample_every,
+            train_lr=cfg.model.train_lr,
+            train_num_steps=cfg.model.train_num_steps,
+            gradient_accumulate_every=cfg.model.gradient_accumulate_every,
+            ema_decay=cfg.model.ema_decay,
+            amp=cfg.model.amp,
+            num_sample_rows=cfg.model.num_sample_rows,
+            results_folder=cfg.model.results_folder,
+            num_workers=cfg.model.num_workers,
+            # logger=cfg.model.logger
+        )
+
+    else:
+        raise ValueError(f"Model {cfg.model.diffusion} doesn't exist")
 
     if cfg.model.load_milestone:
         trainer.load(cfg.model.load_milestone)

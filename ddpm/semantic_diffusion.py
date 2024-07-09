@@ -1137,7 +1137,7 @@ class Dataset(data.Dataset):
 # trainer class
 
 
-class Trainer(object):
+class Semantic_Trainer(object):
     def __init__(
         self,
         diffusion_model,
