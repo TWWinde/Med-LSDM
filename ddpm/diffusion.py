@@ -1203,8 +1203,7 @@ class Trainer(object):
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
                 path_image = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path_image, exist_ok=True)
-                path = str(path_image /
-                    f'sample-{milestone}.jpg')
+                path = os.path.join(path_image, f'sample-{milestone}.jpg')
 
                 plt.figure(figsize=(50, 50))
                 cols = 5
