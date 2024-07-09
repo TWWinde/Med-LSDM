@@ -924,7 +924,7 @@ class SemanticGaussianDiffusion(nn.Module):
         return model_mean + nonzero_mask * torch.exp(0.5 * model_log_variance) * noise   # x_{t-1}
 
     @torch.inference_mode()
-    def p_sample_loop(self, shape, cond=None, cond_scale=1.):
+    def p_sample_loop(self, shape, cond=None, cond_scale=1.5):
         """
             Generate samples from the model. From noise to x_{t}
 

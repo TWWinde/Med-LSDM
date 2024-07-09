@@ -41,7 +41,7 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=2 model.gpus=0
 
 # diffusion without condition
-python train/train_ddpm.py model=ddpm dataset=synthrad2023 model.results_folder_postfix='output' \
+python train/train_ddpm.py model=ddpm dataset=synthrad2023_wo_mask model.results_folder_postfix='output' model.name=vq_gan_3d \
 model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/SynthRAD2023_wo_mask/flair/lightning_logs/version_133984/checkpoints/latest_checkpoint.ckpt' \
 model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D  model.diffusion=GaussianDiffusion \
 model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8]  model.batch_size=10 model.gpus=0
