@@ -1314,8 +1314,10 @@ class Semantic_Trainer(object):
                     -1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
 
-                path = os.path.join(self.results_folder, 'images_results', f'sample-{milestone}.jpg' )
+                path_image = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path, exist_ok=True)
+                path = str(path_image /
+                           f'sample-{milestone}.jpg')
                 plt.figure(figsize=(50, 50))
                 cols = 5
                 for num, frame in enumerate(frames.cpu()):
