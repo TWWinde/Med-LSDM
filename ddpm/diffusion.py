@@ -1122,11 +1122,10 @@ class Trainer(object):
         path = os.path.join(path_cp, f'sample-{milestone}.pt')
         torch.save(data, path)
 
-
-def load(self, milestone, map_location=None, **kwargs):
+    def load(self, milestone, map_location=None, **kwargs):
         if milestone == -1:
             all_milestones = [int(p.stem.split('-')[-1])
-                              for p in Path(self.results_folder).glob('**/*.pt')]
+                              for p in Path(os.path.join(self.results_folder, 'checkpoints')).glob('**/*.pt')]
             assert len(
                 all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
             milestone = max(all_milestones)
