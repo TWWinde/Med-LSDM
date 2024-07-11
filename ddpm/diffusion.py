@@ -1117,9 +1117,13 @@ class Trainer(object):
             'ema': self.ema_model.state_dict(),
             'scaler': self.scaler.state_dict()
         }
-        torch.save(data, str(self.results_folder / f'model-{milestone}.pt'))
+        path_cp = os.path.join(self.results_folder, 'checkpoints')
+        os.makedirs(path_cp, exist_ok=True)
+        path = os.path.join(path_cp, f'sample-{milestone}.pt')
+        torch.save(data, path)
 
-    def load(self, milestone, map_location=None, **kwargs):
+
+def load(self, milestone, map_location=None, **kwargs):
         if milestone == -1:
             all_milestones = [int(p.stem.split('-')[-1])
                               for p in Path(self.results_folder).glob('**/*.pt')]
