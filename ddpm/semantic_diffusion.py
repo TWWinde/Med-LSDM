@@ -1296,7 +1296,7 @@ class Semantic_Trainer(object):
                     batches = num_to_groups(num_samples, self.batch_size)
 
                     all_videos_list = list(
-                        map(lambda n: self.ema_model.sample(batch_size=n), batches))
+                        map(lambda n: self.ema_model.sample(cond=label, batch_size=n), batches))
                     all_videos_list = torch.cat(all_videos_list, dim=0)
 
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
