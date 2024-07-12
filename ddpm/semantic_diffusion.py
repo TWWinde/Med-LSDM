@@ -1259,13 +1259,13 @@ class Semantic_Trainer(object):
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
                 #data = next(self.dl)['image'].cuda()
-                image = next(self.dl)['image'].cuda()  #
+                input_image = next(self.dl)['image'].cuda()  #
                 label = next(self.dl)['label'].cuda()  #
 
                 with autocast(enabled=self.amp):
                     loss = self.model(
                         #data,
-                        image,  #
+                        input_image,  #
                         cond=label,  #
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
@@ -1306,27 +1306,34 @@ class Semantic_Trainer(object):
 
                 one_gif = rearrange(
                     all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
-                video_path = str(self.results_folder / str(f'{milestone}.gif'))
+                path_video = os.path.join(self.results_folder, 'video_results')
+                os.makedirs(path_video, exist_ok=True)
+                video_path = os.path.join(path_video, f'{milestone}.gif')
                 video_tensor_to_gif(one_gif, video_path)
                 log = {**log, 'sample': video_path}
 
                 # Selects one random 2D image from each 3D Image
                 B, C, D, H, W = all_videos_list.shape
                 frame_idx = torch.randint(0, D, [B]).cuda()
-                frame_idx_selected = frame_idx.reshape(
-                    -1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+                frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
+                label_frames = torch.gather(label, 2, frame_idx_selected).squeeze(2)
                 path_image = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path_image, exist_ok=True)
-                path = os.path.join(path_image, f'sample-{milestone}.jpg')
-                plt.figure(figsize=(50, 50))
-                cols = 5
-                for num, frame in enumerate(frames.cpu()):
-                    plt.subplot(
-                        math.ceil(len(frames) / cols), cols, num + 1)
-                    plt.axis('off')
-                    plt.imshow(frame[0], cmap='gray')
-                    plt.savefig(path)
+                path_sampled = os.path.join(path_image, f'sample-{milestone}.jpg')
+                path_label = os.path.join(path_image, f'label-{milestone}.jpg')
+
+                def save_image(image, save_path):
+                    plt.figure(figsize=(256, 256))
+                    cols = 2
+                    for num, frame in enumerate(image.cpu()):
+                        plt.subplot(math.ceil(len(image) / cols), cols, num + 1)
+                        plt.axis('off')
+                        plt.imshow(frame[0], cmap='gray')
+                        plt.savefig(save_path)
+
+                save_image(frames, path_sampled)
+                save_image(label_frames, path_label)
 
                 if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
                     self.save(milestone)

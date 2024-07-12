@@ -138,13 +138,14 @@ class AutoPETDataset(Dataset):
             label = label.get_fdata()
             img, label = self.transform(img, label)
 
-            if random.random() < 0.5:
-                img = TR.functional.hflip(img)
-                label = TR.functional.hflip(label)
+            #if random.random() < 0.5:
+                #img = TR.functional.hflip(img)
+                #label = TR.functional.hflip(label)
             if random.random() < 0.5:
                 angle = random.choice([90, 180, 270])
                 img = TR.functional.rotate(img, angle)
                 label = TR.functional.rotate(label, angle)
+
 
             return {'image': img, 'label': label}
         else:

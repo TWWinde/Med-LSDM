@@ -1209,10 +1209,9 @@ class Trainer(object):
                 path = os.path.join(path_image, f'sample-{milestone}.jpg')
 
                 plt.figure(figsize=(50, 50))
-                cols = 5
+                cols = 2
                 for num, frame in enumerate(frames.cpu()):
-                    plt.subplot(
-                        math.ceil(len(frames) / cols), cols, num + 1)
+                    plt.subplot(math.ceil(len(frames) / cols), cols, num + 1)
                     plt.axis('off')
                     plt.imshow(frame[0], cmap='gray')
                     plt.savefig(path)
