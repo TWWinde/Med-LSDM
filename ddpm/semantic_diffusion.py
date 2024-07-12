@@ -1314,9 +1314,9 @@ class Semantic_Trainer(object):
                 # Selects one random 2D image from each 3D Image
                 B, C, D, H, W = all_videos_list.shape
                 frame_idx = torch.randint(0, D, [B]).cuda()
-                frame_idx_selected = frame_idx.reshape(B, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+                frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
-                label_frames = torch.gather(label, 2, frame_idx_selected).squeeze(2)
+                #label_frames = torch.gather(label, 2, frame_idx_selected).squeeze(2)
                 path_image = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path_image, exist_ok=True)
                 path_sampled = os.path.join(path_image, f'sample-{milestone}.jpg')
@@ -1332,7 +1332,7 @@ class Semantic_Trainer(object):
                         plt.savefig(save_path)
 
                 save_image(frames, path_sampled)
-                save_image(label_frames, path_label)
+                #save_image(label_frames, path_label)
 
                 if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
                     self.save(milestone)
