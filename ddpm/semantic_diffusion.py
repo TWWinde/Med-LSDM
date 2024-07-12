@@ -632,8 +632,8 @@ class Unet3D_SPADE(nn.Module):
             **kwargs
     ):
         logits = self.forward(*args, null_cond_prob=0., cond=cond, **kwargs)
-        if cond_scale == 1:  # or not self.has_cond:
-            return logits
+        #if cond_scale == 1:  # or not self.has_cond:
+            #return logits
         all_zero = torch.zeros_like(cond)
         null_logits = self.forward(*args, null_cond_prob=1., cond=all_zero, **kwargs)
         return logits + (logits - null_logits) * cond_scale
@@ -1024,8 +1024,7 @@ class SemanticGaussianDiffusion(nn.Module):
             x = normalize_img(x)  # (-1,1)
 
         b, device, img_size, = x.shape[0], x.device, self.image_size
-        check_shape(x, 'b c f h w', c=self.channels,
-                    f=self.num_frames, h=img_size, w=img_size)
+        check_shape(x, 'b c f h w', c=self.channels, f=self.num_frames, h=img_size, w=img_size)
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
 
         return self.p_losses(x, t, *args, **kwargs)
@@ -1315,7 +1314,7 @@ class Semantic_Trainer(object):
                 # Selects one random 2D image from each 3D Image
                 B, C, D, H, W = all_videos_list.shape
                 frame_idx = torch.randint(0, D, [B]).cuda()
-                frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+                frame_idx_selected = frame_idx.reshape(B, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
                 label_frames = torch.gather(label, 2, frame_idx_selected).squeeze(2)
                 path_image = os.path.join(self.results_folder, 'images_results')

@@ -14,7 +14,7 @@ batch_size: 4
 num_workers: 4
 logger: wandb
 objective: pred_x0
-save_and_sample_every: 600
+save_and_sample_every: 4    # 600
 denoising_fn: Unet3D
 diffusion: SemanticGaussianDiffusion
 train_lr: 1e-4
