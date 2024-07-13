@@ -98,6 +98,19 @@ class Transform:
             return final_img
 
 
+PREPROCESSING_TRANSORMS = tio.Compose([
+    tio.RescaleIntensity(out_min_max=(-1, 1)),
+    tio.CropOrPad(target_shape=(256, 256, 32)),
+    tio.Lambda(lambda x: x.float())
+])
+
+TRAIN_TRANSFORMS = tio.Compose([
+    # tio.RandomAffine(scales=(0.03, 0.03, 0), degrees=(
+    # 0, 0, 3), translation=(4, 4, 0)),
+    tio.RandomFlip(axes=(1), flip_probability=0.5),
+])
+
+
 class AutoPETDataset(Dataset):
     def __init__(self, root_dir: str, sem_map=False):
         super().__init__()

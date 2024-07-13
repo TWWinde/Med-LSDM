@@ -1097,6 +1097,21 @@ def cast_num_frames(t, *, frames):
     return F.pad(t, (0, 0, 0, 0, 0, frames - f))
 
 
+def preprocess_input(self, data):
+
+    # move to GPU and change data types
+    data['label'] = data['label'].long()
+
+    # create one-hot label map
+    label_map = data['label']
+    bs, _, t, h, w = label_map.size()
+    nc = self.num_classes
+    input_label = torch.FloatTensor(bs, nc, t, h, w).zero_()
+    input_semantics = input_label.scatter_(1, label_map, 1.0)
+
+    return input_semantics
+
+
 class Dataset(data.Dataset):
     def __init__(
         self,
@@ -1341,3 +1356,6 @@ class Semantic_Trainer(object):
             self.step += 1
 
         print('training completed')
+
+
+
