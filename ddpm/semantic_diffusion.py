@@ -1221,7 +1221,7 @@ class Semantic_Trainer(object):
         label_map = data
         bs, _, t, h, w = label_map.size()
         nc = self.num_classes
-        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_()
+        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
         input_semantics = input_label.scatter_(1, label_map, 1.0)
 
         return input_semantics
