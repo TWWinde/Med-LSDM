@@ -1215,10 +1215,10 @@ class Semantic_Trainer(object):
     def preprocess_input(self, data):
 
         # move to GPU and change data types
-        data['label'] = data['label'].long()
+        data = data.long()
 
         # create one-hot label map
-        label_map = data['label']
+        label_map = data
         bs, _, t, h, w = label_map.size()
         nc = self.num_classes
         input_label = torch.FloatTensor(bs, nc, t, h, w).zero_()
