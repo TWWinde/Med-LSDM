@@ -86,7 +86,6 @@ def run(cfg: DictConfig):
             results_folder=cfg.model.results_folder,
             num_workers=cfg.model.num_workers,
             # logger=cfg.model.logger
-            num_classes=37
         )
 
     elif cfg.model.diffusion == 'GaussianDiffusion':
