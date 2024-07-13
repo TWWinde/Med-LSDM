@@ -98,10 +98,14 @@ class Transform:
             return final_img
 
 
-PREPROCESSING_TRANSORMS = tio.Compose([
+normalization = tio.Compose([
     tio.RescaleIntensity(out_min_max=(-1, 1)),
-    tio.CropOrPad(target_shape=(256, 256, 32)),
     tio.Lambda(lambda x: x.float())
+])
+
+crop = tio.Compose([
+    tio.CropOrPad(target_shape=(256, 256, 32)),
+
 ])
 
 TRAIN_TRANSFORMS = tio.Compose([
@@ -116,14 +120,18 @@ class AutoPETDataset(Dataset):
         super().__init__()
         self.root_dir = root_dir
         self.sem_map = sem_map
+        self.Norm = normalization
+        self.Crop = crop
         if self.sem_map:
-            self.transform = Transform(target_depth=32, label=True)
+            #self.transform = Transform(target_depth=32, label=True)
             self.ct_paths, self.label_paths = self.get_data_files()
         else:
             self.transform = Transform(target_depth=32, label=False)
             self.ct_paths = self.get_data_files()
 
     def get_data_files(self):
+
+        """
         subfolder_names = os.listdir(self.root_dir)
         ct_names = [os.path.join(self.root_dir, subfolder) for subfolder in subfolder_names
                     if subfolder.endswith('0001.nii.gz')]
@@ -131,6 +139,18 @@ class AutoPETDataset(Dataset):
             label_names, ct_names_ = [], []
             for ct_path in ct_names:
                 label_path = ct_path.replace('0001.nii.gz', '0002.nii.gz')
+                if os.path.exists(ct_path) and os.path.exists(label_path):
+                    ct_names_.append(ct_path)
+                    label_names.append(label_path)
+
+        """
+        subfolder_names = os.listdir(self.root_dir)
+        ct_names = [os.path.join(self.root_dir, 'ct', subfolder) for subfolder in subfolder_names
+                    if subfolder.endswith('nii.gz')]
+        if self.sem_map:
+            label_names, ct_names_ = [], []
+            for ct_path in ct_names:
+                label_path = ct_path.replace('ct', 'label')
                 if os.path.exists(ct_path) and os.path.exists(label_path):
                     ct_names_.append(ct_path)
                     label_names.append(label_path)
@@ -144,21 +164,26 @@ class AutoPETDataset(Dataset):
         return len(self.ct_paths)
 
     def __getitem__(self, idx: int):
-        img = nib.load(self.ct_paths[idx])
-        img = img.get_fdata()
+        #img = nib.load(self.ct_paths[idx])
+        #img = img.get_fdata()
+        img = tio.ScalarImage(self.ct_paths[idx])
+        img = self.Crop(img)
+        img = self.Norm(img)
         if self.sem_map:
-            label = nib.load(self.label_paths[idx])
-            label = label.get_fdata()
-            img, label = self.transform(img, label)
+            label = tio.ScalarImage(self.label_paths[idx])
+            label = self.Crop(label)
+
+            #label = nib.load(self.label_paths[idx])
+            #label = label.get_fdata()
+            #img, label = self.transform(img, label)
 
             #if random.random() < 0.5:
                 #img = TR.functional.hflip(img)
                 #label = TR.functional.hflip(label)
-            if random.random() < 0.5:
-                angle = random.choice([90, 180, 270])
-                img = TR.functional.rotate(img, angle)
-                label = TR.functional.rotate(label, angle)
-
+            #if random.random() < 0.5:
+                #angle = random.choice([90, 180, 270])
+                #img = TR.functional.rotate(img, angle)
+                #label = TR.functional.rotate(label, angle)
 
             return {'image': img, 'label': label}
         else:

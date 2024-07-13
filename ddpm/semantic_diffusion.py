@@ -1097,19 +1097,7 @@ def cast_num_frames(t, *, frames):
     return F.pad(t, (0, 0, 0, 0, 0, frames - f))
 
 
-def preprocess_input(self, data):
 
-    # move to GPU and change data types
-    data['label'] = data['label'].long()
-
-    # create one-hot label map
-    label_map = data['label']
-    bs, _, t, h, w = label_map.size()
-    nc = self.num_classes
-    input_label = torch.FloatTensor(bs, nc, t, h, w).zero_()
-    input_semantics = input_label.scatter_(1, label_map, 1.0)
-
-    return input_semantics
 
 
 class Dataset(data.Dataset):
@@ -1173,6 +1161,7 @@ class Semantic_Trainer(object):
         num_sample_rows=1,
         max_grad_norm=None,
         num_workers=20,
+        num_classes=37
     ):
         super().__init__()
         self.model = diffusion_model
@@ -1182,7 +1171,6 @@ class Semantic_Trainer(object):
 
         self.step_start_ema = step_start_ema
         self.save_and_sample_every = save_and_sample_every
-
         self.batch_size = train_batch_size
         self.image_size = diffusion_model.image_size
         self.gradient_accumulate_every = gradient_accumulate_every
@@ -1191,6 +1179,7 @@ class Semantic_Trainer(object):
         image_size = diffusion_model.image_size
         channels = diffusion_model.channels
         num_frames = diffusion_model.num_frames
+        self.num_classes = num_classes
 
         self.cfg = cfg
         if dataset:
@@ -1222,6 +1211,20 @@ class Semantic_Trainer(object):
         self.results_folder.mkdir(exist_ok=True, parents=True)
 
         self.reset_parameters()
+
+    def preprocess_input(self, data):
+
+        # move to GPU and change data types
+        data['label'] = data['label'].long()
+
+        # create one-hot label map
+        label_map = data['label']
+        bs, _, t, h, w = label_map.size()
+        nc = self.num_classes
+        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_()
+        input_semantics = input_label.scatter_(1, label_map, 1.0)
+
+        return input_semantics
 
     def reset_parameters(self):
         self.ema_model.load_state_dict(self.model.state_dict())
@@ -1274,11 +1277,10 @@ class Semantic_Trainer(object):
             for i in range(self.gradient_accumulate_every):
                 #data = next(self.dl)['image'].cuda()
                 input_image = next(self.dl)['image'].cuda()  #
-                label = next(self.dl)['label'].cuda()  #
-
+                label = next(self.dl)['label'].cuda() #
+                label = self.preprocess_input(label)
                 with autocast(enabled=self.amp):
                     loss = self.model(
-                        #data,
                         input_image,  #
                         cond=label,  #
                         prob_focus_present=prob_focus_present,
