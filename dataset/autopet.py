@@ -184,6 +184,8 @@ class AutoPETDataset(Dataset):
                 #angle = random.choice([90, 180, 270])
                 #img = TR.functional.rotate(img, angle)
                 #label = TR.functional.rotate(label, angle)
+            print(img.shape)
+            print(label.shape)
 
             return {'image': img, 'label': label}
         else:
@@ -199,11 +201,6 @@ class AutoPETDataset(Dataset):
                 img = TR.functional.rotate(img, angle)
 
             return {'image': img}
-
-
-
-
-
 
 
 
