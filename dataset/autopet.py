@@ -187,7 +187,7 @@ class AutoPETDataset(Dataset):
             print(img.shape)
             print(label.shape)
 
-            return {'image': img, 'label': label}
+            return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
         else:
             img = self.transform(img)
             img = torch.from_numpy(img).unsqueeze(0).float().permute(0, -1, 1, 2)
