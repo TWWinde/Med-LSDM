@@ -1276,7 +1276,9 @@ class Semantic_Trainer(object):
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
                 #data = next(self.dl)['data'].cuda()
-                input_image = next(self.dl)['image'].cuda()  #
+                input_image = next(self.dl)['image']#.cuda()  #
+                for key, value in input_image.items():
+                    print(f"{key}: {value}")
                 label = next(self.dl)['label'].cuda() #
                 label = self.preprocess_input(label)
                 with autocast(enabled=self.amp):
