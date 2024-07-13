@@ -1278,7 +1278,7 @@ class Semantic_Trainer(object):
                 #data = next(self.dl)['data'].cuda()
                 input_image = next(self.dl)['image']#.cuda()  #
                 for key, value in input_image.items():
-                    print(f"{key}: {value}")
+                    print(f"{key}: {value.shape}")
                 label = next(self.dl)['label'].cuda() #
                 label = self.preprocess_input(label)
                 with autocast(enabled=self.amp):
