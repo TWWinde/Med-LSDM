@@ -126,7 +126,7 @@ class AutoPETDataset(Dataset):
             #self.transform = Transform(target_depth=32, label=True)
             self.ct_paths, self.label_paths = self.get_data_files()
         else:
-            self.transform = Transform(target_depth=32, label=False)
+            #self.transform = Transform(target_depth=32, label=False)
             self.ct_paths = self.get_data_files()
 
     def get_data_files(self):
