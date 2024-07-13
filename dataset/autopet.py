@@ -144,7 +144,7 @@ class AutoPETDataset(Dataset):
                     label_names.append(label_path)
 
         """
-        subfolder_names = os.listdir(self.root_dir)
+        subfolder_names = os.listdir(os.path.join(self.root_dir, 'ct'))
         ct_names = [os.path.join(self.root_dir, 'ct', subfolder) for subfolder in subfolder_names
                     if subfolder.endswith('nii.gz')]
         if self.sem_map:
