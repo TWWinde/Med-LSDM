@@ -1263,6 +1263,7 @@ class Semantic_Trainer(object):
         self.model.load_state_dict(data['model'], **kwargs)
         self.ema_model.load_state_dict(data['ema'], **kwargs)
         self.scaler.load_state_dict(data['scaler'])
+        print("checkpoint is successful loaded")
 
     def train(
         self,
@@ -1338,7 +1339,7 @@ class Semantic_Trainer(object):
                 path_sampled = os.path.join(path_image, f'{milestone}-sample.jpg')
                 path_label = os.path.join(path_image, f'{milestone}-label.jpg')
 
-                def save_image(image_tensor, path, cols=4):
+                def save_image(image_tensor, path, cols=3):
                     B, C, H, W = image_tensor.shape
                     plt.figure(figsize=(50, 50))
                     for i in range(B):
