@@ -4,7 +4,7 @@ from torch.utils.data import WeightedRandomSampler
 
 def get_dataset(cfg):
     print(cfg.dataset.name)
-    print(cfg.model)
+    print("Model is trained on ", cfg.model)
     if cfg.dataset.name == 'MRNet':
         train_dataset = MRNetDataset(
             root_dir=cfg.dataset.root_dir, task=cfg.dataset.task, plane=cfg.dataset.plane, split='train')
