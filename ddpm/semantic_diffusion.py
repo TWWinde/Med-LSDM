@@ -965,6 +965,7 @@ class SemanticGaussianDiffusion(nn.Module):
                                                   self.vqgan.codebook.embeddings.min())) + self.vqgan.codebook.embeddings.min()
 
             _sample = self.vqgan.decode(_sample, quantize=True)
+            print(_sample.shape)
         else:
             unnormalize_img(_sample)
 
@@ -1320,8 +1321,7 @@ class Semantic_Trainer(object):
 
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
 
-                one_gif = rearrange(
-                    all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
+                one_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
                 path_video = os.path.join(self.results_folder, 'video_results')
                 os.makedirs(path_video, exist_ok=True)
                 video_path = os.path.join(path_video, f'{milestone}.gif')
