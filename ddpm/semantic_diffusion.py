@@ -1249,16 +1249,16 @@ class Semantic_Trainer(object):
 
     def load(self, milestone, map_location=None, **kwargs):
         if milestone == -1:
+            all_paths = os.listdir(os.path.join(self.results_folder, 'checkpoints'))
             all_milestones = [int(p.stem.split('-')[-1])
-                              for p in Path(os.path.join(self.results_folder, 'checkpoints')).glob('**/*.pt')]
-            assert len(
-                all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
+                              for p in all_paths if p.endswith('.pt')]
+            assert len(all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
             milestone = max(all_milestones)
 
         if map_location:
             data = torch.load(milestone, map_location=map_location)
         else:
-            data = torch.load(milestone)
+            data = torch.load(os.path.join(self.results_folder, 'checkpoints', f"sample-{milestone}.pt"))
 
         self.step = data['step']
         self.model.load_state_dict(data['model'], **kwargs)
