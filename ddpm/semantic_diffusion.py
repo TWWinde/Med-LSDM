@@ -1250,8 +1250,7 @@ class Semantic_Trainer(object):
     def load(self, milestone, map_location=None, **kwargs):
         if milestone == -1:
             all_paths = os.listdir(os.path.join(self.results_folder, 'checkpoints'))
-            all_milestones = [int(p.stem.split('-')[-1])
-                              for p in all_paths if p.endswith('.pt')]
+            all_milestones = [int(p.stem.split('-')[-1]) for p in all_paths if p.endswith('.pt')]
             assert len(all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
             milestone = max(all_milestones)
 
