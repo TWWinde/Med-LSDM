@@ -1336,12 +1336,12 @@ class Semantic_Trainer(object):
                 label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
                 path_image = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path_image, exist_ok=True)
-                path_sampled = os.path.join(path_image, f'sample-{milestone}.jpg')
-                path_label = os.path.join(path_image, f'label-{milestone}.jpg')
+                path_sampled = os.path.join(path_image, f'{milestone}-sample.jpg')
+                path_label = os.path.join(path_image, f'{milestone}-label.jpg')
 
                 def save_image(image_tensor, path, cols=4):
                     B, C, H, W = image_tensor.shape
-                    plt.figure(figsize=(cols * 5, (B // cols) * 5))
+                    plt.figure(figsize=(50, 50))
                     for i in range(B):
                         plt.subplot(B // cols + 1, cols, i + 1)
                         img = image_tensor[i].cpu().numpy().transpose(1, 2, 0)
