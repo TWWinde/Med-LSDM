@@ -1278,11 +1278,11 @@ class Semantic_Trainer(object):
                 #data = next(self.dl)['data'].cuda()
                 input_image = next(self.dl)['image'].cuda()
                 label = next(self.dl)['label'].cuda()
-                label = self.preprocess_input(label)
+                label_one_hot = self.preprocess_input(label)
                 with autocast(enabled=self.amp):
                     loss = self.model(
                         input_image,  #
-                        cond=label,  #
+                        cond=label_one_hot,  #
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
                     )
@@ -1315,7 +1315,7 @@ class Semantic_Trainer(object):
                     batches = num_to_groups(num_samples, self.batch_size)
 
                     all_videos_list = list(
-                        map(lambda n: self.ema_model.sample(cond=label, batch_size=n), batches))
+                        map(lambda n: self.ema_model.sample(cond=label_one_hot, batch_size=n), batches))
                     all_videos_list = torch.cat(all_videos_list, dim=0)
 
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
