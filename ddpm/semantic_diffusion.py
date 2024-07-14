@@ -1276,10 +1276,8 @@ class Semantic_Trainer(object):
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
                 #data = next(self.dl)['data'].cuda()
-                input_image = next(self.dl)['image'].cuda()  #
-                #for key, value in input_image.items():
-                    #print(f"{key}: {value.shape}")
-                label = next(self.dl)['label'].cuda() #
+                input_image = next(self.dl)['image'].cuda()
+                label = next(self.dl)['label'].cuda()
                 label = self.preprocess_input(label)
                 with autocast(enabled=self.amp):
                     loss = self.model(
@@ -1333,25 +1331,38 @@ class Semantic_Trainer(object):
                 # Selects one random 2D image from each 3D Image
                 B, C, D, H, W = all_videos_list.shape
                 frame_idx = torch.randint(0, D, [B]).cuda()
-                frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+                frame_idx_selected = frame_idx.reshape(-B, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
-                #label_frames = torch.gather(label, 2, frame_idx_selected).squeeze(2)
+                label_frames = torch.gather(label, 2, frame_idx_selected).squeeze(2)
                 path_image = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path_image, exist_ok=True)
                 path_sampled = os.path.join(path_image, f'sample-{milestone}.jpg')
                 path_label = os.path.join(path_image, f'label-{milestone}.jpg')
 
-                def save_image(image, save_path):
-                    plt.figure(figsize=(256, 256))
+                def save_image(image_tensor, path, cols=4):
+                    B, C, H, W = image_tensor.shape
+                    plt.figure(figsize=(cols * 5, (B // cols) * 5))
+                    for i in range(B):
+                        plt.subplot(B // cols + 1, cols, i + 1)
+                        img = image_tensor[i].cpu().numpy().transpose(1, 2, 0)
+                        img = (img - img.min()) / (img.max() - img.min())  # 归一化到 [0, 1]
+                        plt.imshow(img, cmap='gray' if C == 1 else None)
+                        plt.axis('off')
+                    plt.savefig(path)
+                    plt.close()
+                """
+                    def save_image(image, save_path):
+                    plt.figure(figsize=(50, 50))
                     cols = 2
                     for num, frame in enumerate(image.cpu()):
                         plt.subplot(math.ceil(len(image) / cols), cols, num + 1)
                         plt.axis('off')
                         plt.imshow(frame[0], cmap='gray')
                         plt.savefig(save_path)
-
+                
+                """
                 save_image(frames, path_sampled)
-                #save_image(label_frames, path_label)
+                save_image(label_frames, path_label)
 
                 if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
                     self.save(milestone)
