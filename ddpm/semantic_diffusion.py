@@ -965,7 +965,6 @@ class SemanticGaussianDiffusion(nn.Module):
                                                   self.vqgan.codebook.embeddings.min())) + self.vqgan.codebook.embeddings.min()
 
             _sample = self.vqgan.decode(_sample, quantize=True)
-            print(_sample.shape)
         else:
             unnormalize_img(_sample)
 
@@ -1333,7 +1332,8 @@ class Semantic_Trainer(object):
                 frame_idx = torch.randint(0, D, [B]).cuda()
                 frame_idx_selected = frame_idx.reshape(-B, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
-                label_frames = torch.gather(label, 2, frame_idx_selected).squeeze(2)
+                all_label_list = F.pad(label, (2, 2, 2, 2))
+                label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
                 path_image = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path_image, exist_ok=True)
                 path_sampled = os.path.join(path_image, f'sample-{milestone}.jpg')
