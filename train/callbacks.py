@@ -32,7 +32,9 @@ class ImageLogger(Callback):
         #std = images.pop('std_org')
         #std = std[(None,)*3].swapaxes(0, -1)
         for k in images:
-            print(images[k].shape)
+            if images[k].shape[2] != 1:
+                images[k] = torch.argmax(images[k], dim=1)
+
             images[k] = (images[k] + 1.0) * 127.5  # std + mean
             torch.clamp(images[k], 0, 255)
             grid = torchvision.utils.make_grid(images[k], nrow=4)
