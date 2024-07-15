@@ -44,9 +44,10 @@ def vanilla_d_loss(logits_real, logits_fake):
 
 
 class VQGAN(pl.LightningModule):
-    def __init__(self, cfg):
+    def __init__(self, cfg,  label=False):
         super().__init__()
         self.cfg = cfg
+        self.label = label
         self.embedding_dim = cfg.model.embedding_dim
         self.n_codes = cfg.model.n_codes
 
@@ -86,6 +87,21 @@ class VQGAN(pl.LightningModule):
 
         self.l1_weight = cfg.model.l1_weight
         self.save_hyperparameters()
+        self.num_classes = cfg.dataset.image_channels
+
+    def preprocess_input(self, data):
+
+        # move to GPU and change data types
+        data = data.long()
+
+        # create one-hot label map
+        label_map = data
+        bs, _, t, h, w = label_map.size()
+        nc = self.num_classes
+        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
+        input_semantics = input_label.scatter_(1, label_map, 1.0)
+
+        return input_semantics
 
     def encode(self, x, include_embeddings=False, quantize=True):
         h = self.pre_vq_conv(self.encoder(x))
@@ -106,7 +122,10 @@ class VQGAN(pl.LightningModule):
         return self.decoder(h)
 
     def forward(self, x, optimizer_idx=None, log_image=False):
+
         B, C, T, H, W = x.shape  # ([2, 1, 32, 256, 256])
+        if self.label:
+            x = self.preprocess_input(x)
 
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)

@@ -33,7 +33,10 @@ def run(cfg: DictConfig):
     print("Setting learning rate to {:.2e} = {} (accumulate_grad_batches) * {} (num_gpus/8) * {} (batchsize/4) * {:.2e} (base_lr)".format(
         cfg.model.lr, accumulate, ngpu/8, bs/4, base_lr))
 
-    model = VQGAN(cfg)
+    if cfg.dataset.name == 'SemanticMap':
+        model = VQGAN(cfg, label=True)
+    else:
+        model = VQGAN(cfg)
 
     callbacks = []
     callbacks.append(ModelCheckpoint(monitor='val/recon_loss',
