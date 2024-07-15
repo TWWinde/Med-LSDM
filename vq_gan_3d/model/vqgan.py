@@ -82,8 +82,10 @@ class VQGAN(pl.LightningModule):
 
         self.image_gan_weight = cfg.model.image_gan_weight
         self.video_gan_weight = cfg.model.video_gan_weight
-
-        self.perceptual_weight = cfg.model.perceptual_weight
+        if self.label:
+            self.perceptual_weight = 0
+        else:
+            self.perceptual_weight = cfg.model.perceptual_weight
 
         self.l1_weight = cfg.model.l1_weight
         self.save_hyperparameters()
@@ -239,8 +241,12 @@ class VQGAN(pl.LightningModule):
 
             return discloss
 
-        perceptual_loss = self.perceptual_model(
-            frames, frames_recon) * self.perceptual_weight
+        if self.label:
+            perceptual_loss = 0
+        else:
+            perceptual_loss = self.perceptual_model(
+                frames, frames_recon) * self.perceptual_weight
+
         return recon_loss, x_recon, vq_output, perceptual_loss
 
     def training_step(self, batch, batch_idx, optimizer_idx):
