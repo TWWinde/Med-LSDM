@@ -49,8 +49,8 @@ class SemanticMapDataset(Dataset):
         label = self.Crop(label)
         label = label.data.permute(0, -1, 1, 2)
         print(label.shape)
-        random_n = torch.rand(1)
-        if random_n[0] > 0.5:
-            label = np.flip(label, 2)
+        #random_n = torch.rand(1)
+        #if random_n[0] > 0.5:
+            #label = np.flip(label, 2)
 
         return {'label': label}
