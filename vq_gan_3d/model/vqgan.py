@@ -129,8 +129,7 @@ class VQGAN(pl.LightningModule):
 
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)
-        x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']))
-        print(x_recon.shape)
+        x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']))  # torch.Size([B, 37, 32, 256, 256])
 
         recon_loss = F.l1_loss(x_recon, x) * self.l1_weight
 
@@ -140,6 +139,7 @@ class VQGAN(pl.LightningModule):
         frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
         frames = torch.gather(x, 2, frame_idx_selected).squeeze(2)
         frames_recon = torch.gather(x_recon, 2, frame_idx_selected).squeeze(2)
+        print(frames_recon.shape)
 
         if log_image:
             return frames, frames_recon, x, x_recon
