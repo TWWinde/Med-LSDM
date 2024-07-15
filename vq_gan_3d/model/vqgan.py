@@ -135,8 +135,8 @@ class VQGAN(pl.LightningModule):
 
         recon_loss = F.l1_loss(x_recon, x) * self.l1_weight
         if self.label:
-            recon_labels = torch.argmax(x_recon, dim=1)
-            target_labels = torch.argmax(x, dim=1)
+            recon_labels = F.softmax(x_recon, dim=1)
+            target_labels = F.softmax(x, dim=1)
             criterion = torch.nn.CrossEntropyLoss()
             crossentropy_loss = criterion(recon_labels, target_labels)
         else:
