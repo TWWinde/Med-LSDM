@@ -33,7 +33,7 @@ class ImageLogger(Callback):
         #std = std[(None,)*3].swapaxes(0, -1)
         for k in images:
             if images[k].shape[2] != 1:
-                images[k] = torch.argmax(images[k], dim=1)
+                images[k] = torch.argmax(images[k], dim=1, keepdim=True)
 
             images[k] = (images[k] + 1.0) * 127.5  # std + mean
             torch.clamp(images[k], 0, 255)
