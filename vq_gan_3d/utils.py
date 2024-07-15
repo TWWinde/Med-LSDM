@@ -122,10 +122,9 @@ def adopt_weight(global_step, threshold=0, value=0.):
 ###########
 def save_video_grid(video, fname, nrow=None, fps=6):
     b, c, t, h, w = video.shape
+    print(video.shape)
     if c != 1:
         video = torch.argmax(video, dim=1).unsqueeze(1)
-        print(video.shape)
-
 
     video = video.permute(0, 2, 3, 4, 1)
     video = (video.cpu().numpy() * 255).astype('uint8')
