@@ -749,6 +749,13 @@ class SemanticGaussianDiffusion(nn.Module):
         else:
             self.vqgan = None
 
+        if seggan_ckpt:
+            self.vqgan = VQGAN.load_from_checkpoint(vqgan_ckpt).cuda()
+            self.vqgan.eval()
+        else:
+            self.vqgan = None
+
+
         betas = cosine_beta_schedule(timesteps)
 
         alphas = 1. - betas
