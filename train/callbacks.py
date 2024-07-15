@@ -33,15 +33,19 @@ class ImageLogger(Callback):
         #std = std[(None,)*3].swapaxes(0, -1)
         for k in images:
             if images[k].shape[2] != 1:
-                images[k] = torch.argmax(images[k], dim=1, keepdim=True)
+                images[k] = torch.argmax(images[k], dim=1)
 
             images[k] = (images[k] + 1.0) * 127.5  # std + mean
             torch.clamp(images[k], 0, 255)
-            grid = torchvision.utils.make_grid(images[k], nrow=4)
-            grid = grid
-            grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
-            grid = grid.numpy()
-            grid = (grid).astype(np.uint8)
+            N = min(images[k].shape[0], self.max_images)
+            images[k] = images[k][:N]
+            grid = torchvision.utils.make_grid(images[k], nrow=4, padding=2)
+            grid = grid.permute(1, 2, 0).cpu().numpy().astype(np.uint8)
+            #grid = torchvision.utils.make_grid(images[k], nrow=4)
+            #grid = grid
+            #grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
+            #grid = grid.numpy()
+            #grid = (grid).astype(np.uint8)
             filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(
                 k,
                 global_step,
