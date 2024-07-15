@@ -128,6 +128,7 @@ class VQGAN(pl.LightningModule):
         #B, C, T, H, W = x.shape  # ([2, 1, 32, 256, 256])
         if self.label:
             x = self.preprocess_input(x)
+
         B, C, T, H, W = x.shape
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)
@@ -268,6 +269,7 @@ class VQGAN(pl.LightningModule):
         if optimizer_idx == 1:
             discloss = self.forward(x, optimizer_idx)
             loss = discloss
+
         return loss
 
     def validation_step(self, batch, batch_idx):
