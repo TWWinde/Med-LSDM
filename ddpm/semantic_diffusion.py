@@ -1257,6 +1257,7 @@ class Semantic_Trainer(object):
         if map_location:
             data = torch.load(milestone, map_location=map_location)
         else:
+            print('found checkpoint', os.path.join(self.results_folder, 'checkpoints', f"sample-{milestone}.pt"))
             data = torch.load(os.path.join(self.results_folder, 'checkpoints', f"sample-{milestone}.pt"))
 
         self.step = data['step']
