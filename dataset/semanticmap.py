@@ -53,4 +53,4 @@ class SemanticMapDataset(Dataset):
         #if random_n[0] > 0.5:
             #label = np.flip(label, 2)
 
-        return {'label': label}
+        return {'image': label}
