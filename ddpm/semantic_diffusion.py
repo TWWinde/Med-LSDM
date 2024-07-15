@@ -1331,7 +1331,7 @@ class Semantic_Trainer(object):
                 # Selects one random 2D image from each 3D Image
                 B, C, D, H, W = all_videos_list.shape
                 frame_idx = torch.randint(0, D, [B]).cuda()
-                frame_idx_selected = frame_idx.reshape(-B, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+                frame_idx_selected = frame_idx.reshape(B, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
                 all_label_list = F.pad(label, (2, 2, 2, 2))
                 label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
