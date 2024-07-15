@@ -47,5 +47,9 @@ class SemanticMapDataset(Dataset):
     def __getitem__(self, idx: int):
         label = tio.ScalarImage(self.seg_paths[idx])
         label = self.Crop(label)
+        label = label.data.permute(0, -1, 1, 2)
+        random_n = torch.rand(1)
+        if random_n[0] > 0.5:
+            label = np.flip(label, 2)
 
-        return {'label': label.data.permute(0, -1, 1, 2)}
+        return {'label': label}

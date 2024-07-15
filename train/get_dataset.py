@@ -1,4 +1,4 @@
-from dataset import MRNetDataset, BRATSDataset, ADNIDataset, DUKEDataset, LIDCDataset, DEFAULTDataset, SynthRAD2023Dataset, AutoPETDataset
+from dataset import MRNetDataset, BRATSDataset, ADNIDataset, DUKEDataset, LIDCDataset, DEFAULTDataset, SynthRAD2023Dataset, AutoPETDataset, SemanticMapDataset
 from torch.utils.data import WeightedRandomSampler
 
 
@@ -46,6 +46,14 @@ def get_dataset(cfg):
         val_dataset = DEFAULTDataset(
             root_dir=cfg.dataset.root_dir)
         sampler = None
+
+    if cfg.dataset.name == 'SemanticMap':
+        train_dataset = SemanticMapDataset(
+            root_dir=cfg.dataset.root_dir, )
+        val_dataset = SemanticMapDataset(
+            root_dir=cfg.dataset.root_dir, )
+        sampler = None
+        return train_dataset, val_dataset, sampler
 
     if cfg.dataset.name == 'SynthRAD2023':
         if cfg.model.name == 'vq_gan_3d':
