@@ -206,10 +206,11 @@ class SPADEGroupNorm3D(nn.Module):
         x = self.norm(x)
         # seg torch.Size([10, 37, 32, 256, 256])
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
-
-        torch.Size([10, 512, 8, 8, 8])
-        torch.Size([10, 37, 32, 256, 256])
-        torch.Size([10, 37, 8, 8, 8])
+        # replace downsample dual pyramid gan 1. try vqgan on segmap 2.replace by downsample dual pyramid gan 3. add spade to Vqgan decoder
+        # 4make metrics work
+        #torch.Size([10, 512, 8, 8, 8])
+        #torch.Size([10, 37, 32, 256, 256])
+        #torch.Size([10, 37, 8, 8, 8])
         actv = self.mlp_shared(segmap)
         gamma = self.mlp_gamma(actv)
         beta = self.mlp_beta(actv)
