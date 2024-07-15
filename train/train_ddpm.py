@@ -85,6 +85,7 @@ def run(cfg: DictConfig):
             num_sample_rows=cfg.model.num_sample_rows,
             results_folder=cfg.model.results_folder,
             num_workers=cfg.model.num_workers,
+            seggan_ckpt=cfg.model.seggan_ckpt,
             # logger=cfg.model.logger
         )
 

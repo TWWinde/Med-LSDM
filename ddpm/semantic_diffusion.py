@@ -734,7 +734,7 @@ class SemanticGaussianDiffusion(nn.Module):
             use_dynamic_thres=False,  # from the Imagen paper
             dynamic_thres_percentile=0.9,
             vqgan_ckpt=None,
-            cond_scale = 1.5
+            cond_scale=1.5
     ):
         super().__init__()
         self.channels = channels
@@ -749,16 +749,9 @@ class SemanticGaussianDiffusion(nn.Module):
         else:
             self.vqgan = None
 
-        if seggan_ckpt:
-            self.vqgan = VQGAN.load_from_checkpoint(vqgan_ckpt).cuda()
-            self.vqgan.eval()
-        else:
-            self.vqgan = None
-
-
         betas = cosine_beta_schedule(timesteps)
 
-        alphas = 1. - betas
+        alphas = 1.-betas
         alphas_cumprod = torch.cumprod(alphas, axis=0)
         alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.)
 
@@ -1018,7 +1011,8 @@ class SemanticGaussianDiffusion(nn.Module):
 
         return loss
 
-    def forward(self, x,  *args, **kwargs):
+    def forward(self, x,  *args, cond, **kwargs):
+
         if isinstance(self.vqgan, VQGAN):
             with torch.no_grad():
                 x = self.vqgan.encode(
@@ -1035,7 +1029,7 @@ class SemanticGaussianDiffusion(nn.Module):
         check_shape(x, 'b c f h w', c=self.channels, f=self.num_frames, h=img_size, w=img_size)
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
 
-        return self.p_losses(x, t, *args, **kwargs)
+        return self.p_losses(x, t, *args, cond=seg, **kwargs)
 
 
 # trainer class
@@ -1169,6 +1163,7 @@ class Semantic_Trainer(object):
         num_sample_rows=1,
         max_grad_norm=None,
         num_workers=20,
+        seggan_ckpt=None,
         num_classes=37
     ):
         super().__init__()
@@ -1183,6 +1178,12 @@ class Semantic_Trainer(object):
         self.image_size = diffusion_model.image_size
         self.gradient_accumulate_every = gradient_accumulate_every
         self.train_num_steps = train_num_steps
+
+        if seggan_ckpt:
+            self.seggan = VQGAN.load_from_checkpoint(seggan_ckpt).cuda()
+            self.seggan.eval()
+        else:
+            self.seggan = None
 
         image_size = diffusion_model.image_size
         channels = diffusion_model.channels
@@ -1287,11 +1288,20 @@ class Semantic_Trainer(object):
                 #data = next(self.dl)['data'].cuda()
                 input_image = next(self.dl)['image'].cuda()
                 label = next(self.dl)['label'].cuda()
-                label_one_hot = self.preprocess_input(label)
+                seg = self.preprocess_input(label)
+
+                if isinstance(self.seggan, VQGAN):
+                    with torch.no_grad():
+                        seg = self.seggan.encode(seg, quantize=False, include_embeddings=True)
+                        # normalize to -1 and 1
+                        seg = ((seg - self.seggan.codebook.embeddings.min()) /
+                               (self.seggan.codebook.embeddings.max() -
+                                self.seggan.codebook.embeddings.min())) * 2.0 - 1.0
+
                 with autocast(enabled=self.amp):
                     loss = self.model(
                         input_image,  #
-                        cond=label_one_hot,  #
+                        cond=seg,  #
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
                     )
@@ -1324,7 +1334,7 @@ class Semantic_Trainer(object):
                     batches = num_to_groups(num_samples, self.batch_size)
 
                     all_videos_list = list(
-                        map(lambda n: self.ema_model.sample(cond=label_one_hot, batch_size=n), batches))
+                        map(lambda n: self.ema_model.sample(cond=seg, batch_size=n), batches))
                     all_videos_list = torch.cat(all_videos_list, dim=0)
 
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
