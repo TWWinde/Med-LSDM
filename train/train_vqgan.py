@@ -45,10 +45,8 @@ def run(cfg: DictConfig):
                      save_top_k=-1, filename='{epoch}-{step}-{train/recon_loss:.2f}'))
     callbacks.append(ModelCheckpoint(every_n_train_steps=20000, save_top_k=-1,
                      filename='{epoch}-{step}-20000-{train/recon_loss:.2f}'))
-    callbacks.append(ImageLogger(
-        batch_frequency=1500, max_images=4, clamp=True))
-    callbacks.append(VideoLogger(
-        batch_frequency=2000, max_videos=4, clamp=True))
+    callbacks.append(ImageLogger(batch_frequency=1500, max_images=4, clamp=True))
+    callbacks.append(VideoLogger(batch_frequency=2000, max_videos=4, clamp=True))
 
     # load the most recent checkpoint file
     base_dir = os.path.join(cfg.model.default_root_dir, 'lightning_logs')

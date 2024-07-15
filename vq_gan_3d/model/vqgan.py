@@ -134,8 +134,15 @@ class VQGAN(pl.LightningModule):
         x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']))  # torch.Size([B, 37, 32, 256, 256]) for seg
 
         recon_loss = F.l1_loss(x_recon, x) * self.l1_weight
+        if self.label:
+            recon_labels = torch.argmax(x_recon, dim=1, keepdim=True)
+            target_labels = torch.argmax(x, dim=1, keepdim=True)
+            criterion = torch.nn.CrossEntropyLoss()
+            crossentropy_loss = criterion(recon_labels, target_labels)
+        else:
+            crossentropy_loss = 0
 
-        # Selects one random 2D image from each 3D Image
+            # Selects one random 2D image from each 3D Image
 
         frame_idx = torch.randint(0, T, [B]).cuda()
         frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
@@ -199,13 +206,15 @@ class VQGAN(pl.LightningModule):
                      prog_bar=True, logger=True, on_step=True, on_epoch=True)
             self.log("train/recon_loss", recon_loss, prog_bar=True,
                      logger=True, on_step=True, on_epoch=True)
+            self.log("train/crossentropy_loss", crossentropy_loss, prog_bar=True,
+                     logger=True, on_step=True, on_epoch=True)
             self.log("train/aeloss", aeloss, prog_bar=True,
                      logger=True, on_step=True, on_epoch=True)
             self.log("train/commitment_loss", vq_output['commitment_loss'],
                      prog_bar=True, logger=True, on_step=True, on_epoch=True)
             self.log('train/perplexity', vq_output['perplexity'],
                      prog_bar=True, logger=True, on_step=True, on_epoch=True)
-            return recon_loss, x_recon, vq_output, aeloss, perceptual_loss, gan_feat_loss
+            return recon_loss, x_recon, vq_output, aeloss, perceptual_loss, crossentropy_loss, gan_feat_loss
 
         if optimizer_idx == 1:
             # Train discriminator
@@ -247,15 +256,15 @@ class VQGAN(pl.LightningModule):
             perceptual_loss = self.perceptual_model(
                 frames, frames_recon) * self.perceptual_weight
 
-        return recon_loss, x_recon, vq_output, perceptual_loss
+        return recon_loss, crossentropy_loss, x_recon, vq_output, perceptual_loss
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         x = batch['image']
         if optimizer_idx == 0:
-            recon_loss, _, vq_output, aeloss, perceptual_loss, gan_feat_loss = self.forward(
+            recon_loss, _, vq_output, aeloss, perceptual_loss, crossentropy_loss, gan_feat_loss = self.forward(
                 x, optimizer_idx)
             commitment_loss = vq_output['commitment_loss']
-            loss = recon_loss + commitment_loss + aeloss + perceptual_loss + gan_feat_loss
+            loss = recon_loss + commitment_loss + aeloss + perceptual_loss + gan_feat_loss + crossentropy_loss
         if optimizer_idx == 1:
             discloss = self.forward(x, optimizer_idx)
             loss = discloss
@@ -263,12 +272,12 @@ class VQGAN(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x = batch['image']  # TODO: batch['stft']
-        recon_loss, _, vq_output, perceptual_loss = self.forward(x)
+        recon_loss, crossentropy_loss, _, vq_output, perceptual_loss = self.forward(x)
         self.log('val/recon_loss', recon_loss, prog_bar=True)
+        self.log('val/crossentropy_loss', crossentropy_loss, prog_bar=True)
         self.log('val/perceptual_loss', perceptual_loss, prog_bar=True)
         self.log('val/perplexity', vq_output['perplexity'], prog_bar=True)
-        self.log('val/commitment_loss',
-                 vq_output['commitment_loss'], prog_bar=True)
+        self.log('val/commitment_loss', vq_output['commitment_loss'], prog_bar=True)
 
     def configure_optimizers(self):
         lr = self.cfg.model.lr

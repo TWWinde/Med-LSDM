@@ -24,9 +24,9 @@ class ImageLogger(Callback):
         self.clamp = clamp
 
     @rank_zero_only
-    def log_local(self, save_dir, split, images,
-                  global_step, current_epoch, batch_idx):
+    def log_local(self, save_dir, split, images, global_step, current_epoch, batch_idx):
         root = os.path.join(save_dir, "images", split)
+        print(images.shape)
         # print(root)
         #mean = images.pop('mean_org')
         #mean = mean[(None,)*3].swapaxes(0, -1)
