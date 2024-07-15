@@ -26,13 +26,13 @@ class ImageLogger(Callback):
     @rank_zero_only
     def log_local(self, save_dir, split, images, global_step, current_epoch, batch_idx):
         root = os.path.join(save_dir, "images", split)
-        print(images[1].shape)
         # print(root)
         #mean = images.pop('mean_org')
         #mean = mean[(None,)*3].swapaxes(0, -1)
         #std = images.pop('std_org')
         #std = std[(None,)*3].swapaxes(0, -1)
         for k in images:
+            print(images[k].shape)
             images[k] = (images[k] + 1.0) * 127.5  # std + mean
             torch.clamp(images[k], 0, 255)
             grid = torchvision.utils.make_grid(images[k], nrow=4)
