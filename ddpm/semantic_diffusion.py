@@ -1297,7 +1297,7 @@ class Semantic_Trainer(object):
                         seg = ((seg - self.seggan.codebook.embeddings.min()) /
                                (self.seggan.codebook.embeddings.max() -
                                 self.seggan.codebook.embeddings.min())) * 2.0 - 1.0
-                        assert seg.size[-1] == 64
+                        assert seg.size()[-1] == 64
 
                 with autocast(enabled=self.amp):
                     loss = self.model(
