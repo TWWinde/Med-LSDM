@@ -1,5 +1,6 @@
 name: AutoPET
 root_dir: /data/private/autoPET/autopet_3d/train   #/data/private/autoPET/imagesTr #/misc/data/private/autoPET/autopet_3d_wo_artifacts/train/ct # /misc/data/private/autoPET/autopet_3d/train/ct
+val_dir: /data/private/autoPET/autopet_3d/test
 image_channels: 1
 label_nc: 37
 

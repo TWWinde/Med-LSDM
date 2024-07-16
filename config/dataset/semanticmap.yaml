@@ -1,3 +1,4 @@
 name: SemanticMap
 root_dir: /data/private/autoPET/autopet_3d/train
+val_dir: /data/private/autoPET/autopet_3d/test
 image_channels: 37

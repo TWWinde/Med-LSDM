@@ -1375,6 +1375,7 @@ class Semantic_Trainer(object):
                         map(lambda n: self.ema_model.sample(cond=seg, batch_size=n), batches))
                     all_videos_list = torch.cat(all_videos_list, dim=0)
 
+
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
 
                 one_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
