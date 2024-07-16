@@ -1216,6 +1216,7 @@ class Semantic_Trainer(object):
         if seggan_ckpt:
             self.seggan = VQGAN.load_from_checkpoint(seggan_ckpt).cuda()
             self.seggan.eval()
+            print('seggan is implemented')
         else:
             self.seggan = None
 
