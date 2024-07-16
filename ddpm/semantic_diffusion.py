@@ -666,6 +666,7 @@ class Unet3D_SPADE(nn.Module):
         # classifier free guidance
 
         seg = cond
+        print(seg.shape)
 
         h = []
 
