@@ -1390,11 +1390,14 @@ class Semantic_Trainer(object):
                 frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
                 frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
                 all_label_list = F.pad(label, (2, 2, 2, 2))
+                all_image_list = F.pad(input_image, (2, 2, 2, 2))
                 label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
-                path_image = os.path.join(self.results_folder, 'images_results')
-                os.makedirs(path_image, exist_ok=True)
-                path_sampled = os.path.join(path_image, f'{milestone}-sample.jpg')
-                path_label = os.path.join(path_image, f'{milestone}-label.jpg')
+                image_frames = torch.gather(all_image_list, 2, frame_idx_selected).squeeze(2)
+                path_image_root = os.path.join(self.results_folder, 'images_results')
+                os.makedirs(path_image_root, exist_ok=True)
+                path_sampled = os.path.join(path_image_root, f'{milestone}-sample.jpg')
+                path_label = os.path.join(path_image_root, f'{milestone}-label.jpg')
+                path_image = os.path.join(path_image_root, f'{milestone}-image.jpg')
 
                 def save_image(image_tensor, path, cols=3):
                     B, C, H, W = image_tensor.shape
@@ -1420,6 +1423,7 @@ class Semantic_Trainer(object):
                 """
                 save_image(frames, path_sampled)
                 save_image(label_frames, path_label)
+                save_image(image_frames, path_image)
 
                 if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
                     self.save(milestone)
