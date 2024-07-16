@@ -1029,7 +1029,7 @@ class SemanticGaussianDiffusion(nn.Module):
         check_shape(x, 'b c f h w', c=self.channels, f=self.num_frames, h=img_size, w=img_size)
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
 
-        return self.p_losses(x, t, *args, cond=seg, **kwargs)
+        return self.p_losses(x, t, *args, **kwargs)
 
 
 # trainer class
