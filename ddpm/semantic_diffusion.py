@@ -1336,8 +1336,8 @@ class Semantic_Trainer(object):
 
                     self.scaler.scale(
                         loss / self.gradient_accumulate_every).backward()
-
-                print(f'{self.step}: {loss.item()}')
+                if self.step % 50 == 0:
+                    print(f'{self.step}: {loss.item()}')
 
             log = {'loss': loss.item()}
 
