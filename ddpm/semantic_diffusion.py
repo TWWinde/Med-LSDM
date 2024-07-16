@@ -188,7 +188,7 @@ class LayerNorm(nn.Module):
 
 
 class SPADEGroupNorm3D(nn.Module):
-    def __init__(self, dim_out, label_nc=8, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
+    def __init__(self, dim_out, label_nc=37, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
         super().__init__()
 
         self.norm = nn.GroupNorm(groups, dim_out, affine=False)
@@ -698,6 +698,7 @@ class Unet3D_SPADE(nn.Module):
         # add 3d conv for input segmap
         if self.segconv == 1:
             seg = self.segconv3d(cond)
+            print(seg.shape)
             print('Segmap Convolution is implemented')
         else:
             seg = cond
