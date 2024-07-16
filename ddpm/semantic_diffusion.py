@@ -666,7 +666,6 @@ class Unet3D_SPADE(nn.Module):
         # classifier free guidance
 
         seg = cond
-        print(seg.shape)
 
         h = []
 
@@ -1030,7 +1029,7 @@ class SemanticGaussianDiffusion(nn.Module):
         check_shape(x, 'b c f h w', c=self.channels, f=self.num_frames, h=img_size, w=img_size)
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
 
-        return self.p_losses(x, t, *args, **kwargs)
+        return self.p_losses(x, t, cond, *args, **kwargs)
 
 
 # trainer class
@@ -1298,8 +1297,7 @@ class Semantic_Trainer(object):
                         seg = ((seg - self.seggan.codebook.embeddings.min()) /
                                (self.seggan.codebook.embeddings.max() -
                                 self.seggan.codebook.embeddings.min())) * 2.0 - 1.0
-                        assert seg.size()[-1] == 64
-                        print(seg.shape)
+                        assert seg.size()[-1] == 64   # torch.Size([1, 8, 8, 64, 64])
 
                 with autocast(enabled=self.amp):
                     loss = self.model(
