@@ -544,7 +544,8 @@ class Unet3D_SPADE(nn.Module):
         use_sparse_linear_attn=True,
         label_nc=37,
         block_type='resnet',
-        resnet_groups=8
+        resnet_groups=8,
+        segconv=0
     ):
         super().__init__()
         self.channels = channels
@@ -650,7 +651,11 @@ class Unet3D_SPADE(nn.Module):
             block_klass(dim * 2, dim),
             nn.Conv3d(dim, out_dim, 1)
         )
-        self.segconv3d=SegConv3D()
+
+        # add 3d conv for input segmap
+        self.segconv = segconv
+        if self.segconv == 1:
+            self.segconv3d = SegConv3D()
 
     def forward_with_cond_scale(
             self,
@@ -690,9 +695,11 @@ class Unet3D_SPADE(nn.Module):
 
         t = self.time_mlp(time) if exists(self.time_mlp) else None
 
-        # classifier free guidance
-
-        seg = cond
+        # add 3d conv for input segmap
+        if self.segconv == 1:
+            seg = self.segconv3d(cond)
+        else:
+            seg = cond
 
         h = []
 

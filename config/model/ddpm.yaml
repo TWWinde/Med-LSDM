@@ -1,6 +1,7 @@
 vqgan_ckpt: /misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/BRATS/flair/lightning_logs/version_0/checkpoints/latest_checkpoint.ckpt'
-seggan_ckpt: /no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/SemanticMap/results/lightning_logs/version_136248/checkpoints/latest_checkpoint.ckpt
+seggan_ckpt: ???
 name: ddpm
+segconv: 0
 
 # Have to be derived from VQ-GAN Latent space dimensions
 diffusion_img_size: 64
