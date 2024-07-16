@@ -698,6 +698,7 @@ class Unet3D_SPADE(nn.Module):
         # add 3d conv for input segmap
         if self.segconv == 1:
             seg = self.segconv3d(cond)
+            print('Segmap Convolution is implemented')
         else:
             seg = cond
 
