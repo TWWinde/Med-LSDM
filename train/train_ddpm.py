@@ -68,13 +68,14 @@ def run(cfg: DictConfig):
     else:
         raise ValueError(f"Model {cfg.model.diffusion} doesn't exist")
 
-    train_dataset, *_ = get_dataset(cfg)
+    train_dataset, val_dataset = get_dataset(cfg)
 
     if cfg.model.diffusion == 'SemanticGaussianDiffusion':
         trainer = Semantic_Trainer(
             diffusion,
             cfg=cfg,
-            dataset=train_dataset,
+            train_dataset=train_dataset,
+            val_dataset=val_dataset,
             train_batch_size=cfg.model.batch_size,
             save_and_sample_every=cfg.model.save_and_sample_every,
             train_lr=cfg.model.train_lr,

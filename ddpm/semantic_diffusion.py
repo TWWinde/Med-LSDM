@@ -1183,7 +1183,8 @@ class Semantic_Trainer(object):
         diffusion_model,
         cfg,
         folder=None,
-        dataset=None,
+        train_dataset=None,
+        val_dataset=None,
         *,
         ema_decay=0.995,
         num_frames=16,
@@ -1228,14 +1229,15 @@ class Semantic_Trainer(object):
         self.num_classes = num_classes
 
         self.cfg = cfg
-        if dataset:
-            self.ds = dataset
+        if train_dataset:
+            self.ds = train_dataset
         else:
             assert folder is not None, 'Provide a folder path to the dataset'
             self.ds = Dataset(folder, image_size,
                               channels=channels, num_frames=num_frames)
         dl = DataLoader(self.ds, batch_size=train_batch_size,
                         shuffle=True, pin_memory=True, num_workers=num_workers)
+        val_dl = DataLoader(val_dataset, batch_size=train_batch_size*2, shuffle=False, pin_memory=True, num_workers=num_workers)
 
         self.len_dataloader = len(dl)
         self.dl = cycle(dl)
@@ -1312,17 +1314,11 @@ class Semantic_Trainer(object):
         self.scaler.load_state_dict(data['scaler'])
         print("checkpoint is successful loaded")
 
-    def train(
-        self,
-        prob_focus_present=0.,
-        focus_present_mask=None,
-        log_fn=noop
-    ):
+    def train( self, prob_focus_present=0., focus_present_mask=None, log_fn=noop):
         assert callable(log_fn)
 
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
-                #data = next(self.dl)['data'].cuda()
                 input_image = next(self.dl)['image'].cuda()
                 label = next(self.dl)['label'].cuda()
                 seg = self.preprocess_input(label)
@@ -1338,14 +1334,13 @@ class Semantic_Trainer(object):
 
                 with autocast(enabled=self.amp):
                     loss = self.model(
-                        input_image,  #
-                        cond=seg,  #
+                        input_image,
+                        cond=seg,
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
                     )
 
-                    self.scaler.scale(
-                        loss / self.gradient_accumulate_every).backward()
+                    self.scaler.scale( loss / self.gradient_accumulate_every).backward()
                 if self.step % 50 == 0:
                     print(f'{self.step}: {loss.item()}')
 
@@ -1353,8 +1348,7 @@ class Semantic_Trainer(object):
 
             if exists(self.max_grad_norm):
                 self.scaler.unscale_(self.opt)
-                nn.utils.clip_grad_norm_(
-                    self.model.parameters(), self.max_grad_norm)
+                nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
 
             self.scaler.step(self.opt)
             self.scaler.update()
@@ -1374,7 +1368,6 @@ class Semantic_Trainer(object):
                     all_videos_list = list(
                         map(lambda n: self.ema_model.sample(cond=seg, batch_size=n), batches))
                     all_videos_list = torch.cat(all_videos_list, dim=0)
-
 
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
 
@@ -1411,17 +1404,7 @@ class Semantic_Trainer(object):
                         plt.axis('off')
                     plt.savefig(path)
                     plt.close()
-                """
-                    def save_image(image, save_path):
-                    plt.figure(figsize=(50, 50))
-                    cols = 2
-                    for num, frame in enumerate(image.cpu()):
-                        plt.subplot(math.ceil(len(image) / cols), cols, num + 1)
-                        plt.axis('off')
-                        plt.imshow(frame[0], cmap='gray')
-                        plt.savefig(save_path)
-                
-                """
+
                 save_image(frames, path_sampled)
                 save_image(label_frames, path_label)
                 save_image(image_frames, path_image)

@@ -17,8 +17,7 @@ def create_window(window_size, channel=1):
         _1D_window.t()).float().unsqueeze(0).unsqueeze(0)
     window = _2D_window.expand(
         channel, 1, window_size, window_size).contiguous()
-    _3D_window = filters.gaussian_filter
-    return window
+    return window.unsqueeze(2)
 
 
 def ssim_exact(img1, img2, sd=1.5, C1=0.01**2, C2=0.03**2):

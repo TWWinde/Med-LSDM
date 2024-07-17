@@ -6,69 +6,53 @@ import torchvision.transforms as transforms
 import pytorch_msssim
 import lpips
 import torch
+import torch.nn.functional as F
+from scipy import ndimage
+from math import exp
+
 # --------------------------------------------------------------------------#
 # This code is to calculate and save SSIM PIPS PSNR RMSE
 # --------------------------------------------------------------------------#
 
 
-class metrics():
-    def __init__(self, cfg, dataloader_val):
+class metrics:
+    def __init__(self, cfg,  dataloader_val):
         self.cfg = cfg
         self.val_dataloader = dataloader_val
-        self.path_to_save = os.path.join(self.opt.checkpoints_dir, self.opt.name)
-        self.path_to_save_PIPS = os.path.join(self.opt.checkpoints_dir, self.opt.name, "PIPS")
-        self.path_to_save_SSIM = os.path.join(self.opt.checkpoints_dir, self.opt.name, "SSIM")
-        self.path_to_save_PSNR = os.path.join(self.opt.checkpoints_dir, self.opt.name, "PSNR")
-        self.path_to_save_RMSE = os.path.join(self.opt.checkpoints_dir, self.opt.name, "RMSE")
+        self.path_to_save = self.cfg.result_folder
+        self.path_to_save_PIPS = os.path.join(self.path_to_save, "PIPS")
+        self.path_to_save_SSIM = os.path.join(self.path_to_save, "SSIM")
+        self.path_to_save_PSNR = os.path.join(self.path_to_save, "PSNR")
+        self.path_to_save_RMSE = os.path.join(self.path_to_save, "RMSE")
 
         Path(self.path_to_save_SSIM).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_PIPS).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_PSNR).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_RMSE).mkdir(parents=True, exist_ok=True)
 
-    def compute_metrics(self, netG, netEMA, model=None):
+    def compute_metrics(self, model):
         pips, ssim, psnr, rmse  = [], [], [], []
-        loss_fn_alex = lpips.LPIPS(net='vgg')
-        loss_fn_alex = loss_fn_alex.to('cuda:0')
-        netG.eval()
-        transform1 = transforms.Compose([
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # [0, 1]normalized to [—1, 1]
-        ])
-        transform2 = transforms.Compose([
-            transforms.Normalize(mean=[0, 0, 0], std=[1, 1, 1])  # normalized to [0, 1]
-        ])
-        if not self.opt.no_EMA:
-            netEMA.eval()
-
+        model.eval()
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
-                image,  label = models.preprocess_input(self.opt, data_i, test=False)
-                if self.opt.no_EMA:
-                    generated = netG(label)
-                else:
-                    generated = netEMA(label)  # [2, 3, 256, 256] [-1,1]
-
+                image,  label = self.preprocess_input(data_i)
+                generated = model.sample(cond=label)
                 input1 = (generated + 1) / 2
                 input2 = (image + 1) / 2
-
                 # SSIM
                 ssim_value = pytorch_msssim.ssim(input1, input2)
                 ssim.append(ssim_value.mean().item())
                 # PIPS lpips
-                d = loss_fn_alex(input1, input2)
+                d = self.pips_3d(input1, input2)
                 pips.append(d.mean().item())
                 # PSNR, RMSE
-                mse = torch.nn.functional.mse_loss(input1, input2)
-                max_pixel_value = 1.0
-                psnr_value = 10 * torch.log10((max_pixel_value ** 2) / mse)
-                rmse_value = torch.sqrt(mse)
+                psnr_value = self.psnr_3d(input1, input2)
+                rmse_value = self.rmse_3d(input1, input2)
                 psnr.append(psnr_value.mean().item())
                 rmse.append(rmse_value.mean().item())
 
-        netG.train()
-        if not self.opt.no_EMA:
-            netEMA.train()
+        model.train()
 
         avg_pips = sum(pips) / total_samples
         avg_ssim = sum(ssim) / total_samples
@@ -81,6 +65,41 @@ class metrics():
 
         return avg_pips, avg_ssim, avg_psnr, avg_rmse
 
+    def pips_3d(self, img1, img2):
+        assert img1.shape == img2.shape
+        b, c, d, h, w = img1.shape
+        loss_lpips = lpips.LPIPS(net='vgg').to('cuda:0')
+        total_loss = 0.0
+        for i in range(d):
+            total_loss += loss_lpips(img1[:, :, i, :, :], img2[:, :, i, :, :])
+        return total_loss / d
+
+    def psnr_3d(self, img1, img2, max_pixel_value=1.0):
+        max_pixel_value = max(max(img1), max(img2))
+        mse = torch.mean((img1 - img2) ** 2)
+        psnr = 20 * torch.log10(max_pixel_value / torch.sqrt(mse))
+
+        return psnr.item()
+
+    def rmse_3d(self, img1, img2):
+        mse = torch.mean((img1 - img2) ** 2)
+        rmse = torch.sqrt(mse)
+        return rmse.item()
+
+    def preprocess_input(self, data):
+
+        # move to GPU and change data types
+        data = data['label'].long()
+        img = data['image']
+        # create one-hot label map
+        label_map = data
+        bs, _, t, h, w = label_map.size()
+        nc = self.num_classes
+        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
+        input_semantics = input_label.scatter_(1, label_map, 1.0)
+
+        return img, input_semantics
+
     def update_metrics(self, model, cur_iter):
         print("--- Iter %s: computing PIPS SSIM PSNR RMSE---" % (cur_iter))
         cur_pips, cur_ssim, cur_psnr, cur_rmse= self.compute_metrics(model.module.netG, model.module.netEMA, model)
@@ -89,7 +108,7 @@ class metrics():
         self.update_logs(cur_psnr, cur_iter, 'PSNR')
         self.update_logs(cur_rmse, cur_iter, 'RMSE')
 
-        print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips),"{:.2f}".format(cur_ssim),"{:.2f}".format(cur_psnr),"{:.2f}".format(cur_rmse))
+        print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips), "{:.2f}".format(cur_ssim), "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse))
 
     def update_logs(self, cur_data, epoch, mode):
         try:
@@ -119,3 +138,72 @@ class metrics():
         print("--- SSIM at test : ", "{:.5f}".format(ssim))
         print("--- PSNR at test : ", "{:.2f}".format(psnr))
         print("--- RMSE at test : ", "{:.2f}".format(rmse))
+
+
+
+def gaussian(window_size, sigma):
+    gauss = torch.Tensor(
+        [exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
+    return gauss/gauss.sum()
+
+
+def create_window(window_size, channel=1):
+    _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
+    _2D_window = _1D_window.mm(
+        _1D_window.t()).float().unsqueeze(0).unsqueeze(0)
+    window = _2D_window.expand(
+        channel, 1, window_size, window_size).contiguous()
+    return window.unsqueeze(2)
+
+
+def ssim_3d(img1, img2, window_size=11, window=None, size_average=True, val_range=None):
+    # Value range can be different from 255. Other common ranges are 1 (sigmoid) and 2 (tanh).
+    if val_range is None:
+        if torch.max(img1) > 128:
+            max_val = 255
+        else:
+            max_val = 1
+
+        if torch.min(img1) < -0.5:
+            min_val = -1
+        else:
+            min_val = 0
+        L = max_val - min_val
+    else:
+        L = val_range
+
+    padd = 0
+    (_, channel, depth, height, width) = img1.size()
+    if window is None:
+        real_size = min(window_size, depth, height, width)
+        window = create_window(real_size, channel=channel).to(img1.device)
+
+    mu1 = F.conv3d(img1, window, padding=padd, groups=channel)
+    mu2 = F.conv3d(img2, window, padding=padd, groups=channel)
+
+    mu1_sq = mu1.pow(2)
+    mu2_sq = mu2.pow(2)
+    mu1_mu2 = mu1 * mu2
+
+    sigma1_sq = F.conv3d(img1 * img1, window, padding=padd,
+                         groups=channel) - mu1_sq
+    sigma2_sq = F.conv3d(img2 * img2, window, padding=padd,
+                         groups=channel) - mu2_sq
+    sigma12 = F.conv3d(img1 * img2, window, padding=padd,
+                       groups=channel) - mu1_mu2
+
+    C1 = (0.01 * L) ** 2
+    C2 = (0.03 * L) ** 2
+
+    v1 = 2.0 * sigma12 + C2
+    v2 = sigma1_sq + sigma2_sq + C2
+    cs = torch.mean(v1 / v2)  # contrast sensitivity
+
+    ssim_map = ((2 * mu1_mu2 + C1) * v1) / ((mu1_sq + mu2_sq + C1) * v2)
+
+    if size_average:
+        ret = ssim_map.mean()
+    else:
+        ret = ssim_map.mean(1).mean(1).mean(1)
+
+    return ret
