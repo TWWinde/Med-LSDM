@@ -25,7 +25,7 @@ from rotary_embedding_torch import RotaryEmbedding
 from ddpm.text import tokenize, bert_embed, BERT_MODEL_DIM
 from torch.utils.data import Dataset, DataLoader
 from vq_gan_3d.model.vqgan import VQGAN
-
+from evaluation.metrics import metrics
 import matplotlib.pyplot as plt
 
 # helpers functions
@@ -1257,7 +1257,9 @@ class Semantic_Trainer(object):
         self.num_sample_rows = num_sample_rows
         self.results_folder = Path(results_folder)
         self.results_folder.mkdir(exist_ok=True, parents=True)
-
+        self.metrics_folder = os.path.join(self.results_folder, 'metrics')
+        os.makedirs(self.metrics_folder)
+        self.metrics_computer = metrics(self.metrics_folder, val_dl)
         self.reset_parameters()
 
     def preprocess_input(self, data):
@@ -1359,7 +1361,8 @@ class Semantic_Trainer(object):
 
             if self.step != 0 and self.step % self.save_and_sample_every == 0:
                 self.ema_model.eval()
-
+                # update metrics
+                self.metrics_computer.update_metrics(self.ema_model, milestone)
                 with torch.no_grad():
                     milestone = self.step // self.save_and_sample_every
                     num_samples = self.num_sample_rows ** 2

@@ -16,10 +16,9 @@ from math import exp
 
 
 class metrics:
-    def __init__(self, cfg,  dataloader_val):
-        self.cfg = cfg
+    def __init__(self, path,  dataloader_val):
         self.val_dataloader = dataloader_val
-        self.path_to_save = self.cfg.result_folder
+        self.path_to_save = path
         self.path_to_save_PIPS = os.path.join(self.path_to_save, "PIPS")
         self.path_to_save_SSIM = os.path.join(self.path_to_save, "SSIM")
         self.path_to_save_PSNR = os.path.join(self.path_to_save, "PSNR")
@@ -31,18 +30,20 @@ class metrics:
         Path(self.path_to_save_RMSE).mkdir(parents=True, exist_ok=True)
 
     def compute_metrics(self, model):
-        pips, ssim, psnr, rmse  = [], [], [], []
+        pips, ssim, psnr, rmse = [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 image,  label = self.preprocess_input(data_i)
                 generated = model.sample(cond=label)
-                input1 = (generated + 1) / 2
-                input2 = (image + 1) / 2
+                if min(input1) < 0:
+                    input1 = (generated + 1) / 2
+                if min(input2) < 0:
+                    input2 = (image + 1) / 2
                 # SSIM
-                ssim_value = pytorch_msssim.ssim(input1, input2)
-                ssim.append(ssim_value.mean().item())
+                ssim_value, _ = self.ssim_3d(input1, input2)
+                ssim.append(ssim_value.item())
                 # PIPS lpips
                 d = self.pips_3d(input1, input2)
                 pips.append(d.mean().item())
@@ -86,6 +87,43 @@ class metrics:
         rmse = torch.sqrt(mse)
         return rmse.item()
 
+    def ssim_3d(self, img1, img2, window_size=11, size_average=True, val_range=None):
+        if val_range is None:
+            max_val = 255 if torch.max(img1) > 128 else 1
+            min_val = -1 if torch.min(img1) < -0.5 else 0
+            L = max_val - min_val
+        else:
+            L = val_range
+
+        padd = 0
+        (_, channel, depth, height, width) = img1.size()
+        window = create_window(window_size, channel=channel).to(img1.device)
+
+        mu1 = F.conv3d(img1, window, padding=padd, groups=channel)
+        mu2 = F.conv3d(img2, window, padding=padd, groups=channel)
+
+        mu1_sq = mu1.pow(2)
+        mu2_sq = mu2.pow(2)
+        mu1_mu2 = mu1 * mu2
+
+        sigma1_sq = F.conv3d(img1 * img1, window, padding=padd, groups=channel) - mu1_sq
+        sigma2_sq = F.conv3d(img2 * img2, window, padding=padd, groups=channel) - mu2_sq
+        sigma12 = F.conv3d(img1 * img2, window, padding=padd, groups=channel) - mu1_mu2
+
+        C1 = (0.01 * L) ** 2
+        C2 = (0.03 * L) ** 2
+
+        v1 = 2.0 * sigma12 + C2
+        v2 = sigma1_sq + sigma2_sq + C2
+        cs = torch.mean(v1 / v2)
+
+        ssim_map = ((2 * mu1_mu2 + C1) * v1) / ((mu1_sq + mu2_sq + C1) * v2)
+
+        if size_average:
+            return ssim_map.mean(), cs
+        else:
+            return ssim_map.mean(1).mean(1).mean(1), cs
+
     def preprocess_input(self, data):
 
         # move to GPU and change data types
@@ -102,7 +140,7 @@ class metrics:
 
     def update_metrics(self, model, cur_iter):
         print("--- Iter %s: computing PIPS SSIM PSNR RMSE---" % (cur_iter))
-        cur_pips, cur_ssim, cur_psnr, cur_rmse= self.compute_metrics(model.module.netG, model.module.netEMA, model)
+        cur_pips, cur_ssim, cur_psnr, cur_rmse= self.compute_metrics(model)
         self.update_logs(cur_pips, cur_iter, 'PIPS')
         self.update_logs(cur_ssim, cur_iter, 'SSIM')
         self.update_logs(cur_psnr, cur_iter, 'PSNR')
@@ -141,42 +179,32 @@ class metrics:
 
 
 
+
 def gaussian(window_size, sigma):
     gauss = torch.Tensor(
-        [exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
-    return gauss/gauss.sum()
+        [np.exp(-(x - window_size // 2)**2 / float(2 * sigma**2)) for x in range(window_size)]
+    )
+    return gauss / gauss.sum()
 
 
 def create_window(window_size, channel=1):
     _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
-    _2D_window = _1D_window.mm(
-        _1D_window.t()).float().unsqueeze(0).unsqueeze(0)
-    window = _2D_window.expand(
-        channel, 1, window_size, window_size).contiguous()
-    return window.unsqueeze(2)
+    _3D_window = (_1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0))
+    window = _3D_window.expand(channel, 1, window_size, window_size, window_size).contiguous()
+    return window
 
 
-def ssim_3d(img1, img2, window_size=11, window=None, size_average=True, val_range=None):
-    # Value range can be different from 255. Other common ranges are 1 (sigmoid) and 2 (tanh).
+def ssim_3d(img1, img2, window_size=11, size_average=True, val_range=None):
     if val_range is None:
-        if torch.max(img1) > 128:
-            max_val = 255
-        else:
-            max_val = 1
-
-        if torch.min(img1) < -0.5:
-            min_val = -1
-        else:
-            min_val = 0
+        max_val = 255 if torch.max(img1) > 128 else 1
+        min_val = -1 if torch.min(img1) < -0.5 else 0
         L = max_val - min_val
     else:
         L = val_range
 
     padd = 0
     (_, channel, depth, height, width) = img1.size()
-    if window is None:
-        real_size = min(window_size, depth, height, width)
-        window = create_window(real_size, channel=channel).to(img1.device)
+    window = create_window(window_size, channel=channel).to(img1.device)
 
     mu1 = F.conv3d(img1, window, padding=padd, groups=channel)
     mu2 = F.conv3d(img2, window, padding=padd, groups=channel)
@@ -185,25 +213,20 @@ def ssim_3d(img1, img2, window_size=11, window=None, size_average=True, val_rang
     mu2_sq = mu2.pow(2)
     mu1_mu2 = mu1 * mu2
 
-    sigma1_sq = F.conv3d(img1 * img1, window, padding=padd,
-                         groups=channel) - mu1_sq
-    sigma2_sq = F.conv3d(img2 * img2, window, padding=padd,
-                         groups=channel) - mu2_sq
-    sigma12 = F.conv3d(img1 * img2, window, padding=padd,
-                       groups=channel) - mu1_mu2
+    sigma1_sq = F.conv3d(img1 * img1, window, padding=padd, groups=channel) - mu1_sq
+    sigma2_sq = F.conv3d(img2 * img2, window, padding=padd, groups=channel) - mu2_sq
+    sigma12 = F.conv3d(img1 * img2, window, padding=padd, groups=channel) - mu1_mu2
 
     C1 = (0.01 * L) ** 2
     C2 = (0.03 * L) ** 2
 
     v1 = 2.0 * sigma12 + C2
     v2 = sigma1_sq + sigma2_sq + C2
-    cs = torch.mean(v1 / v2)  # contrast sensitivity
+    cs = torch.mean(v1 / v2)
 
     ssim_map = ((2 * mu1_mu2 + C1) * v1) / ((mu1_sq + mu2_sq + C1) * v2)
 
     if size_average:
-        ret = ssim_map.mean()
+        return ssim_map.mean(), cs
     else:
-        ret = ssim_map.mean(1).mean(1).mean(1)
-
-    return ret
+        return ssim_map.mean(1).mean(1).mean(1), cs
