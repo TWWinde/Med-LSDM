@@ -124,14 +124,13 @@ class metrics:
     def preprocess_input(self, data):
 
         # move to GPU and change data types
-        label = data['label'].long()
-        img = data['image'].float()
+        label = data['label'].cuda().long()
+        img = data['image'].cuda().float()
         # create one-hot label map
-        label_map = label
-        bs, _, t, h, w = label_map.size()
+        bs, _, t, h, w = label.size()
         nc = self.num_classes
         input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
-        input_semantics = input_label.scatter_(1, label_map, 1.0)
+        input_semantics = input_label.scatter_(1, label, 1.0)
 
         return img, input_semantics
 
