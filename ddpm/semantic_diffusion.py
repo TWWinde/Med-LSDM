@@ -1359,10 +1359,10 @@ class Semantic_Trainer(object):
 
             if self.step != 0 and self.step % self.save_and_sample_every == 0:
                 self.ema_model.eval()
+                milestone = self.step // self.save_and_sample_every
                 # update metrics
                 self.metrics_computer.update_metrics(self.ema_model, milestone)
                 with torch.no_grad():
-                    milestone = self.step // self.save_and_sample_every
                     num_samples = self.num_sample_rows ** 2
                     batches = num_to_groups(num_samples, self.batch_size)
 
