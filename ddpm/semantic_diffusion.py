@@ -970,9 +970,11 @@ class SemanticGaussianDiffusion(nn.Module):
         b = shape[0]
         img = torch.randn(shape, device=device)
 
-        for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
+        for i in reversed(range(0, self.num_timesteps)):
             img = self.p_sample(img, torch.full(
                 (b,), i, device=device, dtype=torch.long), cond=cond, cond_scale=cond_scale)
+
+        print('#################### sample finished ####################')
 
         return img
 
