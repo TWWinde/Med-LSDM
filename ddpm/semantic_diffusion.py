@@ -1258,7 +1258,7 @@ class Semantic_Trainer(object):
         self.results_folder = Path(results_folder)
         self.results_folder.mkdir(exist_ok=True, parents=True)
         self.metrics_folder = os.path.join(self.results_folder, 'metrics')
-        os.makedirs(self.metrics_folder)
+        os.makedirs(self.metrics_folder, exist_ok=True)
         self.metrics_computer = metrics(self.metrics_folder, val_dl)
         self.reset_parameters()
 
