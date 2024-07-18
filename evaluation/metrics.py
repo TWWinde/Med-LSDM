@@ -124,7 +124,7 @@ class metrics:
 
         # move to GPU and change data types
         data = data['label'].long()
-        img = data['image']
+        img = data['image'].float()
         # create one-hot label map
         label_map = data
         bs, _, t, h, w = label_map.size()
