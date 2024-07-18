@@ -24,6 +24,7 @@ class metrics:
         Path(self.path_to_save_PIPS).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_PSNR).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_RMSE).mkdir(parents=True, exist_ok=True)
+        self.num_classes = 37
 
     def compute_metrics(self, model):
         pips, ssim, psnr, rmse = [], [], [], []
@@ -123,10 +124,10 @@ class metrics:
     def preprocess_input(self, data):
 
         # move to GPU and change data types
-        data = data['label'].long()
+        label = data['label'].long()
         img = data['image'].float()
         # create one-hot label map
-        label_map = data
+        label_map = label
         bs, _, t, h, w = label_map.size()
         nc = self.num_classes
         input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
