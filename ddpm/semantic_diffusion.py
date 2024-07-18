@@ -1410,7 +1410,7 @@ class Semantic_Trainer(object):
                 save_image(label_frames, path_label)
                 save_image(image_frames, path_image)
 
-                if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
+                if self.step != 0 and self.step % (self.save_and_sample_every * 10) == 0:
                     self.save(milestone)
 
             log_fn(log)
