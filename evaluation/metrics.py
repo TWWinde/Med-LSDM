@@ -34,14 +34,8 @@ class metrics:
             for i, data_i in enumerate(self.val_dataloader):
                 image,  label = self.preprocess_input(data_i)
                 generated = model.sample(cond=label)
-                if min(generated) < 0:
-                    input1 = (generated + 1) / 2
-                else:
-                    input1 = generated
-                if min(image) < 0:
-                    input2 = (image + 1) / 2
-                else:
-                    input2 = image
+                input1 = (generated + 1) / 2
+                input2 = (image + 1) / 2
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input1, input2)
                 ssim.append(ssim_value.item())
