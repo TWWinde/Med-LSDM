@@ -1337,21 +1337,6 @@ class Semantic_Trainer(object):
                 input_image, label = data_['image'].cuda(), data_['label'].cuda()
                 seg = self.preprocess_input(label)
 
-                B, C, D, H, W = input_image.shape
-                frame_idx = torch.randint(0, D, [B]).cuda()
-                frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
-                all_label_list = F.pad(label, (2, 2, 2, 2))
-                all_image_list = F.pad(input_image, (2, 2, 2, 2))
-                label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
-                image_frames = torch.gather(all_image_list, 2, frame_idx_selected).squeeze(2)
-                path_image_root = os.path.join(self.results_folder, 'images_results')
-                os.makedirs(path_image_root, exist_ok=True)
-                path_label = os.path.join(path_image_root, f'{self.step}-label_.jpg')
-                path_image = os.path.join(path_image_root, f'{self.step}-image_.jpg')
-
-                self.save_image(label_frames, path_label)
-                self.save_image(image_frames, path_image)
-
                 if isinstance(self.seggan, VQGAN):
                     with torch.no_grad():
                         seg = self.seggan.encode(seg, quantize=False, include_embeddings=True)
@@ -1368,7 +1353,6 @@ class Semantic_Trainer(object):
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
                     )
-
 
                     self.scaler.scale( loss / self.gradient_accumulate_every).backward()
                 if self.step % 50 == 0:
