@@ -77,8 +77,8 @@ class Metrics:
                 rmse_value = self.rmse_3d(input1, input2)
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
-                break
-
+                if i ==20:
+                    break
         model.train()
 
         avg_pips = sum(pips) / total_samples
