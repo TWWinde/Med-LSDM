@@ -95,7 +95,7 @@ def get_dataset(cfg):
                 root_dir=cfg.dataset.val_dir)
             sampler = None
             return train_dataset, val_dataset, sampler
-        elif cfg.model.name == 'ddpm':
+        elif cfg.model.name == 'ddpm' or 'vq_gan_spade':
             train_dataset = AutoPETDataset(
                 root_dir=cfg.dataset.root_dir, sem_map=True)
             val_dataset = AutoPETDataset(

@@ -40,7 +40,7 @@ def vanilla_d_loss(logits_real, logits_fake):
     return d_loss
 
 
-class VQGAN(pl.LightningModule):
+class VQGAN_SPADE(pl.LightningModule):
     def __init__(self, cfg,  label=False):
         super().__init__()
         self.cfg = cfg
@@ -112,24 +112,26 @@ class VQGAN(pl.LightningModule):
                 return vq_output['encodings']
         return h
 
-    def decode(self, latent, quantize=False):
+    def decode(self, latent, seg, quantize=False):
         if quantize:
             vq_output = self.codebook(latent)
             latent = vq_output['encodings']
         h = F.embedding(latent, self.codebook.embeddings)
         h = self.post_vq_conv(shift_dim(h, -1, 1))
-        return self.decoder(h)
+        return self.decoder(h, seg)
 
-    def forward(self, x, optimizer_idx=None, log_image=False):
+    def forward(self, x, seg, optimizer_idx=None, log_image=False):
 
         #B, C, T, H, W = x.shape  # ([2, 1, 32, 256, 256])
         if self.label:
             x = self.preprocess_input(x)
 
+        seg = self.preprocess_input(seg)
+
         B, C, T, H, W = x.shape
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)
-        x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']))  # torch.Size([B, 37, 32, 256, 256]) for seg
+        x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']), seg)  # torch.Size([B, 37, 32, 256, 256]) for seg
 
         recon_loss = F.l1_loss(x_recon, x) * self.l1_weight
         if self.label:
@@ -258,13 +260,14 @@ class VQGAN(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx):
         x = batch['image']
+        seg = batch['label']
         if optimizer_idx == 0:
             recon_loss, _, vq_output, aeloss, perceptual_loss, crossentropy_loss, gan_feat_loss = self.forward(
-                x, optimizer_idx)
+                x, seg, optimizer_idx)
             commitment_loss = vq_output['commitment_loss']
             loss = recon_loss + commitment_loss + aeloss + perceptual_loss + gan_feat_loss + crossentropy_loss
         if optimizer_idx == 1:
-            discloss = self.forward(x, optimizer_idx)
+            discloss = self.forward(x, seg, optimizer_idx)
             loss = discloss
 
         return loss
@@ -360,6 +363,32 @@ class Encoder(nn.Module):
         return h
 
 
+class SPADEGroupNorm3D(nn.Module):
+    def __init__(self, dim_out, label_nc=37, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
+        super().__init__()
+
+        self.norm = nn.GroupNorm(groups, dim_out, affine=False)
+        self.eps = eps
+
+        self.mlp_shared = nn.Sequential(
+            nn.Conv3d(label_nc, dim_hidden, (1, 3, 3), padding=(0, 1, 1)),
+            nn.ReLU()
+        )
+
+        self.mlp_gamma = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
+        self.mlp_beta = nn.Conv3d(dim_hidden, dim_out, (1, 3, 3), padding=(0, 1, 1))
+
+    def forward(self, x, segmap):
+        x = self.norm(x)
+        # seg torch.Size([10, 37, 32, 256, 256])
+        segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
+
+        actv = self.mlp_shared(segmap)
+        gamma = self.mlp_gamma(actv)
+        beta = self.mlp_beta(actv)
+
+        return x * (1 + gamma) + beta
+
 
 class Decoder(nn.Module):
     def __init__(self, n_hiddens, upsample, image_channel, norm_type='group', num_groups=32):
@@ -370,7 +399,7 @@ class Decoder(nn.Module):
 
         in_channels = n_hiddens*2**max_us
         self.final_block = nn.Sequential(
-            Normalize(in_channels, norm_type, num_groups=num_groups),
+            SPADEGroupNorm3D(in_channels),        #Normalize(in_channels, norm_type, num_groups=num_groups),
             SiLU()
         )
 
@@ -382,9 +411,9 @@ class Decoder(nn.Module):
             us = tuple([2 if d > 0 else 1 for d in n_times_upsample])
             block.up = SamePadConvTranspose3d(
                 in_channels, out_channels, 4, stride=us)
-            block.res1 = ResBlock(
+            block.res1 = Spade_ResBlock(
                 out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
-            block.res2 = ResBlock(
+            block.res2 = Spade_ResBlock(
                 out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
             self.conv_blocks.append(block)
             n_times_upsample -= 1
@@ -392,12 +421,12 @@ class Decoder(nn.Module):
         self.conv_last = SamePadConv3d(
             out_channels, image_channel, kernel_size=3)
 
-    def forward(self, x):
-        h = self.final_block(x)
+    def forward(self, x, seg):
+        h = self.final_block(x,seg)
         for i, block in enumerate(self.conv_blocks):
             h = block.up(h)
-            h = block.res1(h)
-            h = block.res2(h)
+            h = block.res1(h, seg)
+            h = block.res2(h, seg)
         h = self.conv_last(h)
         return h
 
@@ -427,6 +456,43 @@ class ResBlock(nn.Module):
         h = silu(h)
         h = self.conv1(h)
         h = self.norm2(h)
+        h = silu(h)
+        h = self.conv2(h)
+
+        if self.in_channels != self.out_channels:
+            x = self.conv_shortcut(x)
+
+        return x+h
+
+
+class Spade_ResBlock(nn.Module):
+    def __init__(self, in_channels, out_channels=None, conv_shortcut=False, dropout=0.0, norm_type='group', padding_type='replicate', num_groups=32):
+        super().__init__()
+        self.in_channels = in_channels
+        out_channels = in_channels if out_channels is None else out_channels
+        self.out_channels = out_channels
+        self.use_conv_shortcut = conv_shortcut
+
+        self.spade_norm1 = SPADEGroupNorm3D(in_channels)  #  Normalize(in_channels, norm_type, num_groups=num_groups)
+
+        self.conv1 = SamePadConv3d(
+            in_channels, out_channels, kernel_size=3, padding_type=padding_type)
+        self.dropout = torch.nn.Dropout(dropout)
+
+        self.spade_norm2 = SPADEGroupNorm3D(in_channels)          #Normalize(in_channels, norm_type, num_groups=num_groups)
+
+        self.conv2 = SamePadConv3d(
+            out_channels, out_channels, kernel_size=3, padding_type=padding_type)
+        if self.in_channels != self.out_channels:
+            self.conv_shortcut = SamePadConv3d(
+                in_channels, out_channels, kernel_size=3, padding_type=padding_type)
+
+    def forward(self, x, seg):
+        h = x
+        h = self.norm1(h, seg)
+        h = silu(h)
+        h = self.conv1(h)
+        h = self.norm2(h, seg)
         h = silu(h)
         h = self.conv2(h)
 
