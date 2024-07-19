@@ -58,8 +58,8 @@ class Metrics:
                 # PSNR, RMSE
                 psnr_value = self.psnr_3d(input1, input2)
                 rmse_value = self.rmse_3d(input1, input2)
-                psnr.append(psnr_value.mean().item())
-                rmse.append(rmse_value.mean().item())
+                psnr.append(psnr_value.item())
+                rmse.append(rmse_value.item())
 
         model.train()
 
@@ -82,12 +82,12 @@ class Metrics:
     def psnr_3d(self, img1, img2):
         mse = torch.mean((img1 - img2) ** 2)
         psnr = 20 * torch.log10(1.0 / torch.sqrt(mse))
-        return psnr.item()
+        return psnr
 
     def rmse_3d(self, img1, img2):
         mse = torch.mean((img1 - img2) ** 2)
         rmse = torch.sqrt(mse)
-        return rmse.item()
+        return rmse
 
     def ssim_3d(self, img1, img2, window_size=11, size_average=True, val_range=None):
         if val_range is None:
