@@ -1333,8 +1333,8 @@ class Semantic_Trainer(object):
 
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
-                input_image = next(self.dl)['image'].cuda()
-                label = next(self.dl)['label'].cuda()
+                data_ = next(self.dl)
+                input_image, label = data_['image'].cuda(), data_['label'].cuda()
                 seg = self.preprocess_input(label)
 
                 B, C, D, H, W = input_image.shape
