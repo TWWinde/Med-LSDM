@@ -228,8 +228,4 @@ def save_image(image_tensor, path, cols=3):
     plt.close()
 
 
-save_image(frames, path_sampled)
-save_image(label_frames, path_label)
-save_image(image_frames, path_image)
-
 
