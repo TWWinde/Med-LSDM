@@ -1135,9 +1135,6 @@ def cast_num_frames(t, *, frames):
     return F.pad(t, (0, 0, 0, 0, 0, frames - f))
 
 
-
-
-
 class Dataset(data.Dataset):
     def __init__(
         self,
@@ -1237,7 +1234,7 @@ class Semantic_Trainer(object):
                               channels=channels, num_frames=num_frames)
         dl = DataLoader(self.ds, batch_size=train_batch_size,
                         shuffle=True, pin_memory=True, num_workers=num_workers)
-        val_dl = DataLoader(val_dataset, batch_size=train_batch_size*2, shuffle=False, pin_memory=True, num_workers=num_workers)
+        val_dl = DataLoader(val_dataset, batch_size=20, shuffle=False, pin_memory=True, num_workers=num_workers)
 
         self.len_dataloader = len(dl)
         self.dl = cycle(dl)
@@ -1328,7 +1325,7 @@ class Semantic_Trainer(object):
         plt.savefig(path)
         plt.close()
 
-    def train( self, prob_focus_present=0., focus_present_mask=None, log_fn=noop):
+    def train(self, prob_focus_present=0., focus_present_mask=None, log_fn=noop):
         assert callable(log_fn)
 
         while self.step < self.train_num_steps:
@@ -1375,7 +1372,7 @@ class Semantic_Trainer(object):
                 self.ema_model.eval()
                 milestone = self.step // self.save_and_sample_every
                 # update metrics
-                self.metrics_computer.update_metrics(self.ema_model, milestone)
+                self.metrics_computer.update_metrics(self.ema_model, milestone, model2=none)
                 with torch.no_grad():
                     num_samples = self.num_sample_rows ** 2
                     batches = num_to_groups(num_samples, self.batch_size)

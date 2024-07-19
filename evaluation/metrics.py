@@ -55,15 +55,23 @@ class Metrics:
 
         return generated, real, label_save
 
-
-    def compute_metrics(self, model):
+    def compute_metrics(self, model, encoder=None):
         pips, ssim, psnr, rmse = [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 image, label = self.preprocess_input(data_i)
-                generated = model.sample(cond=label)
+                if encoder is not None:
+                    with torch.no_grad():
+                        seg = encoder.encode(label, quantize=False, include_embeddings=True)
+                        # normalize to -1 and 1
+                        seg = ((seg - encoder.codebook.embeddings.min()) /
+                               (encoder.codebook.embeddings.max() -
+                                encoder.codebook.embeddings.min())) * 2.0 - 1.0
+                        assert seg.size()[-1] == 64  # torch.Size([1, 8, 8, 64, 64])
+
+                generated = model.sample(cond=seg)
                 input1 = (generated + 1) / 2
                 input2 = (image + 1) / 2
                 # SSIM
@@ -77,8 +85,7 @@ class Metrics:
                 rmse_value = self.rmse_3d(input1, input2)
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
-                if i ==20:
-                    break
+                break
         model.train()
 
         avg_pips = sum(pips) / total_samples
@@ -156,9 +163,9 @@ class Metrics:
 
         return img, input_semantics
 
-    def update_metrics(self, model, cur_iter):
+    def update_metrics(self, model, cur_iter, encoder=None):
         print("--- Iter %s: computing PIPS SSIM PSNR RMSE---" % (cur_iter))
-        cur_pips, cur_ssim, cur_psnr, cur_rmse = self.compute_metrics(model)
+        cur_pips, cur_ssim, cur_psnr, cur_rmse = self.compute_metrics(model, encoder)
         self.update_logs(cur_pips, cur_iter, 'PIPS')
         self.update_logs(cur_ssim, cur_iter, 'SSIM')
         self.update_logs(cur_psnr, cur_iter, 'PSNR')
