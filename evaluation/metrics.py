@@ -28,7 +28,8 @@ def create_window(window_size, channel=1):
 class Metrics:
     def __init__(self, path, dataloader_val):
         self.val_dataloader = dataloader_val
-        self.path_to_save = path
+        self.root_dir = path
+        self.path_to_save = os.path.join(self.root_dir, 'metrics')
         self.path_to_save_PIPS = os.path.join(self.path_to_save, "PIPS")
         self.path_to_save_SSIM = os.path.join(self.path_to_save, "SSIM")
         self.path_to_save_PSNR = os.path.join(self.path_to_save, "PSNR")
@@ -39,6 +40,21 @@ class Metrics:
         Path(self.path_to_save_PSNR).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_RMSE).mkdir(parents=True, exist_ok=True)
         self.num_classes = 37
+
+    def sample(self, model):
+        model.eval()
+        total_samples = len(self.val_dataloader)
+        with torch.no_grad():
+            for i, data_i in enumerate(self.val_dataloader):
+                label_save = data_i['label']
+                image, label = self.preprocess_input(data_i)
+                generated = model.sample(cond=label)
+                generated = (generated + 1) / 2
+                real = (image + 1) / 2
+                break
+
+        return generated, real, label_save
+
 
     def compute_metrics(self, model):
         pips, ssim, psnr, rmse = [], [], [], []
@@ -178,5 +194,42 @@ class Metrics:
         print("--- SSIM at test : ", "{:.5f}".format(ssim))
         print("--- PSNR at test : ", "{:.2f}".format(psnr))
         print("--- RMSE at test : ", "{:.2f}".format(rmse))
+
+    def image_saver(self, fake, real, label, milestone):
+
+        B, C, D, H, W = label.shape
+        frame_idx = torch.randint(0, D, [B]).cuda()
+        frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+        frames = torch.gather(fake, 2, frame_idx_selected).squeeze(2)
+        all_label_list = F.pad(label, (2, 2, 2, 2))
+        all_image_list = F.pad(real, (2, 2, 2, 2))
+        label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
+        image_frames = torch.gather(all_image_list, 2, frame_idx_selected).squeeze(2)
+        path_image_root = os.path.join(self.root_dir, 'images_results')
+        os.makedirs(path_image_root, exist_ok=True)
+        path_sampled = os.path.join(path_image_root, f'{milestone}-sample.jpg')
+        path_label = os.path.join(path_image_root, f'{milestone}-label.jpg')
+        path_image = os.path.join(path_image_root, f'{milestone}-image.jpg')
+        save_image(frames, path_sampled)
+        save_image(label_frames, path_label)
+        save_image(image_frames, path_image)
+
+
+def save_image(image_tensor, path, cols=3):
+    B, C, H, W = image_tensor.shape
+    plt.figure(figsize=(50, 50))
+    for i in range(B):
+        plt.subplot(B // cols + 1, cols, i + 1)
+        img = image_tensor[i].cpu().numpy().transpose(1, 2, 0)
+        img = (img - img.min()) / (img.max() - img.min())  # 归一化到 [0, 1]
+        plt.imshow(img, cmap='gray' if C == 1 else None)
+        plt.axis('off')
+    plt.savefig(path)
+    plt.close()
+
+
+save_image(frames, path_sampled)
+save_image(label_frames, path_label)
+save_image(image_frames, path_image)
 
 

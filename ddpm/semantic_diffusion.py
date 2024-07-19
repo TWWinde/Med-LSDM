@@ -1257,7 +1257,7 @@ class Semantic_Trainer(object):
         self.num_sample_rows = num_sample_rows
         self.results_folder = Path(results_folder)
         self.results_folder.mkdir(exist_ok=True, parents=True)
-        self.metrics_folder = os.path.join(self.results_folder, 'metrics')
+        self.metrics_folder = os.path.join(self.results_folder)
         os.makedirs(self.metrics_folder, exist_ok=True)
         self.metrics_computer = Metrics(self.metrics_folder, val_dl)
         self.reset_parameters()
@@ -1316,6 +1316,18 @@ class Semantic_Trainer(object):
         self.scaler.load_state_dict(data['scaler'])
         print("checkpoint is successful loaded")
 
+    def save_image(self, image_tensor, path, cols=3):
+        B, C, H, W = image_tensor.shape
+        plt.figure(figsize=(50, 50))
+        for i in range(B):
+            plt.subplot(B // cols + 1, cols, i + 1)
+            img = image_tensor[i].cpu().numpy().transpose(1, 2, 0)
+            img = (img - img.min()) / (img.max() - img.min())  # 归一化到 [0, 1]
+            plt.imshow(img, cmap='gray' if C == 1 else None)
+            plt.axis('off')
+        plt.savefig(path)
+        plt.close()
+
     def train( self, prob_focus_present=0., focus_present_mask=None, log_fn=noop):
         assert callable(log_fn)
 
@@ -1324,6 +1336,21 @@ class Semantic_Trainer(object):
                 input_image = next(self.dl)['image'].cuda()
                 label = next(self.dl)['label'].cuda()
                 seg = self.preprocess_input(label)
+
+                B, C, D, H, W = input_image.shape
+                frame_idx = torch.randint(0, D, [B]).cuda()
+                frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+                all_label_list = F.pad(label, (2, 2, 2, 2))
+                all_image_list = F.pad(input_image, (2, 2, 2, 2))
+                label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
+                image_frames = torch.gather(all_image_list, 2, frame_idx_selected).squeeze(2)
+                path_image_root = os.path.join(self.results_folder, 'images_results')
+                os.makedirs(path_image_root, exist_ok=True)
+                path_label = os.path.join(path_image_root, f'{milestone}-label_.jpg')
+                path_image = os.path.join(path_image_root, f'{milestone}-image_.jpg')
+
+                self.save_image(label_frames, path_label)
+                self.save_image(image_frames, path_image)
 
                 if isinstance(self.seggan, VQGAN):
                     with torch.no_grad():
@@ -1341,6 +1368,7 @@ class Semantic_Trainer(object):
                         prob_focus_present=prob_focus_present,
                         focus_present_mask=focus_present_mask
                     )
+
 
                     self.scaler.scale( loss / self.gradient_accumulate_every).backward()
                 if self.step % 50 == 0:
