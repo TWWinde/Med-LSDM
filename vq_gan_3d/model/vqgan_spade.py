@@ -360,6 +360,7 @@ class Encoder(nn.Module):
         return h
 
 
+
 class Decoder(nn.Module):
     def __init__(self, n_hiddens, upsample, image_channel, norm_type='group', num_groups=32):
         super().__init__()
