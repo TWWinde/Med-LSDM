@@ -24,6 +24,7 @@ def create_window(window_size, channel=1):
     window = _2D_window.expand(channel, 1, window_size, window_size, window_size).contiguous()
     return window
 
+
 class Metrics:
     def __init__(self, path, dataloader_val):
         self.val_dataloader = dataloader_val
@@ -60,6 +61,7 @@ class Metrics:
                 rmse_value = self.rmse_3d(input1, input2)
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
+                break
 
         model.train()
 
