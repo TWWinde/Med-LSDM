@@ -1372,7 +1372,8 @@ class Semantic_Trainer(object):
                 self.ema_model.eval()
                 milestone = self.step // self.save_and_sample_every
                 # update metrics
-                self.metrics_computer.update_metrics(self.ema_model, milestone, model2=none)
+                self.metrics_computer.update_metrics(self.ema_model, milestone, encoder=self.seggan)
+
                 with torch.no_grad():
                     num_samples = self.num_sample_rows ** 2
                     batches = num_to_groups(num_samples, self.batch_size)
