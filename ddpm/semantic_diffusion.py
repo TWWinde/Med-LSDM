@@ -1385,21 +1385,28 @@ class Semantic_Trainer(object):
                     all_videos_list = torch.cat(all_videos_list, dim=0)
 
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
+                all_label_list = F.pad(label, (2, 2, 2, 2))
+                all_image_list = F.pad(input_image, (2, 2, 2, 2))
+                if self.step != 0 and self.step % (self.save_and_sample_every*5) == 0:
+                    sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
+                    label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
+                    image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
+                    path_video = os.path.join(self.results_folder, 'video_results')
+                    os.makedirs(path_video, exist_ok=True)
 
-                one_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
-                path_video = os.path.join(self.results_folder, 'video_results')
-                os.makedirs(path_video, exist_ok=True)
-                video_path = os.path.join(path_video, f'{milestone}.gif')
-                video_tensor_to_gif(one_gif, video_path)
-                log = {**log, 'sample': video_path}
+                    sample_path = os.path.join(path_video, f'{milestone}_sample.gif')
+                    image_path = os.path.join(path_video, f'{milestone}_image.gif')
+                    label_path = os.path.join(path_video, f'{milestone}_label.gif')
+                    video_tensor_to_gif(sample_gif, sample_path)
+                    video_tensor_to_gif(image_gif, image_path)
+                    video_tensor_to_gif(label_gif, label_path)
+                    log = {**log, 'sample': sample_path}
 
                 # Selects one random 2D image from each 3D Image
                 B, C, D, H, W = all_videos_list.shape
                 frame_idx = torch.randint(0, D, [B]).cuda()
                 frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
-                frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
-                all_label_list = F.pad(label, (2, 2, 2, 2))
-                all_image_list = F.pad(input_image, (2, 2, 2, 2))
+                sample_frames = torch.gather(all_videos_list, 2, frame_idx_selected).squeeze(2)
                 label_frames = torch.gather(all_label_list, 2, frame_idx_selected).squeeze(2)
                 image_frames = torch.gather(all_image_list, 2, frame_idx_selected).squeeze(2)
                 path_image_root = os.path.join(self.results_folder, 'images_results')
@@ -1420,7 +1427,7 @@ class Semantic_Trainer(object):
                     plt.savefig(path)
                     plt.close()
 
-                save_image(frames, path_sampled)
+                save_image(sample_frames, path_sampled)
                 save_image(label_frames, path_label)
                 save_image(image_frames, path_image)
 
