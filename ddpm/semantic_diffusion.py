@@ -1346,8 +1346,8 @@ class Semantic_Trainer(object):
                 image_frames = torch.gather(all_image_list, 2, frame_idx_selected).squeeze(2)
                 path_image_root = os.path.join(self.results_folder, 'images_results')
                 os.makedirs(path_image_root, exist_ok=True)
-                path_label = os.path.join(path_image_root, f'{milestone}-label_.jpg')
-                path_image = os.path.join(path_image_root, f'{milestone}-image_.jpg')
+                path_label = os.path.join(path_image_root, f'{self.step}-label_.jpg')
+                path_image = os.path.join(path_image_root, f'{self.step}-image_.jpg')
 
                 self.save_image(label_frames, path_label)
                 self.save_image(image_frames, path_image)
