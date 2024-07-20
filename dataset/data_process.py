@@ -433,6 +433,9 @@ def image_process_total_mri(root_path, label_in_path, out_path):
             sitk.WriteImage(final_mr, os.path.join(out_mr, f'{item}.nii.gz'))
             sitk.WriteImage(final_label, os.path.join(out_label, f'{item}.nii.gz'))
         except:
+            mr_image = sitk.ReadImage(mr_path, sitk.sitkFloat32)
+            mr_image.SetDirection([1, 0, 0, 0, 1, 0, 0, 0, 1])
+
             print('error', x )
 
 
@@ -513,7 +516,7 @@ def save_cropped_total_mr(image_in_files, image_out_files, crop_size, length=32)
             name = image_path.split('.')[0]
 
             img_output_path = os.path.join(image_out_files, 'mr', name + f'_{n}.' + 'nii.gz')
-            label_output_path = img_output_path.replace('mr', 'label')
+            label_output_path = os.path.join(image_out_files, 'label', name + f'_{n}.' + 'nii.gz')
             nib.save(cropped_img, img_output_path)
             cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
             nib.save(cropped_label, label_output_path)
