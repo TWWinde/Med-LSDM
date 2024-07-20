@@ -23,4 +23,4 @@ pip uninstall nvidia_cublas_cu11
 
 # Run your python code
 
-python /no_backups/d1502/medicaldiffusion/dataset/data_processing.py
+python /no_backups/d1502/medicaldiffusion/dataset/data_process.py
