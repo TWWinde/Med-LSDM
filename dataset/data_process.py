@@ -492,12 +492,13 @@ def iterator_total_mri_combine_label(in_path, output_path):
 
 def save_cropped_total_mr(image_in_files, image_out_files, crop_size, length=32):
     image_in = os.path.join(image_in_files, "mr")
+    label_in = os.path.join(image_in_files, "label")
     image_in_paths = os.listdir(image_in)
     os.makedirs(os.path.join(image_out_files, 'mr'), exist_ok=True)
     os.makedirs(os.path.join(image_out_files, 'label'), exist_ok=True)
     for image_path in image_in_paths:
         path_image = os.path.join(image_in, image_path)
-        path_label = path_image.replace('mr', 'label')
+        path_label = path_image.replace(label_in, image_path)
         img = nib.load(path_image)
         label = nib.load(path_label)
         img_data = img.get_fdata()
