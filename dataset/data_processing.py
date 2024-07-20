@@ -381,6 +381,27 @@ def iterator_synthrad2023(in_path, out_path):
         image_process_synthrad2023(file_path, out_path)
         print('finished', file_path)
 
+txt = "/no_backups/d1502/medicaldiffusion/dataset/total_mri.txt"
+
+def read_labels(file_path):
+    name = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line:
+                file = 's'+str(line).zfill(4)
+                print(file)
+                name.append(file)
+    return name
+
+
+def iterator_total_mri(in_path, out_path):
+    name = read_labels(txt)
+    os.makedirs(out_path, exist_ok=True)
+    files = [os.path.join(in_path, f, 'mri.nii.gz') for f in name]
+    for file_path in files:
+        image_process_synthrad2023(file_path, out_path)
+        print('finished', file_path)
 
 if __name__ == '__main__':
 
@@ -400,7 +421,7 @@ if __name__ == '__main__':
     train_folder4 = '/data/private/autoPET/autopet_3d_only_crop/train'
     test_folder4 = '/data/private/autoPET/autopet_3d_only_crop/test'
 
-    autopet = True
+    autopet = False
     if autopet:
         preprocess_raw = False
         crop = True
@@ -411,6 +432,14 @@ if __name__ == '__main__':
 
     sythrad2023 = False
     if sythrad2023:
+        preprocess_raw = True
+        cut = True
+        if preprocess_raw:
+            iterator_synthrad2023(source_folder3, out_folder2)
+        if cut:
+            process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
+
+    if total_mri:
         preprocess_raw = True
         cut = True
         if preprocess_raw:
