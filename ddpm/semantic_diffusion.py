@@ -1414,7 +1414,7 @@ class Semantic_Trainer(object):
                 path_label = os.path.join(path_image_root, f'{milestone}-label.jpg')
                 path_image = os.path.join(path_image_root, f'{milestone}-image.jpg')
 
-                def save_image(image_tensor, path, cols=3):
+                def save_image(image_tensor, path, cols=2):
                     B, C, H, W = image_tensor.shape
                     plt.figure(figsize=(50, 50))
                     for i in range(B):

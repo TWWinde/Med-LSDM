@@ -380,7 +380,7 @@ def pad_and_rescale(image):
     resampler.SetSize(new_size)
     resampler.SetOutputDirection(final_image.GetDirection())
     resampler.SetOutputOrigin(final_image.GetOrigin())
-    resampler.SetInterpolator(sitk.sitkBSpline)
+    resampler.SetInterpolator(sitk.sitkNearestNeighbor)
     resampled_image = resampler.Execute(final_image)
 
     return resampled_image
@@ -408,6 +408,24 @@ def image_process_synthrad2023(in_file, out_path):
     sitk.WriteImage(final_mr, os.path.join(out_path, os.path.basename(in_file), 'mr.nii.gz'))
     sitk.WriteImage(final_label, os.path.join(out_path, os.path.basename(in_file), 'label.nii.gz'))
     # print('finish', os.path.join(out_path, os.path.basename(in_file), 'mr.nii.gz'))
+
+
+def image_process_total_mri(root_path, label_path, out_path):
+    out_mr = os.path.join(out_path, 'mr')
+    out_label = os.path.join(out_path, 'label')
+    os.makedirs(out_mr, exist_ok=True)
+    os.makedirs(out_label, exist_ok=True)
+    names = os.listdir(root_path)
+    for item in names:
+        mr_path = os.path.join(root_path, item, 'mri.nii.gz')
+        label_path = os.path.join(label_path, f'{item}.nii.gz')
+
+        mr_image = sitk.ReadImage(mr_path)
+        label = sitk.ReadImage(label_path)
+        final_mr = pad_and_rescale(mr_image)
+        final_label = pad_and_rescale(label)
+        sitk.WriteImage(final_mr, os.path.join(out_mr, f'{item}.nii.gz'))
+        sitk.WriteImage(final_label, os.path.join(out_label, f'{item}.nii.gz'))
 
 
 def iterator_synthrad2023(in_path, out_path):
@@ -479,8 +497,9 @@ if __name__ == '__main__':
     test_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/test'
     train_folder4 = '/data/private/autoPET/autopet_3d_only_crop/train'
     test_folder4 = '/data/private/autoPET/autopet_3d_only_crop/test'
-    Total_label_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/label'
+    Total_label_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/label_'
     Total_mri_root = "/misc/data/private/autoPET/TotalSegmentator"
+    Total_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/'
 
     autopet = False
     if autopet:
@@ -502,10 +521,12 @@ if __name__ == '__main__':
     total_mri = True
     if total_mri:
         os.makedirs(Total_label_out, exist_ok=True)
-        preprocess_raw = True
+        pad_rescale = True
         cut = False
-        combine_label = True
+        combine_label = False
         if combine_label:
             iterator_total_mri_combine_label(Total_mri_root, Total_label_out)
             print('finished label combine')
+        if pad_rescale:
+            image_process_total_mri(Total_mri_root, Total_label_out, Total_out )
 
