@@ -474,6 +474,7 @@ def iterator_total_mri_combine_label(in_path, out_path):
                     label = Totalsegmentator_ct_classes[organ.split('_')[0]]
                 merged_data[data_anatomy != 0] = int(label)
         merged_label = nib.Nifti1Image(merged_data, affine=mr_affine)
+        print(out_path)
         nib.save(merged_label, os.path.join(out_path, f'{item}.nii.gz'))
         print('finished', os.path.join(out_path, f'{item}.nii.gz'))
 
