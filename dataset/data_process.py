@@ -475,7 +475,7 @@ def iterator_total_mri_combine_label(in_path, out_path):
                 merged_data[data_anatomy != 0] = int(label)
         merged_label = nib.Nifti1Image(merged_data, affine=mr_affine)
         print(out_path)
-        nib.save(merged_label, os.path.join(out_path, f'{item}.nii.gz'))
+        nib.save(merged_label, os.path.join('/data/private/autoPET/Totalsegmentator_mri_cutted/label', f'{item}.nii.gz'))
         print('finished', os.path.join(out_path, f'{item}.nii.gz'))
 
 
