@@ -569,7 +569,7 @@ if __name__ == '__main__':
     total_mri = True
     if total_mri:
         os.makedirs(Total_label_out, exist_ok=True)
-        pad_rescale = True
+        pad_rescale = False
         cut = False
         combine_label = False
         crop = True
