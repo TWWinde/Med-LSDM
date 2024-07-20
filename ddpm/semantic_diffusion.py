@@ -1234,7 +1234,7 @@ class Semantic_Trainer(object):
                               channels=channels, num_frames=num_frames)
         dl = DataLoader(self.ds, batch_size=train_batch_size,
                         shuffle=True, pin_memory=True, num_workers=num_workers)
-        val_dl = DataLoader(val_dataset, batch_size=20, shuffle=False, pin_memory=True, num_workers=num_workers)
+        val_dl = DataLoader(val_dataset, batch_size=16, shuffle=False, pin_memory=True, num_workers=num_workers)
 
         self.len_dataloader = len(dl)
         self.dl = cycle(dl)
