@@ -3,6 +3,42 @@ import nibabel as nib
 import SimpleITK as sitk
 import numpy as np
 
+Totalsegmentator_ct_classes = {
+                    #"0": "background",
+                    "1": "kidney",
+                    "2": "vessels",
+                    "3": "gallbladder",
+                    "4": "liver",
+                    "5": "stomach",
+                    "6": "pancreas",
+                    "7": "adrenal",
+                    "8": "lung",
+                    "9": "vertebrae",
+                    "10": "esophagus",
+                    "11": "trachea",
+                    "12": "heart",
+                    "13": "pulmonary_artery",
+                    "14": "small_bowel",
+                    "15": "duodenum",
+                    "16": "colon",
+                    "17": "ribs",
+                    "18": "humerus",
+                    "19": "scapula",
+                    "20": "clavicula",
+                    "21": "femur",
+                    "22": "hip",
+                    "23": "sacrum",
+                    "24": "autochthon",
+                    "25": "iliopsoas",
+                    "26": "urinary_bladder",
+                    "27": "skin",
+                    "28": "spleen",
+                    "29": "fat",
+                    "30": "skeletal_muscle"
+
+}
+
+
 
 def crop_center(img, label, new_x, new_y):
     x, y, z = img.shape
@@ -381,7 +417,9 @@ def iterator_synthrad2023(in_path, out_path):
         image_process_synthrad2023(file_path, out_path)
         print('finished', file_path)
 
+
 txt = "/no_backups/d1502/medicaldiffusion/dataset/total_mri.txt"
+
 
 def read_labels(file_path):
     name = []
@@ -395,13 +433,51 @@ def read_labels(file_path):
     return name
 
 
-def iterator_total_mri(in_path, out_path):
+def combine_labels(label_root_path, simplified_classes):
+    people_name = os.listdir(label_root_path)
+    output_path = '/data/private/autoPET/Task1/ct_label_combine'
+    for item in people_name:
+        print(item)
+        nii_root_path = os.path.join(label_root_path, item)
+        ct = nib.load(os.path.join(nii_root_path, 'fat.nii.gz'))
+        ct_example = ct.get_fdata()
+        ct_affine = ct.affine
+        merged_data = np.zeros_like(ct_example)
+        for key, label in simplified_classes.items():
+            nii_name = f"{label}.nii.gz"
+            nii_path = os.path.join(nii_root_path, nii_name)
+            anatomy = nib.load(nii_path)
+            data_anatomy = anatomy.get_fdata()
+            merged_data[data_anatomy != 0] = int(key)
+        merged_label = nib.Nifti1Image(merged_data, affine=ct_affine)
+        nib.save(merged_label, os.path.join(output_path, f'{item}_ct_label.nii.gz'))
+
+
+def iterator_total_mri_combine_label(in_path, out_path):
     name = read_labels(txt)
     os.makedirs(out_path, exist_ok=True)
-    files = [os.path.join(in_path, f, 'mri.nii.gz') for f in name]
-    for file_path in files:
-        image_process_synthrad2023(file_path, out_path)
-        print('finished', file_path)
+    files = [os.path.join(in_path, f) for f in name]
+    for item in files:
+        seg_path = os.path.join(item, 'segmentations')
+        organs_path = os.listdir(seg_path)
+        mr = nib.load(os.path.join(seg_path, organs_path[0]))
+        mr_example = mr.get_fdata()
+        mr_affine = mr.affine
+        merged_data = np.zeros_like(mr_example)
+        for organ in organs_path:
+            if organ.split('.')[0] in Totalsegmentator_ct_classes or organ.split('_')[0] in Totalsegmentator_ct_classes:
+                nii_path = os.path.join(seg_path, organ)
+                anatomy = nib.load(nii_path)
+                data_anatomy = anatomy.get_fdata()
+                try:
+                    label = Totalsegmentator_ct_classes[organ.split('.')[0]]
+                except:
+                    label = Totalsegmentator_ct_classes[organ.split('_')[0]]
+                merged_data[data_anatomy != 0] = int(label)
+        merged_label = nib.Nifti1Image(merged_data, affine=mr_affine)
+        nib.save(merged_label, os.path.join(out_path, f'{item}.nii.gz'))
+        print('finished', os.path.join(out_path, f'{item}.nii.gz'))
+
 
 if __name__ == '__main__':
 
@@ -420,6 +496,8 @@ if __name__ == '__main__':
     test_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/test'
     train_folder4 = '/data/private/autoPET/autopet_3d_only_crop/train'
     test_folder4 = '/data/private/autoPET/autopet_3d_only_crop/test'
+    Label_Total_mri = '/data/private/autoPET/Totalsegmentator_mri_cutted/label'
+    Total_mri_root = "/misc/data/private/autoPET/TotalSegmentator"
 
     autopet = False
     if autopet:
@@ -438,10 +516,15 @@ if __name__ == '__main__':
             iterator_synthrad2023(source_folder3, out_folder2)
         if cut:
             process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
-
+    total_mri = True
     if total_mri:
+        os.makedirs(Label_Total_mri)
         preprocess_raw = True
         cut = True
+        combine_label = True
+        if combine_label:
+            iterator_total_mri_combine_label(Total_mri_root, Label_Total_mri)
+            print('finished label combine')
         if preprocess_raw:
             iterator_synthrad2023(source_folder3, out_folder2)
         if cut:
