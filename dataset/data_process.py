@@ -2,6 +2,7 @@ import os
 import nibabel as nib
 import SimpleITK as sitk
 import numpy as np
+import random
 
 Totalsegmentator_ct_classes = {
                     #"0": "background",
@@ -224,6 +225,7 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
             print(n, ct_path)
 
 
+
 def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_size=(256, 256)):
     ct_train_folder = os.path.join(train_folder, 'ct')
     ct_test_folder = os.path.join(test_folder, 'ct')
@@ -415,10 +417,11 @@ def image_process_total_mri(root_path, label_in_path, out_path):
     out_label = os.path.join(out_path, 'label')
     os.makedirs(out_mr, exist_ok=True)
     os.makedirs(out_label, exist_ok=True)
-    names = os.listdir(root_path)
+    names = os.listdir(label_in_path)
     for item in names:
-        mr_path = os.path.join(root_path, item, 'mri.nii.gz')
-        label_path = os.path.join(label_in_path, f'{item}.nii.gz')
+        x = item.split('.')[0]
+        mr_path = os.path.join(root_path, x, 'mri.nii.gz')
+        label_path = os.path.join(label_in_path, f'{x}.nii.gz')
 
         mr_image = sitk.ReadImage(mr_path)
         label = sitk.ReadImage(label_path)
@@ -479,6 +482,41 @@ def iterator_total_mri_combine_label(in_path, output_path):
         print('finished', os.path.join(output_path, f'{number}.nii.gz'))
 
 
+def save_cropped_total_mr(image_in_files, image_out_files, crop_size, length=32):
+    image_in = os.path.join(image_in_files, "mr")
+    image_in_paths = os.listdir(image_in)
+    os.makedirs(os.path.join(image_out_files, 'mr'), exist_ok=True)
+    os.makedirs(os.path.join(image_out_files, 'label'), exist_ok=True)
+    for image_path in image_in_paths:
+        path_image = os.path.join(image_in, image_path)
+        path_label = path_image.replace('mr', 'label')
+        img = nib.load(path_image)
+        label = nib.load(path_label)
+        img_data = img.get_fdata()
+        label_data = label.get_fdata()
+        assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
+        n = 0
+        for i in range(0, img_data.shape[2] // 8):
+            if img_data.shape[2] < 32:
+                continue
+            number = random.randint(0, img_data.shape[2] - length)
+            cropped_image, cropped_label = crop_block(img_data, label_data, *crop_size, number, length)
+            if is_all_zero(cropped_image, cropped_label):
+                print("Array is all zeros. Skipping rescaling.")
+                continue
+            cropped_img = nib.Nifti1Image(cropped_image, affine=img.affine)
+            name = image_path.split('.')[0]
+
+            img_output_path = os.path.join(image_out_files, 'mr', name + f'_{n}.' + 'nii.gz')
+            label_output_path = img_output_path.replace('mr', 'label')
+            nib.save(cropped_img, img_output_path)
+            cropped_label = nib.Nifti1Image(cropped_label, affine=label.affine)
+            nib.save(cropped_label, label_output_path)
+            print('finished', img_output_path)
+            print('finished', label_output_path)
+
+
+
 
 if __name__ == '__main__':
 
@@ -500,6 +538,7 @@ if __name__ == '__main__':
     Total_label_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/label_'
     Total_mri_root = "/misc/data/private/autoPET/TotalSegmentator"
     Total_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/'
+    croped_total_mr = '/data/private/autoPET/Totalsegmentator_mri_croped/'
 
     autopet = False
     if autopet:
@@ -524,9 +563,12 @@ if __name__ == '__main__':
         pad_rescale = True
         cut = False
         combine_label = False
+        crop = True
         if combine_label:
             iterator_total_mri_combine_label(Total_mri_root, Total_label_out)
             print('finished label combine')
         if pad_rescale:
             image_process_total_mri(Total_mri_root, Total_label_out, Total_out)
+        if crop:
+            save_cropped_total_mr(Total_out, croped_total_mr, (256, 256), length=32)
 
