@@ -410,7 +410,7 @@ def image_process_synthrad2023(in_file, out_path):
     # print('finish', os.path.join(out_path, os.path.basename(in_file), 'mr.nii.gz'))
 
 
-def image_process_total_mri(root_path, label_path, out_path):
+def image_process_total_mri(root_path, label_in_path, out_path):
     out_mr = os.path.join(out_path, 'mr')
     out_label = os.path.join(out_path, 'label')
     os.makedirs(out_mr, exist_ok=True)
@@ -418,7 +418,7 @@ def image_process_total_mri(root_path, label_path, out_path):
     names = os.listdir(root_path)
     for item in names:
         mr_path = os.path.join(root_path, item, 'mri.nii.gz')
-        label_path = os.path.join(label_path, f'{item}.nii.gz')
+        label_path = os.path.join(label_in_path, f'{item}.nii.gz')
 
         mr_image = sitk.ReadImage(mr_path)
         label = sitk.ReadImage(label_path)
