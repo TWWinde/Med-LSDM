@@ -424,15 +424,16 @@ def image_process_total_mri(root_path, label_in_path, out_path):
         x = item.split('.')[0]
         mr_path = os.path.join(root_path, x, 'mri.nii.gz')
         label_path = os.path.join(label_in_path, f'{x}.nii.gz')
-        print(mr_path)
-        print(label_path)
 
-        mr_image = sitk.ReadImage(mr_path)
-        label = sitk.ReadImage(label_path)
-        final_mr = pad_and_rescale(mr_image)
-        final_label = pad_and_rescale(label)
-        sitk.WriteImage(final_mr, os.path.join(out_mr, f'{item}.nii.gz'))
-        sitk.WriteImage(final_label, os.path.join(out_label, f'{item}.nii.gz'))
+        try:
+            mr_image = sitk.ReadImage(mr_path)
+            label = sitk.ReadImage(label_path)
+            final_mr = pad_and_rescale(mr_image)
+            final_label = pad_and_rescale(label)
+            sitk.WriteImage(final_mr, os.path.join(out_mr, f'{item}.nii.gz'))
+            sitk.WriteImage(final_label, os.path.join(out_label, f'{item}.nii.gz'))
+        except:
+            print('error', x )
 
 
 def iterator_synthrad2023(in_path, out_path):
