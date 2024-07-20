@@ -525,5 +525,4 @@ if __name__ == '__main__':
         if combine_label:
             iterator_total_mri_combine_label(Total_mri_root, Total_label_out)
             print('finished label combine')
-        if cut:
 
