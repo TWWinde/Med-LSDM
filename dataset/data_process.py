@@ -518,7 +518,7 @@ if __name__ == '__main__':
             process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
     total_mri = True
     if total_mri:
-        os.makedirs(Label_Total_mri)
+        os.makedirs(Label_Total_mri, exist_ok=True)
         preprocess_raw = True
         cut = True
         combine_label = True
