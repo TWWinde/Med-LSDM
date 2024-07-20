@@ -503,6 +503,7 @@ def save_cropped_total_mr(image_in_files, image_out_files, crop_size, length=32)
         label = nib.load(path_label)
         img_data = img.get_fdata()
         label_data = label.get_fdata()
+        print(label_data.shape)
         assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
         n = 0
         for i in range(0, img_data.shape[2] // 8):
