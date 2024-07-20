@@ -432,32 +432,13 @@ def read_labels(file_path):
     return name
 
 
-def combine_labels(label_root_path, simplified_classes):
-    people_name = os.listdir(label_root_path)
-    output_path = '/data/private/autoPET/Task1/ct_label_combine'
-    for item in people_name:
-        print(item)
-        nii_root_path = os.path.join(label_root_path, item)
-        ct = nib.load(os.path.join(nii_root_path, 'fat.nii.gz'))
-        ct_example = ct.get_fdata()
-        ct_affine = ct.affine
-        merged_data = np.zeros_like(ct_example)
-        for key, label in simplified_classes.items():
-            nii_name = f"{label}.nii.gz"
-            nii_path = os.path.join(nii_root_path, nii_name)
-            anatomy = nib.load(nii_path)
-            data_anatomy = anatomy.get_fdata()
-            merged_data[data_anatomy != 0] = int(key)
-        merged_label = nib.Nifti1Image(merged_data, affine=ct_affine)
-        nib.save(merged_label, os.path.join(output_path, f'{item}_ct_label.nii.gz'))
-
-
 def iterator_total_mri_combine_label(in_path, output_path):
     name = read_labels(txt)
     os.makedirs(output_path, exist_ok=True)
     files = [os.path.join(in_path, f) for f in name]
     for item in files:
-        name = item.split('/')[-1]
+        number = item.split('/')[-1]
+        print(number)
         seg_path = os.path.join(item, 'segmentations')
         organs_path = os.listdir(seg_path)
         mr = nib.load(os.path.join(seg_path, organs_path[0]))
@@ -476,8 +457,8 @@ def iterator_total_mri_combine_label(in_path, output_path):
                 merged_data[data_anatomy != 0] = int(label)
         merged_label = nib.Nifti1Image(merged_data, affine=mr_affine)
         print(output_path)
-        nib.save(merged_label, os.path.join(output_path, f'{name}.nii.gz'))
-        print('finished', os.path.join(output_path, f'{item}.nii.gz'))
+        nib.save(merged_label, os.path.join(output_path, f'{number}.nii.gz'))
+        print('finished', os.path.join(output_path, f'{number}.nii.gz'))
 
 
 
