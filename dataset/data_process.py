@@ -186,9 +186,11 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
         assert ct_data.shape == mr_data.shape == label_data.shape, "Error: The shapes of arrayys do not match."
         n = 0
         if crop_2_block:
-            for i in range(3, ct_data.shape[2] - length, stride):
-                cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size, i,
-                                                                     length)
+            for i in range(0, ct_data.shape[2] // 4):
+                if ct_data.shape[2] < 32:
+                    continue
+                number = random.randint(0, ct_data.shape[2] - length)
+                cropped_ct, cropped_mr, cropped_label = crop_block_3(ct_data, mr_data, label_data, *crop_size, number, length)
                 if is_all_zero(cropped_mr, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
                     continue
@@ -549,15 +551,15 @@ if __name__ == '__main__':
         if crop:
             process_autopet_onlycrop(source_folder1, train_folder4, test_folder4, crop_size=(256, 256))
 
-    sythrad2023 = False
+    sythrad2023 = True
     if sythrad2023:
-        preprocess_raw = True
+        preprocess_raw = False
         cut = True
         if preprocess_raw:
             iterator_synthrad2023(source_folder3, out_folder2)
         if cut:
             process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
-    total_mri = True
+    total_mri = False
     if total_mri:
         os.makedirs(Total_label_out, exist_ok=True)
         pad_rescale = True
