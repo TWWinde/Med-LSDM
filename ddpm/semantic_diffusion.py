@@ -25,6 +25,7 @@ from rotary_embedding_torch import RotaryEmbedding
 from ddpm.text import tokenize, bert_embed, BERT_MODEL_DIM
 from torch.utils.data import Dataset, DataLoader
 from vq_gan_3d.model.vqgan import VQGAN
+from vq_gan_3d.model.vqgan_spade import VQGAN_SPADE
 from evaluation.metrics import Metrics
 import matplotlib.pyplot as plt
 
