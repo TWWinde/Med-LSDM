@@ -424,6 +424,8 @@ def image_process_total_mri(root_path, label_in_path, out_path):
         x = item.split('.')[0]
         mr_path = os.path.join(root_path, x, 'mri.nii.gz')
         label_path = os.path.join(label_in_path, f'{x}.nii.gz')
+        print(mr_path)
+        print(label_path)
 
         mr_image = sitk.ReadImage(mr_path)
         label = sitk.ReadImage(label_path)
@@ -551,7 +553,7 @@ if __name__ == '__main__':
         if crop:
             process_autopet_onlycrop(source_folder1, train_folder4, test_folder4, crop_size=(256, 256))
 
-    sythrad2023 = True
+    sythrad2023 = False
     if sythrad2023:
         preprocess_raw = False
         cut = True
@@ -559,7 +561,7 @@ if __name__ == '__main__':
             iterator_synthrad2023(source_folder3, out_folder2)
         if cut:
             process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
-    total_mri = False
+    total_mri = True
     if total_mri:
         os.makedirs(Total_label_out, exist_ok=True)
         pad_rescale = True
