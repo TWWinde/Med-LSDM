@@ -5,36 +5,36 @@ import numpy as np
 
 Totalsegmentator_ct_classes = {
                     #"0": "background",
-                    "1": "kidney",
-                    "2": "vessels",
-                    "3": "gallbladder",
-                    "4": "liver",
-                    "5": "stomach",
-                    "6": "pancreas",
-                    "7": "adrenal",
-                    "8": "lung",
-                    "9": "vertebrae",
-                    "10": "esophagus",
-                    "11": "trachea",
-                    "12": "heart",
-                    "13": "pulmonary_artery",
-                    "14": "small_bowel",
-                    "15": "duodenum",
-                    "16": "colon",
-                    "17": "ribs",
-                    "18": "humerus",
-                    "19": "scapula",
-                    "20": "clavicula",
-                    "21": "femur",
-                    "22": "hip",
-                    "23": "sacrum",
-                    "24": "autochthon",
-                    "25": "iliopsoas",
-                    "26": "urinary_bladder",
-                    "27": "skin",
-                    "28": "spleen",
-                    "29": "fat",
-                    "30": "skeletal_muscle"
+                    "kidney": "1",
+                    "vessels":"2",
+                    "gallbladder":"3",
+                     "liver":"4",
+                     "stomach":"5",
+                     "pancreas":"6",
+                     "adrenal":"7",
+                    "lung":"8" ,
+                     "vertebrae":"9",
+                     "esophagus":"10",
+                     "trachea":"11",
+                     "heart":"12",
+                    "pulmonary_artery":"13" ,
+                    "small_bowel":"14" ,
+                    "duodenum":"15" ,
+                     "colon":"16",
+                     "ribs":"17",
+                     "humerus":"18",
+                    "scapula":"19" ,
+                    "clavicula":"20" ,
+                     "femur":"21",
+                     "hip":"22",
+                     "sacrum":"23",
+                    "autochthon":"24" ,
+                    "iliopsoas":"25" ,
+                     "urinary_bladder":"26",
+                    "skin":"27" ,
+                     "spleen":"28",
+                     "fat":"29",
+                     "skeletal_muscle":"30"
 
 }
 
@@ -428,7 +428,6 @@ def read_labels(file_path):
             line = line.strip()
             if line:
                 file = 's'+str(line).zfill(4)
-                print(file)
                 name.append(file)
     return name
 
@@ -479,6 +478,7 @@ def iterator_total_mri_combine_label(in_path, out_path):
         print('finished', os.path.join(out_path, f'{item}.nii.gz'))
 
 
+
 if __name__ == '__main__':
 
     source_folder1 = '/data/private/autoPET/imagesTr'
@@ -496,7 +496,7 @@ if __name__ == '__main__':
     test_folder3 = '/data/private/autoPET/SynthRad2024_withoutmask/test'
     train_folder4 = '/data/private/autoPET/autopet_3d_only_crop/train'
     test_folder4 = '/data/private/autoPET/autopet_3d_only_crop/test'
-    Label_Total_mri = '/data/private/autoPET/Totalsegmentator_mri_cutted/label'
+    Total_label_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/label'
     Total_mri_root = "/misc/data/private/autoPET/TotalSegmentator"
 
     autopet = False
@@ -518,14 +518,12 @@ if __name__ == '__main__':
             process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
     total_mri = True
     if total_mri:
-        os.makedirs(Label_Total_mri, exist_ok=True)
+        os.makedirs(Total_label_out, exist_ok=True)
         preprocess_raw = True
-        cut = True
+        cut = False
         combine_label = True
         if combine_label:
-            iterator_total_mri_combine_label(Total_mri_root, Label_Total_mri)
+            iterator_total_mri_combine_label(Total_mri_root, Total_label_out)
             print('finished label combine')
-        if preprocess_raw:
-            iterator_synthrad2023(source_folder3, out_folder2)
         if cut:
-            process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
+
