@@ -5,7 +5,7 @@
 #SBATCH --output=Diffusion%j.%N.out
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=5-23:00:00
+#SBATCH --time=4-23:00:00
 #SBATCH --mem=64G
 #SBATCH --nodes=1
 #SBATCH --gpus=1
