@@ -41,11 +41,11 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=4 model.gpus=0
 
 # diffusion with seggan condition 137083
-python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output_with_seggan' dataset.label_nc=8 \
-model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET1/flair/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
-model.seggan_ckpt="/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/SemanticMap/results/lightning_logs/version_136418/checkpoints/latest_checkpoint.ckpt" \
-model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
-model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0
+#python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output_with_seggan' dataset.label_nc=8 \
+#model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET1/flair/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
+#model.seggan_ckpt="/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/SemanticMap/results/lightning_logs/version_136418/checkpoints/latest_checkpoint.ckpt" \
+#model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0
 
 # diffusion without condition
 #python train/train_ddpm.py model=ddpm dataset=synthrad2023_wo_mask model.results_folder_postfix="output' model.name=vq_gan_3d \
@@ -59,4 +59,11 @@ model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 mode
 #model.seggan_ckpt=0 \
 #model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
+
+# diffusion with vg_gan_SPADE
+python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output_with_vq_gan_spade' dataset.label_nc=37 \
+model.vqgan_spade_ckpt = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan_spade/AutoPET/vq_gan_spade/lightning_logs/version_137077/checkpoints/latest_checkpoint.ckpt" \
+model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0
+
 

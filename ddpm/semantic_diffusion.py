@@ -207,11 +207,6 @@ class SPADEGroupNorm3D(nn.Module):
         x = self.norm(x)
         # seg torch.Size([10, 37, 32, 256, 256])
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')  # !!! is 2 right?
-        # replace downsample dual pyramid gan 1. try vqgan on segmap 2.replace by downsample dual pyramid gan 3. add spade to Vqgan decoder
-        # 4make metrics work
-        #torch.Size([10, 512, 8, 8, 8])
-        #torch.Size([10, 37, 32, 256, 256])
-        #torch.Size([10, 37, 8, 8, 8])
         actv = self.mlp_shared(segmap)
         gamma = self.mlp_gamma(actv)
         beta = self.mlp_beta(actv)
@@ -769,6 +764,7 @@ class SemanticGaussianDiffusion(nn.Module):
             use_dynamic_thres=False,  # from the Imagen paper
             dynamic_thres_percentile=0.9,
             vqgan_ckpt=None,
+            vqgan_spade_ckpt=None,
             cond_scale=1.5
     ):
         super().__init__()
@@ -778,9 +774,13 @@ class SemanticGaussianDiffusion(nn.Module):
         self.denoise_fn = denoise_fn  # Unet3D noise_predictor
         self.cond_scale = cond_scale
 
-        if vqgan_ckpt:
+        if vqgan_ckpt and not vqgan_spade_ckpt:
             self.vqgan = VQGAN.load_from_checkpoint(vqgan_ckpt).cuda()
             self.vqgan.eval()
+        elif vqgan_spade_ckpt:
+            self.vqgan_spade = VQGAN_SPADE.load_from_checkpoint(vqgan_spade_ckpt).cuda()
+            self.vqgan_spade.eval()
+            self.vqgan = None
         else:
             self.vqgan = None
 
@@ -997,12 +997,19 @@ class SemanticGaussianDiffusion(nn.Module):
         _sample = self.p_sample_loop(
             (batch_size, channels, num_frames, image_size, image_size), cond=cond, cond_scale=self.cond_scale)
 
+        assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
             # denormalize TODO: Remove eventually
             _sample = (((_sample + 1.0) / 2.0) * (self.vqgan.codebook.embeddings.max() -
                                                   self.vqgan.codebook.embeddings.min())) + self.vqgan.codebook.embeddings.min()
 
             _sample = self.vqgan.decode(_sample, quantize=True)
+        elif isinstance(self.vqgan_spade, VQGAN_SPADE):
+            # denormalize TODO: Remove eventually
+            _sample = (((_sample + 1.0) / 2.0) * (self.vqgan_spade.codebook.embeddings.max() -
+                                                  self.vqgan_spade.codebook.embeddings.min())) + self.vqgan_spade.codebook.embeddings.min()
+
+            _sample = self.vqgan_spade.decode(_sample, cond, quantize=True)
         else:
             unnormalize_img(_sample)
 
@@ -1050,6 +1057,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
     def forward(self, x,  *args, cond, **kwargs):
 
+        assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
             with torch.no_grad():
                 x = self.vqgan.encode(
@@ -1058,6 +1066,14 @@ class SemanticGaussianDiffusion(nn.Module):
                 x = ((x - self.vqgan.codebook.embeddings.min()) /
                      (self.vqgan.codebook.embeddings.max() -
                       self.vqgan.codebook.embeddings.min())) * 2.0 - 1.0
+        elif isinstance(self.vqgan_spade, VQGAN_SPADE):
+            with torch.no_grad():
+                x = self.vqgan_spade.encode(
+                    x, quantize=False, include_embeddings=True)
+                # normalize to -1 and 1
+                x = ((x - self.vqgan_spade.codebook.embeddings.min()) /
+                     (self.vqgan_spade.codebook.embeddings.max() -
+                      self.vqgan_spade.codebook.embeddings.min())) * 2.0 - 1.0
         else:
             print("Hi")
             x = normalize_img(x)  # (-1,1)

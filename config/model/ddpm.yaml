@@ -1,5 +1,6 @@
-vqgan_ckpt: /misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/BRATS/flair/lightning_logs/version_0/checkpoints/latest_checkpoint.ckpt'
-seggan_ckpt: ???
+vqgan_ckpt: 0
+seggan_ckpt: 0
+vqgan_spade_ckpt: 0
 name: ddpm
 segconv: 0
 
