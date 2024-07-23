@@ -166,7 +166,7 @@ class metrics:
 
     def get_fid(self, im1, im2):
         def get_activations(images, model):
-
+            pred = model(images)
             pred = F.adaptive_avg_pool2d(pred, output_size=(1, 1)).squeeze(-1).squeeze(-1)
             return pred
 
