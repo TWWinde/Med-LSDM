@@ -284,7 +284,10 @@ class VQGAN_SPADE(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x = batch['image']  # TODO: batch['stft']
-        recon_loss, crossentropy_loss, _, vq_output, perceptual_loss = self.forward(x)
+        label = batch['label']
+        seg = self.preprocess_input(label)
+
+        recon_loss, crossentropy_loss, _, vq_output, perceptual_loss = self.forward(x, seg)
         self.log('val/recon_loss', recon_loss, prog_bar=True)
         self.log('val/crossentropy_loss', crossentropy_loss, prog_bar=True)
         self.log('val/perceptual_loss', perceptual_loss, prog_bar=True)
