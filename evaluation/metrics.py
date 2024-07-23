@@ -90,8 +90,8 @@ class Metrics:
                 rmse.append(rmse_value.item())
 
                 # FID
-                fid_value = self.calculate_fid(input1, input2)
-                fid.append(fid_value.item())
+                #fid_value = self.calculate_fid(input1, input2)
+                #fid.append(fid_value.item())
 
                 break
         model.train()
@@ -100,9 +100,9 @@ class Metrics:
         avg_ssim = sum(ssim) / total_samples
         avg_psnr = sum(psnr) / total_samples
         avg_rmse = sum(rmse) / total_samples
-        avg_fid = sum(fid) / total_samples
+        #avg_fid = sum(fid) / total_samples
 
-        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_fid
+        return avg_pips, avg_ssim, avg_psnr, avg_rmse #, #avg_fid
 
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
@@ -203,15 +203,15 @@ class Metrics:
 
     def update_metrics(self, model, cur_iter, encoder=None):
         print("--- Iter %s: computing PIPS SSIM PSNR RMSE FID ---" % (cur_iter))
-        cur_pips, cur_ssim, cur_psnr, cur_rmse, cur_fid = self.compute_metrics(model, encoder)
+        cur_pips, cur_ssim, cur_psnr, cur_rmse= self.compute_metrics(model, encoder)
         self.update_logs(cur_pips, cur_iter, 'PIPS')
         self.update_logs(cur_ssim, cur_iter, 'SSIM')
         self.update_logs(cur_psnr, cur_iter, 'PSNR')
         self.update_logs(cur_rmse, cur_iter, 'RMSE')
-        self.update_logs(cur_fid, cur_iter, 'FID')
+        #self.update_logs(cur_fid, cur_iter, 'FID')
 
         print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips), "{:.2f}".format(cur_ssim),
-              "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse), "{:.2f}".format(cur_fid))
+              "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse))   #, "{:.2f}".format(cur_fid))
 
     def update_logs(self, cur_data, epoch, mode):
         try:
@@ -235,12 +235,12 @@ class Metrics:
         plt.close()
 
     def metrics_test(self, model):
-        pips, ssim, psnr, rmse, fid = self.compute_metrics(model)
+        pips, ssim, psnr, rmse= self.compute_metrics(model)
         print("--- PIPS at test : ", "{:.2f}".format(pips))
         print("--- SSIM at test : ", "{:.5f}".format(ssim))
         print("--- PSNR at test : ", "{:.2f}".format(psnr))
         print("--- RMSE at test : ", "{:.2f}".format(rmse))
-        print("--- FID at test : ", "{:.2f}".format(fid))
+        #print("--- FID at test : ", "{:.2f}".format(fid))
 
     def image_saver(self, fake, real, label, milestone):
 
