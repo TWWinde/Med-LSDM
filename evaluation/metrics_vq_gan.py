@@ -6,6 +6,7 @@ import lpips
 import requests
 import torch
 import torch.nn.functional as F
+from torch import nn
 from torchvision.models import inception_v3
 from scipy.linalg import sqrtm
 # --------------------------------------------------------------------------#
@@ -57,8 +58,9 @@ class metrics:
         model = inception_v3(pretrained=False, transform_input=False)
         model.load_state_dict(torch.load("inception_v3.pth"))
         model = model.eval().cuda()
+        model_features = nn.Sequential(*list(model.children())[:-2])
 
-        return model
+        return model_features
 
     def compute_metrics(self, model, encoder=None, seg=False):
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
@@ -164,8 +166,7 @@ class metrics:
 
     def get_fid(self, im1, im2):
         def get_activations(images, model):
-            pred = model(images) # torch.Size([2, 3, 256, 256])
-            print(pred.shape)
+
             pred = F.adaptive_avg_pool2d(pred, output_size=(1, 1)).squeeze(-1).squeeze(-1)
             return pred
 
