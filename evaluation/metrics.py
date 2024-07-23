@@ -47,7 +47,6 @@ class Metrics:
 
     def sample(self, model):
         model.eval()
-        total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 label_save = data_i['label']
