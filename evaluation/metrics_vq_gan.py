@@ -127,8 +127,8 @@ class metrics:
         rmse.append(rmse_value.item())
 
         # FID
-        fid_value = self.calculate_fid(input1, input2)
-        fid.append(fid_value.item())
+        #fid_value = self.calculate_fid(input1, input2)
+        #fid.append(fid_value.item())
         # l1
         l1_value = F.l1_loss(image, recon).item()
         l1.append(l1_value)
@@ -137,7 +137,7 @@ class metrics:
         avg_ssim = torch.mean(torch.tensor(ssim)).item()
         avg_psnr = torch.mean(torch.tensor(psnr)).item()
         avg_rmse = torch.mean(torch.tensor(rmse)).item()
-        avg_fid = torch.mean(torch.tensor(fid)).item()
+        #avg_fid = torch.mean(torch.tensor(fid)).item()
         avg_l1 = torch.mean(torch.tensor(l1)).item()
 
         return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_l1 #fid
