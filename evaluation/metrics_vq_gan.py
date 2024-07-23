@@ -155,8 +155,8 @@ class metrics:
         b, c, d, h, w = img1.shape
         total_fid = 0.0
         for i in range(d):
-            x1 = np.stack([img1[:, :, i, :, :]] * 3, axis=1)
-            x2 = np.stack([img2[:, :, i, :, :]] * 3, axis=1)
+            x1 = img1[:, :, i, :, :].repeat(1, 3, 1, 1)
+            x2 = img2[:, :, i, :, :].repeat(1, 3, 1, 1)
             total_fid += self.get_fid(x1, x2)
 
         return total_fid / d
