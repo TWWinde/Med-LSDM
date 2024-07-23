@@ -131,8 +131,6 @@ class VQGAN_SPADE(pl.LightningModule):
         if self.label:
             x = self.preprocess_input(x)
 
-        seg = self.preprocess_input(seg)
-
         B, C, T, H, W = x.shape
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)
