@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import lpips
 import torch
 import torch.nn.functional as F
-
+from torchvision.models import inception_v3
+from scipy.linalg import sqrtm
 # --------------------------------------------------------------------------#
 # This code is to calculate and save SSIM PIPS PSNR RMSE
 # --------------------------------------------------------------------------#
@@ -26,7 +27,7 @@ def create_window(window_size, channel=1):
 
 
 class Metrics:
-    def __init__(self, path, dataloader_val):
+    def __init__(self, path, dataloader_val, num_classes=37):
         self.val_dataloader = dataloader_val
         self.root_dir = path
         self.path_to_save = os.path.join(self.root_dir, 'metrics')
@@ -34,12 +35,15 @@ class Metrics:
         self.path_to_save_SSIM = os.path.join(self.path_to_save, "SSIM")
         self.path_to_save_PSNR = os.path.join(self.path_to_save, "PSNR")
         self.path_to_save_RMSE = os.path.join(self.path_to_save, "RMSE")
+        self.path_to_save_FID = os.path.join(self.path_to_save, "FID")
 
         Path(self.path_to_save_SSIM).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_PIPS).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_PSNR).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_RMSE).mkdir(parents=True, exist_ok=True)
-        self.num_classes = 37
+        Path(self.path_to_save_FID).mkdir(parents=True, exist_ok=True)
+        self.num_classes = num_classes
+        self.inception_model = inception_v3(pretrained=True, transform_input=False).eval().cuda()
 
     def sample(self, model):
         model.eval()
@@ -56,7 +60,7 @@ class Metrics:
         return generated, real, label_save
 
     def compute_metrics(self, model, encoder=None):
-        pips, ssim, psnr, rmse = [], [], [], []
+        pips, ssim, psnr, rmse, fid = [], [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
@@ -85,6 +89,11 @@ class Metrics:
                 rmse_value = self.rmse_3d(input1, input2)
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
+
+                # FID
+                fid_value = self.calculate_fid(input1, input2)
+                fid.append(fid_value.item())
+
                 break
         model.train()
 
@@ -92,8 +101,9 @@ class Metrics:
         avg_ssim = sum(ssim) / total_samples
         avg_psnr = sum(psnr) / total_samples
         avg_rmse = sum(rmse) / total_samples
+        avg_fid = sum(fid) / total_samples
 
-        return avg_pips, avg_ssim, avg_psnr, avg_rmse
+        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_fid
 
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
@@ -151,8 +161,37 @@ class Metrics:
         else:
             return ssim_map.mean(1).mean(1).mean(1), cs
 
+    def calculate_fid(self, img1, img2):
+        def get_activations(images, model):
+            pred = model(images)
+            pred = F.adaptive_avg_pool2d(pred, output_size=(1, 1)).squeeze(-1).squeeze(-1)
+            return pred
+
+        act1 = get_activations(img1, self.inception_model)
+        act2 = get_activations(img2, self.inception_model)
+
+        mu1 = torch.mean(act1, dim=0)
+        mu2 = torch.mean(act2, dim=0)
+        sigma1 = torch.cov(act1.T)
+        sigma2 = torch.cov(act2.T)
+
+        fid_score = self.calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
+        return fid_score
+
+    def calculate_frechet_distance(self, mu1, sigma1, mu2, sigma2):
+        diff = mu1 - mu2
+
+        covmean, _ = sqrtm(sigma1.cpu().numpy() @ sigma2.cpu().numpy(), disp=False)
+        if not np.isfinite(covmean).all():
+            covmean = np.eye(sigma1.shape[0])
+
+        covmean = torch.from_numpy(covmean).to(mu1.device)
+
+        fid = diff.dot(diff) + torch.trace(sigma1 + sigma2 - 2 * covmean)
+        return fid
+
     def preprocess_input(self, data):
-        # move to GPU and change data types
+
         label = data['label'].cuda().long()
         img = data['image'].cuda().float()
         # create one-hot label map
@@ -164,14 +203,16 @@ class Metrics:
         return img, input_semantics
 
     def update_metrics(self, model, cur_iter, encoder=None):
-        print("--- Iter %s: computing PIPS SSIM PSNR RMSE---" % (cur_iter))
-        cur_pips, cur_ssim, cur_psnr, cur_rmse = self.compute_metrics(model, encoder)
+        print("--- Iter %s: computing PIPS SSIM PSNR RMSE FID ---" % (cur_iter))
+        cur_pips, cur_ssim, cur_psnr, cur_rmse, cur_fid = self.compute_metrics(model, encoder)
         self.update_logs(cur_pips, cur_iter, 'PIPS')
         self.update_logs(cur_ssim, cur_iter, 'SSIM')
         self.update_logs(cur_psnr, cur_iter, 'PSNR')
         self.update_logs(cur_rmse, cur_iter, 'RMSE')
+        self.update_logs(cur_fid, cur_iter, 'FID')
 
-        print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips), "{:.2f}".format(cur_ssim), "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse))
+        print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips), "{:.2f}".format(cur_ssim),
+              "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse), "{:.2f}".format(cur_fid))
 
     def update_logs(self, cur_data, epoch, mode):
         try:
@@ -195,12 +236,12 @@ class Metrics:
         plt.close()
 
     def metrics_test(self, model):
-        print("--- test: computing PIPS SSIM PSNR RMSE ---")
-        pips, ssim, psnr, rmse = self.compute_metrics(model)
+        pips, ssim, psnr, rmse, fid = self.compute_metrics(model)
         print("--- PIPS at test : ", "{:.2f}".format(pips))
         print("--- SSIM at test : ", "{:.5f}".format(ssim))
         print("--- PSNR at test : ", "{:.2f}".format(psnr))
         print("--- RMSE at test : ", "{:.2f}".format(rmse))
+        print("--- FID at test : ", "{:.2f}".format(fid))
 
     def image_saver(self, fake, real, label, milestone):
 
