@@ -47,7 +47,7 @@ class metrics:
         Path(self.path_to_save_L1).mkdir(parents=True, exist_ok=True)
         self.num_classes = num_classes
         #self.inception_model = inception_v3(pretrained=True, transform_input=False).eval().cuda()
-        self.inception_model = self.load_inception_model()
+        #self.inception_model = self.load_inception_model()
 
     def load_inception_model(self):
         url = "https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth"
@@ -115,8 +115,8 @@ class metrics:
         input2 = (image + 1) / 2
 
         # SSIM
-        ssim_value, _ = self.ssim_3d(input1, input2)
-        ssim.append(ssim_value.item())
+        #ssim_value, _ = self.ssim_3d(input1, input2)
+        #ssim.append(ssim_value.item())
         # PIPS lpips
         d = self.pips_3d(input1, input2)
         pips.append(d.mean().item())
@@ -134,13 +134,13 @@ class metrics:
         l1.append(l1_value)
 
         avg_pips = torch.mean(torch.tensor(pips)).item()
-        avg_ssim = torch.mean(torch.tensor(ssim)).item()
+        #avg_ssim = torch.mean(torch.tensor(ssim)).item()
         avg_psnr = torch.mean(torch.tensor(psnr)).item()
         avg_rmse = torch.mean(torch.tensor(rmse)).item()
         #avg_fid = torch.mean(torch.tensor(fid)).item()
         avg_l1 = torch.mean(torch.tensor(l1)).item()
 
-        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_l1 #fid
+        return avg_pips, avg_psnr, avg_rmse, avg_l1 #fid ssim
 
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
@@ -258,9 +258,9 @@ class metrics:
 
     def update_metrics(self, image, recon, cur_iter):
         print(f"--- Iter {cur_iter}: computing PIPS SSIM PSNR RMSE FID ---" )
-        cur_pips, cur_ssim, cur_psnr, cur_rmse,  cur_l1 = self.compute_metrics_during_training(image, recon)
+        cur_pips,  cur_psnr, cur_rmse,  cur_l1 = self.compute_metrics_during_training(image, recon)
         self.update_logs(cur_pips, cur_iter, 'PIPS')
-        self.update_logs(cur_ssim, cur_iter, 'SSIM')
+        #self.update_logs(cur_ssim, cur_iter, 'SSIM')
         self.update_logs(cur_psnr, cur_iter, 'PSNR')
         self.update_logs(cur_rmse, cur_iter, 'RMSE')
         self.update_logs(cur_l1, cur_iter, 'L1')
