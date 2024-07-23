@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 import lpips
+import requests
 import torch
 import torch.nn.functional as F
 from torchvision.models import inception_v3
@@ -44,7 +45,20 @@ class metrics:
         Path(self.path_to_save_RMSE).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_L1).mkdir(parents=True, exist_ok=True)
         self.num_classes = num_classes
-        self.inception_model = inception_v3(pretrained=True, transform_input=False).eval().cuda()
+        #self.inception_model = inception_v3(pretrained=True, transform_input=False).eval().cuda()
+        self.inception_model = self.load_inception_model()
+
+    def load_inception_model(self):
+        url = "https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth"
+        response = requests.get(url)
+        with open("inception_v3.pth", "wb") as f:
+            f.write(response.content)
+
+        model = inception_v3(pretrained=False, transform_input=False)
+        model.load_state_dict(torch.load("inception_v3.pth"))
+        model = model.eval().cuda()
+
+        return model
 
     def compute_metrics(self, model, encoder=None, seg=False):
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
