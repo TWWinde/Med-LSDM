@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
 
-from evaluation.metrics_vq_gan import metrics
+#from evaluation.metrics_vq_gan import metrics
 from vq_gan_3d.utils import shift_dim, adopt_weight, comp_getattr
 from vq_gan_3d.model.lpips import LPIPS
 from vq_gan_3d.model.codebook import Codebook
