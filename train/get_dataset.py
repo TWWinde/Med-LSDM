@@ -67,7 +67,7 @@ def get_dataset(cfg):
             train_dataset = SynthRAD2023Dataset(
                 root_dir=cfg.dataset.root_dir, sem_map=True)
             val_dataset = SynthRAD2023Dataset(
-                root_dir=cfg.dataset.val, sem_map=True)
+                root_dir=cfg.dataset.val_dir, sem_map=True)
             sampler = None
             return train_dataset, val_dataset, sampler
 
