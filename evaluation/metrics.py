@@ -43,7 +43,7 @@ class Metrics:
         Path(self.path_to_save_RMSE).mkdir(parents=True, exist_ok=True)
         Path(self.path_to_save_FID).mkdir(parents=True, exist_ok=True)
         self.num_classes = num_classes
-        self.inception_model = inception_v3(pretrained=True, transform_input=False).eval().cuda()
+        #self.inception_model = inception_v3(pretrained=True, transform_input=False).eval().cuda()
 
     def sample(self, model):
         model.eval()
