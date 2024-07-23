@@ -98,6 +98,7 @@ class Transform:
             return final_img
 
 
+
 normalization = tio.Compose([
     tio.RescaleIntensity(out_min_max=(-1, 1)),
     tio.Lambda(lambda x: x.float())
@@ -116,6 +117,56 @@ TRAIN_TRANSFORMS = tio.Compose([
 
 
 class AutoPETDataset(Dataset):
+    """
+    root_dir: root_dir: /data/private/autoPET/autopet_3d/train  for training
+                       /data/private/autoPET/autopet_3d/test  for test and validation
+
+    """
+    def __init__(self, root_dir: str, sem_map=False):
+        super().__init__()
+        self.root_dir = root_dir
+        self.sem_map = sem_map
+        self.Norm = normalization
+        self.Crop = crop
+        if self.sem_map:
+            self.ct_paths, self.label_paths = self.get_data_files()
+        else:
+            self.ct_paths = self.get_data_files()
+
+    def get_data_files(self):
+
+        ct_names = [os.path.join(self.root_dir, 'ct', subfolder) for subfolder in os.listdir(os.path.join(self.root_dir, 'ct'))
+                    if subfolder.endswith('nii.gz')]
+        if self.sem_map:
+            label_names, ct_names_ = [], []
+            for ct_path in ct_names:
+                label_path = ct_path.replace('ct', 'label')
+                if os.path.exists(ct_path) and os.path.exists(label_path):
+                    ct_names_.append(ct_path)
+                    label_names.append(label_path)
+
+            return ct_names_, label_names
+        else:
+
+            return ct_names
+
+    def __len__(self):
+        return len(self.ct_paths)
+
+    def __getitem__(self, idx: int):
+        img = tio.ScalarImage(self.ct_paths[idx])
+        img = self.Crop(img)
+        img = self.Norm(img)
+        if self.sem_map:
+            label = tio.ScalarImage(self.label_paths[idx])
+            label = self.Crop(label)
+
+            return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
+        else:
+            return {'image': img}
+
+
+class AutoPETDataset2(Dataset):
     def __init__(self, root_dir: str, sem_map=False):
         super().__init__()
         self.root_dir = root_dir
