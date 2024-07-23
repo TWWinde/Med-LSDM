@@ -152,7 +152,8 @@ class metrics:
         return total_loss / d
 
     def calculate_fid(self, img1, img2):
-        #images = F.interpolate(images, size=(299, 299), mode='bilinear', align_corners=False)
+        img1 = F.interpolate(img1, size=(299, 299), mode='bilinear', align_corners=False)
+        img2 = F.interpolate(img2, size=(299, 299), mode='bilinear', align_corners=False)
         assert img1.shape == img2.shape
         b, c, d, h, w = img1.shape
         total_fid = 0.0
