@@ -140,7 +140,7 @@ class metrics:
         avg_fid = torch.mean(torch.tensor(fid)).item()
         avg_l1 = torch.mean(torch.tensor(l1)).item()
 
-        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_fid, avg_l1
+        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_l1 #fid
 
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
@@ -258,7 +258,7 @@ class metrics:
 
     def update_metrics(self, image, recon, cur_iter):
         print(f"--- Iter {cur_iter}: computing PIPS SSIM PSNR RMSE FID ---" )
-        cur_pips, cur_ssim, cur_psnr, cur_rmse, cur_fid, cur_l1 = self.compute_metrics_during_training(image, recon)
+        cur_pips, cur_ssim, cur_psnr, cur_rmse,  cur_l1 = self.compute_metrics_during_training(image, recon)
         self.update_logs(cur_pips, cur_iter, 'PIPS')
         self.update_logs(cur_ssim, cur_iter, 'SSIM')
         self.update_logs(cur_psnr, cur_iter, 'PSNR')
@@ -266,7 +266,7 @@ class metrics:
         self.update_logs(cur_l1, cur_iter, 'L1')
 
         print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips), "{:.2f}".format(cur_ssim),
-              "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse), "{:.2f}".format(cur_fid), "{:.2f}".format(cur_l1))
+              "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse), "{:.2f}".format(cur_l1))
 
     def update_logs(self, cur_data, epoch, mode):
         try:
