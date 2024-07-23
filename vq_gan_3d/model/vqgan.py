@@ -3,6 +3,8 @@
 
 import math
 import argparse
+import os.path
+
 import numpy as np
 import pickle as pkl
 
@@ -15,7 +17,7 @@ import torch.distributed as dist
 from vq_gan_3d.utils import shift_dim, adopt_weight, comp_getattr
 from vq_gan_3d.model.lpips import LPIPS
 from vq_gan_3d.model.codebook import Codebook
-
+from evaluation.metrics_vq_gan import metrics
 
 def silu(x):
     return x*torch.sigmoid(x)
@@ -44,7 +46,7 @@ def vanilla_d_loss(logits_real, logits_fake):
 
 
 class VQGAN(pl.LightningModule):
-    def __init__(self, cfg,  label=False):
+    def __init__(self, cfg,  label=False, val_dataloader=None):
         super().__init__()
         self.cfg = cfg
         self.label = label
@@ -90,6 +92,10 @@ class VQGAN(pl.LightningModule):
         self.l1_weight = cfg.model.l1_weight
         self.save_hyperparameters()
         self.num_classes = cfg.dataset.image_channels
+        self.val_dataloader = val_dataloader
+        self.path = os.path.join(self.cfg.model.default_root_dir, self.cfg.model.name, self.cfg.model.default_root_dir_postfix, 'metrics')
+        os.makedirs(self.path, exist_ok=True)
+        self.metrics_computer = metrics(self.path, self.val_dataloader, self.num_classes)
 
     def preprocess_input(self, data):
 
@@ -133,6 +139,9 @@ class VQGAN(pl.LightningModule):
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)
         x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']))  # torch.Size([B, 37, 32, 256, 256]) for seg
+
+        if self.global_step % 500 == 0:
+            self.metrics_computer.update_metrics(x, x_recon, self.global_step)
 
         recon_loss = F.l1_loss(x_recon, x) * self.l1_weight
         if self.label:
@@ -256,6 +265,7 @@ class VQGAN(pl.LightningModule):
         else:
             perceptual_loss = self.perceptual_model(
                 frames, frames_recon) * self.perceptual_weight
+
 
         return recon_loss, crossentropy_loss, x_recon, vq_output, perceptual_loss
 
