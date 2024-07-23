@@ -72,8 +72,11 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
         assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
         n = 0
         if crop_2_block:
-            for i in range(0, img_data.shape[2] - length, stride):
-                cropped_image, cropped_label = crop_block(img_data, label_data, *crop_size, i, length)
+            for i in range(0, img_data.shape[2] // 4):
+                if img_data.shape[2] < 32:
+                    continue
+                number = random.randint(0, img_data.shape[2] - length)
+                cropped_image, cropped_label = crop_block(img_data, label_data, *crop_size, number, length)
                 if is_all_zero(cropped_image, cropped_label):
                     print("Array is all zeros. Skipping rescaling.")
                     continue
@@ -550,7 +553,7 @@ if __name__ == '__main__':
     Total_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/'
     croped_total_mr = '/data/private/autoPET/Totalsegmentator_mri_croped/'
 
-    autopet = False
+    autopet = True
     if autopet:
         preprocess_raw = False
         crop = True
@@ -567,7 +570,7 @@ if __name__ == '__main__':
             iterator_synthrad2023(source_folder3, out_folder2)
         if cut:
             process_images_synthrad2023(out_folder2, train_folder3, test_folder3)
-    total_mri = True
+    total_mri = False
     if total_mri:
         os.makedirs(Total_label_out, exist_ok=True)
         pad_rescale = False
