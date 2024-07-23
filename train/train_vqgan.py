@@ -35,7 +35,7 @@ def run(cfg: DictConfig):
 
     if cfg.dataset.name == 'SemanticMap':
         model = VQGAN(cfg, label=True, val_dataloader=val_dataloader)
-    elif cfg.model.name == 'vg_gan_spade':
+    elif cfg.model.name == 'vq_gan_spade':
         model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader)
     else:
         model = VQGAN(cfg, val_dataloader=val_dataloader)
