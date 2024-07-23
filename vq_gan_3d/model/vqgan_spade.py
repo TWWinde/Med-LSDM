@@ -499,10 +499,10 @@ class Spade_ResBlock(nn.Module):
 
     def forward(self, x, seg):
         h = x
-        h = self.norm1(h, seg)
+        h = self.spade_norm1(h, seg)
         h = silu(h)
         h = self.conv1(h)
-        h = self.norm2(h, seg)
+        h = self.spade_norm2(h, seg)
         h = silu(h)
         h = self.conv2(h)
 
