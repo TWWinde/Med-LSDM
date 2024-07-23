@@ -157,6 +157,7 @@ class metrics:
         for i in range(d):
             x1 = img1[:, :, i, :, :].repeat(1, 3, 1, 1)
             x2 = img2[:, :, i, :, :].repeat(1, 3, 1, 1)
+            print(x1.shape)
             total_fid += self.get_fid(x1, x2)
 
         return total_fid / d
