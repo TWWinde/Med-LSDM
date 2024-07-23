@@ -164,16 +164,16 @@ class metrics:
 
         return total_fid / d
 
+    def get_activations(self, images, model):
+        images = F.interpolate(images, size=(299, 299), mode='bilinear', align_corners=False)
+        pred = model(images)
+        pred = F.adaptive_avg_pool2d(pred, output_size=(1, 1)).squeeze(-1).squeeze(-1)
+        return pred
+
     def get_fid(self, im1, im2):
 
-        def get_activations(images, model):
-            images = F.interpolate(images, size=(299, 299), mode='bilinear', align_corners=False)
-            pred = model(images)
-            pred = F.adaptive_avg_pool2d(pred, output_size=(1, 1)).squeeze(-1).squeeze(-1)
-            return pred
-
-        act1 = get_activations(im1, self.inception_model)
-        act2 = get_activations(im2, self.inception_model)
+        act1 = self.get_activations(im1, self.inception_model)
+        act2 = self.get_activations(im2, self.inception_model)
 
         mu1 = torch.mean(act1, dim=0)
         mu2 = torch.mean(act2, dim=0)
