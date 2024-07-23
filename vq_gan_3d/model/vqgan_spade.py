@@ -93,7 +93,7 @@ class VQGAN_SPADE(pl.LightningModule):
         self.path = os.path.join(self.cfg.model.default_root_dir, self.cfg.model.name,
                                  self.cfg.model.default_root_dir_postfix, 'metrics')
         os.makedirs(self.path, exist_ok=True)
-        self.metrics_computer = metrics(self.path, self.val_dataloader, self.num_classes)
+        #self.metrics_computer = metrics(self.path, self.val_dataloader, self.num_classes)
 
     def preprocess_input(self, data):
 
@@ -140,8 +140,8 @@ class VQGAN_SPADE(pl.LightningModule):
         vq_output = self.codebook(z)
         x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']), seg)  # torch.Size([B, 37, 32, 256, 256]) for seg
 
-        if self.global_step % 500 == 0:
-            self.metrics_computer.update_metrics(x, x_recon, self.global_step)
+        #if self.global_step % 500 == 0:
+            #self.metrics_computer.update_metrics(x, x_recon, self.global_step)
 
         recon_loss = F.l1_loss(x_recon, x) * self.l1_weight
         if self.label:
