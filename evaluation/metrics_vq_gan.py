@@ -78,8 +78,8 @@ class metrics:
                 input2 = (image + 1) / 2
 
                 # SSIM
-                ssim_value, _ = self.ssim_3d(input1, input2)
-                ssim.append(ssim_value.item())
+                #ssim_value, _ = self.ssim_3d(input1, input2)
+                #ssim.append(ssim_value.item())
                 # PIPS lpips
                 d = self.pips_3d(input1, input2)
                 pips.append(d.mean().item())
@@ -100,7 +100,7 @@ class metrics:
         model.train()
 
         avg_pips = torch.mean(torch.tensor(pips)).item()
-        avg_ssim = torch.mean(torch.tensor(ssim)).item()
+        #avg_ssim = torch.mean(torch.tensor(ssim)).item()
         avg_psnr = torch.mean(torch.tensor(psnr)).item()
         avg_rmse = torch.mean(torch.tensor(rmse)).item()
         avg_fid = torch.mean(torch.tensor(fid)).item()
@@ -265,7 +265,7 @@ class metrics:
         self.update_logs(cur_rmse, cur_iter, 'RMSE')
         self.update_logs(cur_l1, cur_iter, 'L1')
 
-        print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips), "{:.2f}".format(cur_ssim),
+        print("--- Metrics at Iter %s: " % cur_iter, "{:.2f}".format(cur_pips),
               "{:.2f}".format(cur_psnr), "{:.2f}".format(cur_rmse), "{:.2f}".format(cur_l1))
 
     def update_logs(self, cur_data, epoch, mode):
