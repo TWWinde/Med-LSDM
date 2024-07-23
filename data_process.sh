@@ -10,7 +10,7 @@
 #SBATCH --nodes=1
 #SBATCH --gpus=1
 #SBATCH --qos=batch
-# SBATCH --gpus=rtx_a5000:1
+#SBATCH --gpus=rtx_a5000:1
 # SBATCH --qos=shortbatch
 # SBATCH --partition=highperf
 
