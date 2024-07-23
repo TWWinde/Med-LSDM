@@ -1,5 +1,5 @@
 name: SynthRAD2023
-root_dir: /data/private/autoPET/autopet_3d_only_crop/train
-val_dir: /data/private/autoPET/autopet_3d_only_crop/test
+root_dir: /data/private/autoPET/SynthRad2024_withoutmask/train
+val_dir: /data/private/autoPET/SynthRad2024_withoutmask/test
 image_channels: 1
 
