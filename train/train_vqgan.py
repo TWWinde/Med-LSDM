@@ -34,11 +34,11 @@ def run(cfg: DictConfig):
         cfg.model.lr, accumulate, ngpu/8, bs/4, base_lr))
 
     if cfg.dataset.name == 'SemanticMap':
-        model = VQGAN(cfg, label=True)
+        model = VQGAN(cfg, label=True, val_dataloader=val_dataloader)
     elif cfg.model.name == 'vg_gan_spade':
-        model = VQGAN_SPADE(cfg)
+        model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader)
     else:
-        model = VQGAN(cfg)
+        model = VQGAN(cfg, val_dataloader=val_dataloader)
 
     callbacks = []
     callbacks.append(ModelCheckpoint(monitor='val/recon_loss',
