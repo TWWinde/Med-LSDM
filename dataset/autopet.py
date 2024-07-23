@@ -163,7 +163,7 @@ class AutoPETDataset(Dataset):
 
             return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
         else:
-            return {'image': img}
+            return {'image': img.data.permute(0, -1, 1, 2)}
 
 
 class AutoPETDataset2(Dataset):
