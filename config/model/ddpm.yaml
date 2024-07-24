@@ -3,6 +3,7 @@ seggan_ckpt: 0
 vqgan_spade_ckpt: 0
 name: ddpm
 segconv: 0
+spade_input_channel: 64
 
 # Have to be derived from VQ-GAN Latent space dimensions
 diffusion_img_size: 64

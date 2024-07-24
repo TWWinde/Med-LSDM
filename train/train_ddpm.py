@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
 from ddpm import Unet3D, GaussianDiffusion, Trainer, Unet3D_SPADE, SemanticGaussianDiffusion, Semantic_Trainer
 import hydra
@@ -7,6 +8,7 @@ from train.get_dataset import get_dataset
 import torch
 import os
 from ddpm.unet import UNet
+
 
 # NCCL_P2P_DISABLE=1 accelerate launch train/train_ddpm.py
 
@@ -28,7 +30,7 @@ def run(cfg: DictConfig):
             dim=cfg.model.diffusion_img_size,
             dim_mults=cfg.model.dim_mults,
             channels=cfg.model.diffusion_num_channels,
-            label_nc=cfg.dataset.label_nc,
+            label_nc=cfg.model.spade_input_channel if cfg.model.segconv == 1 else cfg.dataset.label_nc,
             segconv=cfg.model.segconv
         ).cuda()
     elif cfg.model.denoising_fn == 'UNet':
