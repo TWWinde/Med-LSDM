@@ -25,6 +25,7 @@ pyenv activate myenv38 #myenv #venv
 pip uninstall nvidia_cublas_cu11
 nvcc --version
 python -c "import torch; print(torch.__version__)"
+export CUDA_LAUNCH_BLOCKING=1
 
 # Run your python code
 
