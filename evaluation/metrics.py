@@ -64,10 +64,10 @@ class Metrics:
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
-                image, label = self.preprocess_input(data_i)
+                image, seg = self.preprocess_input(data_i)
                 if encoder is not None:
                     with torch.no_grad():
-                        seg = encoder.encode(label, quantize=False, include_embeddings=True)
+                        seg = encoder.encode(seg, quantize=False, include_embeddings=True)
                         # normalize to -1 and 1
                         seg = ((seg - encoder.codebook.embeddings.min()) /
                                (encoder.codebook.embeddings.max() -
@@ -92,7 +92,6 @@ class Metrics:
                 # FID
                 #fid_value = self.calculate_fid(input1, input2)
                 #fid.append(fid_value.item())
-
                 break
         model.train()
 
