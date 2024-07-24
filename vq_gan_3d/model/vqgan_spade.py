@@ -90,8 +90,7 @@ class VQGAN_SPADE(pl.LightningModule):
         self.l1_weight = cfg.model.l1_weight
         self.save_hyperparameters()
         self.num_classes = cfg.dataset.image_channels
-        self.path = os.path.join(self.cfg.model.default_root_dir, self.cfg.model.name,
-                                 self.cfg.model.default_root_dir_postfix, 'metrics')
+        self.path = os.path.join(self.cfg.model.default_root_dir, self.cfg.model.name, self.cfg.model.default_root_dir_postfix, 'metrics')
         os.makedirs(self.path, exist_ok=True)
         #self.metrics_computer = metrics(self.path, self.val_dataloader, self.num_classes)
 
