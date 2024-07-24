@@ -96,8 +96,8 @@ class VQGAN_SPADE(pl.LightningModule):
 
     def preprocess_input(self, data):
 
-        label = data['label'].cuda().long()
-        img = data['image'].cuda().float()
+        label = data['label']
+        img = data['image']
         # create one-hot label map
         bs, _, t, h, w = label.size()
         nc = self.num_classes
@@ -266,6 +266,7 @@ class VQGAN_SPADE(pl.LightningModule):
     def training_step(self, batch, batch_idx, optimizer_idx):
 
         x, seg = self.preprocess_input(batch)
+
         if optimizer_idx == 0:
             recon_loss, _, vq_output, aeloss, perceptual_loss, crossentropy_loss, gan_feat_loss = self.forward(
                 x, seg, optimizer_idx)
