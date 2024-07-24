@@ -406,7 +406,7 @@ class Decoder(nn.Module):
         max_us = n_times_upsample.max()
 
         in_channels = n_hiddens*2**max_us
-        self.final_block_spade = nn.Sequential(SPADEGroupNorm3D(in_channels),   SiLU())
+        self.final_block_spade = SPADEGroupNorm3D(in_channels)  # SiLU())
 
         self.conv_blocks_spade = nn.ModuleList()
         for i in range(max_us):
@@ -428,6 +428,7 @@ class Decoder(nn.Module):
 
     def forward(self, x, seg):
         h = self.final_block_spade(x, seg)
+        h = silu(h)
         for i, block_spade in enumerate(self.conv_blocks_spade):
             h = block_spade.up(h)
             h = block_spade.res1(h, seg)
