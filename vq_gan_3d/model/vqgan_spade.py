@@ -304,9 +304,11 @@ class VQGAN_SPADE(pl.LightningModule):
 
     def log_images(self, batch, **kwargs):
         log = dict()
-        x = batch['image']
+        #x = batch['image']
+        x, seg = self.preprocess_input(batch)
         x = x.to(self.device)
-        frames, frames_rec, _, _ = self(x, log_image=True)
+        seg = seg.to(self.device)
+        frames, frames_rec, _, _ = self(x, seg, log_image=True)
         log["inputs"] = frames
         log["reconstructions"] = frames_rec
         #log['mean_org'] = batch['mean_org']
@@ -315,7 +317,9 @@ class VQGAN_SPADE(pl.LightningModule):
 
     def log_videos(self, batch, **kwargs):
         log = dict()
-        x = batch['image']
+        #x = batch['image']
+        x, seg = self.preprocess_input(batch)
+        x = x.to(self.device)
         _, _, x, x_rec = self(x, log_image=True)
         log["inputs"] = x
         log["reconstructions"] = x_rec
