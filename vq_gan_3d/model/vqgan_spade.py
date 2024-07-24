@@ -420,7 +420,7 @@ class Decoder(nn.Module):
                 out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
             block_spade.res2 = Spade_ResBlock(
                 out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
-            self.conv_blocksblock_spade.append(block_spade)
+            self.conv_blocks_spade.append(block_spade)
             n_times_upsample -= 1
 
         self.conv_last_spade = SamePadConv3d(
