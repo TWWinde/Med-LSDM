@@ -93,9 +93,9 @@ class VQGAN(pl.LightningModule):
         self.save_hyperparameters()
         self.num_classes = cfg.dataset.image_channels
         self.val_dataloader = val_dataloader
-        self.path = os.path.join(self.cfg.model.default_root_dir, self.cfg.model.name, self.cfg.model.default_root_dir_postfix, 'metrics')
-        os.makedirs(self.path, exist_ok=True)
-        self.metrics_computer = metrics(self.path, self.val_dataloader, self.num_classes)
+        #self.path = os.path.join(self.cfg.model.default_root_dir, self.cfg.model.name, self.cfg.model.default_root_dir_postfix, 'metrics')
+        #os.makedirs(self.path, exist_ok=True)
+        #self.metrics_computer = metrics(self.path, self.val_dataloader, self.num_classes)
 
     def preprocess_input(self, data):
 
