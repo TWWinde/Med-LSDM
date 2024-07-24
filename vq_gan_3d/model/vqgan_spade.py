@@ -50,13 +50,14 @@ class VQGAN_SPADE(pl.LightningModule):
         self.label = label
         self.embedding_dim = cfg.model.embedding_dim
         self.n_codes = cfg.model.n_codes
+        self.label_nc = cfg.dataset.label_nc
 
         self.encoder = Encoder(cfg.model.n_hiddens, cfg.model.downsample,
                                cfg.dataset.image_channels, cfg.model.norm_type, cfg.model.padding_type,
                                cfg.model.num_groups,
                                )
         self.decoder = Decoder(
-            cfg.model.n_hiddens, cfg.model.downsample, cfg.dataset.image_channels, cfg.model.norm_type, cfg.model.num_groups)
+            cfg.model.n_hiddens, cfg.model.downsample, cfg.dataset.image_channels, cfg.model.norm_type, cfg.model.num_groups, self.label_nc)
         self.enc_out_ch = self.encoder.out_channels
         self.pre_vq_conv = SamePadConv3d(
             self.enc_out_ch, cfg.model.embedding_dim, 1, padding_type=cfg.model.padding_type)
@@ -403,14 +404,14 @@ class SPADEGroupNorm3D(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, n_hiddens, upsample, image_channel, norm_type='group', num_groups=32):
+    def __init__(self, n_hiddens, upsample, image_channel, norm_type='group', num_groups=32, label_nc=37):
         super().__init__()
 
         n_times_upsample = np.array([int(math.log2(d)) for d in upsample])
         max_us = n_times_upsample.max()
-
+        self.label_nc = label_nc
         in_channels = n_hiddens*2**max_us
-        self.final_block_spade = SPADEGroupNorm3D(in_channels)  # SiLU())
+        self.final_block_spade = SPADEGroupNorm3D(in_channels, label_nc=self.label_nc)  # SiLU())
 
         self.conv_blocks_spade = nn.ModuleList()
         for i in range(max_us):
@@ -421,9 +422,9 @@ class Decoder(nn.Module):
             block_spade.up = SamePadConvTranspose3d(
                 in_channels, out_channels, 4, stride=us)
             block_spade.res1 = Spade_ResBlock(
-                out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
+                out_channels, out_channels, norm_type=norm_type, num_groups=num_groups, label_nc=self.label_nc)
             block_spade.res2 = Spade_ResBlock(
-                out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
+                out_channels, out_channels, norm_type=norm_type, num_groups=num_groups, label_nc=self.label_nc)
             self.conv_blocks_spade.append(block_spade)
             n_times_upsample -= 1
 
@@ -476,20 +477,20 @@ class ResBlock(nn.Module):
 
 
 class Spade_ResBlock(nn.Module):
-    def __init__(self, in_channels, out_channels=None, conv_shortcut=False, dropout=0.0, norm_type='group', padding_type='replicate', num_groups=32):
+    def __init__(self, in_channels, out_channels=None, conv_shortcut=False, dropout=0.0, norm_type='group', padding_type='replicate', num_groups=32, label_nc=37):
         super().__init__()
         self.in_channels = in_channels
         out_channels = in_channels if out_channels is None else out_channels
         self.out_channels = out_channels
         self.use_conv_shortcut = conv_shortcut
-
-        self.spade_norm1 = SPADEGroupNorm3D(in_channels)  #  Normalize(in_channels, norm_type, num_groups=num_groups)
+        self.label_nc = label_nc
+        self.spade_norm1 = SPADEGroupNorm3D(in_channels, label_nc=self.label_nc)  #  Normalize(in_channels, norm_type, num_groups=num_groups)
 
         self.conv1 = SamePadConv3d(
             in_channels, out_channels, kernel_size=3, padding_type=padding_type)
         self.dropout = torch.nn.Dropout(dropout)
 
-        self.spade_norm2 = SPADEGroupNorm3D(in_channels)          #Normalize(in_channels, norm_type, num_groups=num_groups)
+        self.spade_norm2 = SPADEGroupNorm3D(in_channels, label_nc=self.label_nc)          #Normalize(in_channels, norm_type, num_groups=num_groups)
 
         self.conv2 = SamePadConv3d(
             out_channels, out_channels, kernel_size=3, padding_type=padding_type)
