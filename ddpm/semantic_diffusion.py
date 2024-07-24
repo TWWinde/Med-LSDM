@@ -777,6 +777,7 @@ class SemanticGaussianDiffusion(nn.Module):
         if vqgan_ckpt and not vqgan_spade_ckpt:
             self.vqgan = VQGAN.load_from_checkpoint(vqgan_ckpt).cuda()
             self.vqgan.eval()
+            self.vqgan_spade = None
         elif vqgan_spade_ckpt:
             self.vqgan_spade = VQGAN_SPADE.load_from_checkpoint(vqgan_spade_ckpt).cuda()
             self.vqgan_spade.eval()
