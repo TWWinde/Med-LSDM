@@ -96,8 +96,8 @@ class VQGAN_SPADE(pl.LightningModule):
 
     def preprocess_input(self, data):
 
-        label = data['label']
-        img = data['image']
+        label = data['label'].long()
+        img = data['image'].float()
         # create one-hot label map
         bs, _, t, h, w = label.size()
         nc = self.num_classes
