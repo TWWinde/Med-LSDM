@@ -189,7 +189,7 @@ class LayerNorm(nn.Module):
 
 
 class SPADEGroupNorm3D(nn.Module):
-    def __init__(self, dim_out, label_nc=37, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
+    def __init__(self, dim_out, label_nc=64, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
         super().__init__()
 
         self.norm = nn.GroupNorm(groups, dim_out, affine=False)
@@ -507,7 +507,7 @@ class SegConv3D(nn.Module):
         self.conv2 = nn.Conv3d(in_channels=64, out_channels=128, kernel_size=(1, 3, 3), stride=1, padding=1)
         self.pool2 = nn.MaxPool3d(kernel_size=2, stride=2)  # Reduce (16, 128, 128) to (8, 64, 64)
 
-        self.conv3 = nn.Conv3d(in_channels=128, out_channels=37, kernel_size=(1, 3, 3), stride=1, padding=1)
+        self.conv3 = nn.Conv3d(in_channels=128, out_channels=64, kernel_size=(1, 3, 3), stride=1, padding=1)
 
     def forward(self, x):
         x = self.conv1(x)
