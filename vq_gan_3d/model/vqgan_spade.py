@@ -406,36 +406,33 @@ class Decoder(nn.Module):
         max_us = n_times_upsample.max()
 
         in_channels = n_hiddens*2**max_us
-        self.final_block = nn.Sequential(
-            SPADEGroupNorm3D(in_channels),        #Normalize(in_channels, norm_type, num_groups=num_groups),
-            SiLU()
-        )
+        self.final_block_spade = nn.Sequential(SPADEGroupNorm3D(in_channels),   SiLU())
 
-        self.conv_blocks = nn.ModuleList()
+        self.conv_blocks_spade = nn.ModuleList()
         for i in range(max_us):
-            block = nn.Module()
+            block_spade = nn.Module()
             in_channels = in_channels if i == 0 else n_hiddens*2**(max_us-i+1)
             out_channels = n_hiddens*2**(max_us-i)
             us = tuple([2 if d > 0 else 1 for d in n_times_upsample])
-            block.up = SamePadConvTranspose3d(
+            block_spade.up = SamePadConvTranspose3d(
                 in_channels, out_channels, 4, stride=us)
-            block.res1 = Spade_ResBlock(
+            block_spade.res1 = Spade_ResBlock(
                 out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
-            block.res2 = Spade_ResBlock(
+            block_spade.res2 = Spade_ResBlock(
                 out_channels, out_channels, norm_type=norm_type, num_groups=num_groups)
-            self.conv_blocks.append(block)
+            self.conv_blocksblock_spade.append(block_spade)
             n_times_upsample -= 1
 
-        self.conv_last = SamePadConv3d(
+        self.conv_last_spade = SamePadConv3d(
             out_channels, image_channel, kernel_size=3)
 
     def forward(self, x, seg):
-        h = self.final_block(x,seg)
-        for i, block in enumerate(self.conv_blocks):
-            h = block.up(h)
-            h = block.res1(h, seg)
-            h = block.res2(h, seg)
-        h = self.conv_last(h)
+        h = self.final_block_spade(x, seg)
+        for i, block_spade in enumerate(self.conv_blocks_spade):
+            h = block_spade.up(h)
+            h = block_spade.res1(h, seg)
+            h = block_spade.res2(h, seg)
+        h = self.conv_last_spade(h)
         return h
 
 
