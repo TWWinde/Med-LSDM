@@ -95,10 +95,10 @@ class Metrics:
                 break
         model.train()
 
-        avg_pips = sum(pips) / total_samples
-        avg_ssim = sum(ssim) / total_samples
-        avg_psnr = sum(psnr) / total_samples
-        avg_rmse = sum(rmse) / total_samples
+        avg_pips = sum(pips) / len(pips)
+        avg_ssim = sum(ssim) / len(ssim)
+        avg_psnr = sum(psnr) / len(psnr)
+        avg_rmse = sum(rmse) / len(rmse)
         #avg_fid = sum(fid) / total_samples
 
         return avg_pips, avg_ssim, avg_psnr, avg_rmse #, #avg_fid
