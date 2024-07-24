@@ -2,4 +2,4 @@ name: SynthRAD2023
 root_dir: /data/private/autoPET/SynthRad2024_withoutmask/train
 val_dir: /data/private/autoPET/SynthRad2024_withoutmask/test
 image_channels: 1
-
+label_nc: 31
