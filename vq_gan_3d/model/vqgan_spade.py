@@ -320,7 +320,7 @@ class VQGAN_SPADE(pl.LightningModule):
         #x = batch['image']
         x, seg = self.preprocess_input(batch)
         x = x.to(self.device)
-        _, _, x, x_rec = self(x, log_image=True)
+        _, _, x, x_rec = self(x, seg, log_image=True)
         log["inputs"] = x
         log["reconstructions"] = x_rec
         #log['mean_org'] = batch['mean_org']
