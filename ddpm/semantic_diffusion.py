@@ -499,15 +499,16 @@ class Attention(nn.Module):
 
 
 class SegConv3D(nn.Module):
-    def __init__(self):
+    def __init__(self, output_channels):
         super(SegConv3D, self).__init__()
+        self.output_channels = output_channels
         self.conv1 = nn.Conv3d(in_channels=37, out_channels=64, kernel_size=(1, 3, 3), stride=1, padding=1)
         self.pool1 = nn.MaxPool3d(kernel_size=2, stride=2)  # Reduce (32, 256, 256) to (16, 128, 128)
 
         self.conv2 = nn.Conv3d(in_channels=64, out_channels=128, kernel_size=(1, 3, 3), stride=1, padding=1)
         self.pool2 = nn.MaxPool3d(kernel_size=2, stride=2)  # Reduce (16, 128, 128) to (8, 64, 64)
 
-        self.conv3 = nn.Conv3d(in_channels=128, out_channels=64, kernel_size=(1, 3, 3), stride=1, padding=1)
+        self.conv3 = nn.Conv3d(in_channels=128, out_channels=self.output_channels, kernel_size=(1, 3, 3), stride=1, padding=1)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -651,7 +652,7 @@ class Unet3D_SPADE(nn.Module):
         # add 3d conv for input segmap
         self.segconv = segconv
         if self.segconv == 1:
-            self.segconv3d = SegConv3D()
+            self.segconv3d = SegConv3D(self.label_nc)
 
     def forward_with_cond_scale(
             self,
