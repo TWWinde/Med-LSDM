@@ -784,6 +784,7 @@ class SemanticGaussianDiffusion(nn.Module):
             self.vqgan = None
         else:
             self.vqgan = None
+            self.vqgan_spade = None
 
         betas = cosine_beta_schedule(timesteps)
 
