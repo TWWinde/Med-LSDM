@@ -12,7 +12,7 @@ diffusion_num_channels: 8
 dim_mults: ???
 results_folder: /misc/no_backups/d1502/medicaldiffusion/checkpoints/ddpm/
 results_folder_postfix: 'diff'
-load_milestone: 0 #-1
+load_milestone: -1
 
 batch_size: 4
 num_workers: 4

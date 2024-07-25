@@ -114,7 +114,7 @@ def run(cfg: DictConfig):
     else:
         raise ValueError(f"Model {cfg.model.diffusion} doesn't exist")
 
-    if cfg.model.load_milestone:
+    if cfg.model.load_milestone ==-1:
         trainer.load(cfg.model.load_milestone)
 
     trainer.train()
