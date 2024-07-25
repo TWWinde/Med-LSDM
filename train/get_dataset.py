@@ -1,4 +1,4 @@
-from dataset import MRNetDataset, BRATSDataset, ADNIDataset, DUKEDataset, LIDCDataset, DEFAULTDataset, SynthRAD2023Dataset, AutoPETDataset, SemanticMapDataset
+from dataset import MRNetDataset, BRATSDataset, ADNIDataset, DUKEDataset, LIDCDataset, DEFAULTDataset, SynthRAD2023Dataset, AutoPETDataset, SemanticMapDataset, TotalSegmentator_mri_Dataset
 from torch.utils.data import WeightedRandomSampler
 
 
@@ -103,12 +103,21 @@ def get_dataset(cfg):
             sampler = None
             return train_dataset, val_dataset, sampler
 
-    if cfg.dataset.name == 'AutoPET_wo_artifacts':
-        train_dataset = AutoPETDataset(
-            root_dir=cfg.dataset.root_dir)
-        val_dataset = AutoPETDataset(
-            root_dir=cfg.dataset.root_dir)
-        sampler = None
-        return train_dataset, val_dataset, sampler
+    if cfg.dataset.name == 'TotalSegmentator_mri':
+
+        if cfg.model.name == 'vq_gan_3d':
+            train_dataset = TotalSegmentator_mri_Dataset(
+                root_dir=cfg.dataset.root_dir)
+            val_dataset = SynthRAD2023Dataset(
+                root_dir=cfg.dataset.val_dir)
+            sampler = None
+            return train_dataset, val_dataset, sampler
+        elif cfg.model.name == 'ddpm' or 'vq_gan_spade':
+            train_dataset = TotalSegmentator_mri_Dataset(
+                root_dir=cfg.dataset.root_dir, sem_map=True)
+            val_dataset = TotalSegmentator_mri_Dataset(
+                root_dir=cfg.dataset.val_dir, sem_map=True)
+            sampler = None
+            return train_dataset, val_dataset, sampler
 
     raise ValueError(f'{cfg.dataset.name} Dataset is not available')
