@@ -1,6 +1,6 @@
 import sys
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
-from ddpm import Unet3D, GaussianDiffusion, Trainer, Unet3D_SPADE, SemanticGaussianDiffusion, Semantic_Trainer
+from ddpm import Unet3D, GaussianDiffusion, Unet3D_SPADE, SemanticGaussianDiffusion
 import hydra
 from omegaconf import DictConfig, open_dict
 from train.get_dataset import get_dataset
@@ -10,6 +10,10 @@ from ddpm.unet import UNet
 from torch.utils.data import DataLoader
 # NCCL_P2P_DISABLE=1 accelerate launch train/train_ddpm.py
 from evaluation.metrics import Metrics
+from torchvision import transforms as T
+import torch.nn.functional as F
+from einops import rearrange
+
 
 @hydra.main(config_path='/misc/no_backups/d1502/medicaldiffusion/config', config_name='base_cfg', version_base=None)
 def run(cfg: DictConfig):
@@ -65,13 +69,13 @@ def run(cfg: DictConfig):
     else:
         raise ValueError(f"Model {cfg.model.diffusion} doesn't exist")
 
-    def preprocess_input(self, data):
+    def preprocess_input(data):
         # move to GPU and change data types
         label = data['label'].cuda().long()
         img = data['image'].cuda().float()
         # create one-hot label map
         bs, _, t, h, w = label.size()
-        nc = self.num_classes
+        nc = cfg.dataset.label_nc
         input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
         input_semantics = input_label.scatter_(1, label, 1.0)
 
@@ -91,11 +95,13 @@ def run(cfg: DictConfig):
 
         return model
 
-    results_folder = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/ddpm/AutoPET/output_with_segconv/checkpoints"
-    metrics_folder = ""
-    train_dataset, val_dataset, _ = get_dataset(cfg)
+    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/checkpoints/", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
+    os.makedirs(results_folder, exist_ok=True)
+    metrics_folder = os.path.join(results_folder, "metrics")
+    os.makedirs(metrics_folder, exist_ok=True)
+    _, val_dataset, _ = get_dataset(cfg)
     model = load_checkpoint(model, results_folder)
-    val_dl = DataLoader(val_dataset, batch_size=16, shuffle=False, pin_memory=True, num_workers=4)
+    val_dl = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
     compute_matrics = True
     generate_gif = True
@@ -109,32 +115,32 @@ def run(cfg: DictConfig):
                 label_save = data_i['label']
                 image, label = preprocess_input(data_i)
                 generated = model.sample(cond=label)
-                all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
-                all_label_list = F.pad(label, (2, 2, 2, 2))
-    all_image_list = F.pad(input_image, (2, 2, 2, 2))
-    if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
-        sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
-        label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
-        image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
-        path_video = os.path.join(self.results_folder, 'video_results')
-        os.makedirs(path_video, exist_ok=True)
 
-        sample_path = os.path.join(path_video, f'{milestone}_sample.gif')
-        image_path = os.path.join(path_video, f'{milestone}_image.gif')
-        label_path = os.path.join(path_video, f'{milestone}_label.gif')
-        video_tensor_to_gif(sample_gif, sample_path)
-        video_tensor_to_gif(image_gif, image_path)
-        video_tensor_to_gif(label_gif, label_path)
+                all_videos_list = F.pad(generated, (2, 2, 2, 2))
+                all_label_list = F.pad(label_save, (2, 2, 2, 2))
+                all_image_list = F.pad(image, (2, 2, 2, 2))
 
+                sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                path_video = os.path.join(results_folder, 'video_results')
+                os.makedirs(path_video, exist_ok=True)
 
-
+                sample_path = os.path.join(path_video, f'{i}_sample.gif')
+                image_path = os.path.join(path_video, f'{i}_image.gif')
+                label_path = os.path.join(path_video, f'{i}_label.gif')
+                video_tensor_to_gif(sample_gif, sample_path)
+                video_tensor_to_gif(image_gif, image_path)
+                video_tensor_to_gif(label_gif, label_path)
 
 
-
-
-
-
-
+def video_tensor_to_gif(tensor, path, duration=120, loop=0, optimize=True):
+    tensor = ((tensor - tensor.min()) / (tensor.max() - tensor.min())) * 1.0
+    images = map(T.ToPILImage(), tensor.unbind(dim=1))
+    first_img, *rest_imgs = images
+    first_img.save(path, save_all=True, append_images=rest_imgs,
+                   duration=duration, loop=loop, optimize=optimize)
+    return images
 
 
 if __name__ == '__main__':
