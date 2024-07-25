@@ -35,7 +35,7 @@ Totalsegmentator_ct_classes = {
                     "skin":"27" ,
                      "spleen":"28",
                      "fat":"29",
-                     "skeletal_muscle":"30"
+                     "skeletal_muscle": "30"
 
 }
 
