@@ -156,8 +156,6 @@ class TotalSegmentator_mri_Dataset(Dataset):
         img = tio.ScalarImage(self.mr_paths[idx])
         img = self.Crop(img)
         img = self.Norm(img)
-        for i in img:
-            print(i)
         if self.sem_map:
             label = tio.ScalarImage(self.label_paths[idx])
             label = self.Crop(label)
