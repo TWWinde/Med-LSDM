@@ -162,6 +162,6 @@ class TotalSegmentator_mri_Dataset(Dataset):
 
             return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
         else:
-            return {'image': img}
+            return {'image': img.permute(0, -1, 1, 2)}
 
 
