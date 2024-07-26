@@ -1,5 +1,5 @@
 name: TotalSegmentator_mri
-root_dir: /data/private/autoPET/Totalsegmentator_mri_croped/train
-val_dir: /data/private/autoPET/Totalsegmentator_mri_croped/test
+root_dir: /data/private/autoPET/Totalsegmentator_mri_croped
+val_dir: /data/private/autoPET/Totalsegmentator_mri_croped
 image_channels: 1
 label_nc: 31
