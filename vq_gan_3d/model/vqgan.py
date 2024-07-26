@@ -284,6 +284,8 @@ class VQGAN(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x = batch['image']  # TODO: batch['stft']
+        for item in x:
+            print(item)
         recon_loss, crossentropy_loss, _, vq_output, perceptual_loss = self.forward(x)
         self.log('val/recon_loss', recon_loss, prog_bar=True)
         self.log('val/crossentropy_loss', crossentropy_loss, prog_bar=True)
