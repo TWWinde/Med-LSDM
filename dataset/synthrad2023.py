@@ -162,7 +162,7 @@ class SynthRAD2023Dataset(Dataset):
 
             return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
         else:
-            return {'image': img}
+            return {'image': img.data.permute(0, -1, 1, 2)}
 
 
 class SynthRAD2023Dataset1(Dataset):
