@@ -140,8 +140,8 @@ class VQGAN(pl.LightningModule):
         vq_output = self.codebook(z)
         x_recon = self.decoder(self.post_vq_conv(vq_output['embeddings']))  # torch.Size([B, 37, 32, 256, 256]) for seg
 
-        if self.global_step % 500 == 0:
-            self.metrics_computer.update_metrics(x, x_recon, self.global_step)
+        #if self.global_step % 500 == 0:
+            #self.metrics_computer.update_metrics(x, x_recon, self.global_step)
 
         recon_loss = F.l1_loss(x_recon, x) * self.l1_weight
         if self.label:
