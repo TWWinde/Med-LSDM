@@ -103,6 +103,51 @@ class Metrics:
 
         return avg_pips, avg_ssim, avg_psnr, avg_rmse #, #avg_fid
 
+    def compute_metrics_test(self, model, encoder=None):
+        pips, ssim, psnr, rmse, fid = [], [], [], [], []
+        model.eval()
+        total_samples = len(self.val_dataloader)
+        with torch.no_grad():
+            for i, data_i in enumerate(self.val_dataloader):
+                image, seg = self.preprocess_input(data_i)
+                if encoder is not None:
+                    with torch.no_grad():
+                        seg = encoder.encode(seg, quantize=False, include_embeddings=True)
+                        # normalize to -1 and 1
+                        seg = ((seg - encoder.codebook.embeddings.min()) /
+                               (encoder.codebook.embeddings.max() -
+                                encoder.codebook.embeddings.min())) * 2.0 - 1.0
+                        assert seg.size()[-1] == 64  # torch.Size([1, 8, 8, 64, 64])
+
+                generated = model.sample(cond=seg)
+                input1 = (generated + 1) / 2
+                input2 = (image + 1) / 2
+                # SSIM
+                ssim_value, _ = self.ssim_3d(input1, input2)
+                ssim.append(ssim_value.item())
+                # PIPS lpips
+                d = self.pips_3d(input1, input2)
+                pips.append(d.mean().item())
+                # PSNR, RMSE
+                psnr_value = self.psnr_3d(input1, input2)
+                rmse_value = self.rmse_3d(input1, input2)
+                psnr.append(psnr_value.item())
+                rmse.append(rmse_value.item())
+
+                # FID
+                #fid_value = self.calculate_fid(input1, input2)
+                #fid.append(fid_value.item())
+
+        model.train()
+
+        avg_pips = sum(pips) / len(pips)
+        avg_ssim = sum(ssim) / len(ssim)
+        avg_psnr = sum(psnr) / len(psnr)
+        avg_rmse = sum(rmse) / len(rmse)
+        #avg_fid = sum(fid) / total_samples
+
+        return avg_pips, avg_ssim, avg_psnr, avg_rmse #, #avg_fid
+
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
         b, c, d, h, w = img1.shape
@@ -234,7 +279,7 @@ class Metrics:
         plt.close()
 
     def metrics_test(self, model):
-        pips, ssim, psnr, rmse= self.compute_metrics(model)
+        pips, ssim, psnr, rmse= self.compute_metrics_test(model)
         print("--- PIPS at test : ", "{:.2f}".format(pips))
         print("--- SSIM at test : ", "{:.5f}".format(ssim))
         print("--- PSNR at test : ", "{:.2f}".format(psnr))
