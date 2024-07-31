@@ -1,8 +1,8 @@
 #!/bin/bash -l
 
 #Slurm parameters
-#SBATCH --job-name=3D_Diffusion
-#SBATCH --output=Diffusion%j.%N.out
+#SBATCH --job-name=Test_diff
+#SBATCH --output=test%j.%N.out
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=4-23:00:00
