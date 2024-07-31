@@ -97,17 +97,15 @@ def test(cfg: DictConfig):
 
     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/checkpoints/", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
     os.makedirs(results_folder, exist_ok=True)
-    metrics_folder = os.path.join(results_folder, "metrics")
-    os.makedirs(metrics_folder, exist_ok=True)
     _, val_dataset, _ = get_dataset(cfg)
     checkpoint_folder = os.path.join("/misc/no_backups/d1502/medicaldiffusion/checkpoints", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
     model = load_checkpoint(model, checkpoint_folder)
     val_dl = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
     compute_matrics = True
-    generate_gif = True
+    generate_gif = False
     if compute_matrics:
-        metrics_computer = Metrics(metrics_folder, val_dl)
+        metrics_computer = Metrics(results_folder, val_dl)
         metrics_computer.metrics_test(model)
     if generate_gif:
         model.eval()

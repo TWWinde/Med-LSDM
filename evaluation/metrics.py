@@ -7,6 +7,7 @@ import torch
 import torch.nn.functional as F
 from torchvision.models import inception_v3
 from scipy.linalg import sqrtm
+from einops import rearrange
 # --------------------------------------------------------------------------#
 # This code is to calculate and save SSIM PIPS PSNR RMSE
 # --------------------------------------------------------------------------#
@@ -109,6 +110,7 @@ class Metrics:
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
+                label_save = data_i["label"]
                 image, seg = self.preprocess_input(data_i)
                 if encoder is not None:
                     with torch.no_grad():
@@ -122,6 +124,24 @@ class Metrics:
                 generated = model.sample(cond=seg)
                 input1 = (generated + 1) / 2
                 input2 = (image + 1) / 2
+
+                all_videos_list = F.pad(generated, (2, 2, 2, 2))
+                all_label_list = F.pad(label_save, (2, 2, 2, 2))
+                all_image_list = F.pad(image, (2, 2, 2, 2))
+
+                sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                path_video = os.path.join(self.root_dir, 'video_results')
+                os.makedirs(path_video, exist_ok=True)
+
+                sample_path = os.path.join(path_video, f'{i}_sample.gif')
+                image_path = os.path.join(path_video, f'{i}_image.gif')
+                label_path = os.path.join(path_video, f'{i}_label.gif')
+                video_tensor_to_gif(sample_gif, sample_path)
+                video_tensor_to_gif(image_gif, image_path)
+                video_tensor_to_gif(label_gif, label_path)
+
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input1, input2)
                 ssim.append(ssim_value.item())
@@ -133,6 +153,9 @@ class Metrics:
                 rmse_value = self.rmse_3d(input1, input2)
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
+
+                if i ==100:
+                    break
 
                 # FID
                 #fid_value = self.calculate_fid(input1, input2)
@@ -318,5 +341,13 @@ def save_image(image_tensor, path, cols=3):
     plt.savefig(path)
     plt.close()
 
+
+def video_tensor_to_gif(tensor, path, duration=120, loop=0, optimize=True):
+    tensor = ((tensor - tensor.min()) / (tensor.max() - tensor.min())) * 1.0
+    images = map(T.ToPILImage(), tensor.unbind(dim=1))
+    first_img, *rest_imgs = images
+    first_img.save(path, save_all=True, append_images=rest_imgs,
+                   duration=duration, loop=loop, optimize=optimize)
+    return images
 
 
