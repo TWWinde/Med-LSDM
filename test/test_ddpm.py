@@ -33,7 +33,7 @@ def test(cfg: DictConfig):
             dim=cfg.model.diffusion_img_size,
             dim_mults=cfg.model.dim_mults,
             channels=cfg.model.diffusion_num_channels,
-            label_nc=cfg.dataset.label_nc,
+            label_nc=cfg.model.spade_input_channel if cfg.model.segconv == 1 else cfg.dataset.label_nc,
             segconv=cfg.model.segconv
         ).cuda()
     elif cfg.model.denoising_fn == 'UNet':
@@ -46,15 +46,18 @@ def test(cfg: DictConfig):
         raise ValueError(f"Model {cfg.model.denoising_fn} doesn't exist")
 
     if cfg.model.diffusion == 'SemanticGaussianDiffusion':
-        model = SemanticGaussianDiffusion(
+        diffusion = SemanticGaussianDiffusion(
             model,
-            vqgan_ckpt=cfg.model.vqgan_ckpt,
+            vqgan_ckpt=None if cfg.model.vqgan_ckpt == 0 else cfg.model.vqgan_ckpt,
+            vqgan_spade_ckpt=None if cfg.model.vqgan_spade_ckpt == 0 else cfg.model.vqgan_spade_ckpt,
             image_size=cfg.model.diffusion_img_size,
             num_frames=cfg.model.diffusion_depth_size,
             channels=cfg.model.diffusion_num_channels,
             timesteps=cfg.model.timesteps,
+            # sampling_timesteps=cfg.model.sampling_timesteps,
             loss_type=cfg.model.loss_type,
             cond_scale=cfg.model.cond_scale
+            # objective=cfg.objective
         ).cuda()
     elif cfg.model.diffusion == 'GaussianDiffusion':
         model = GaussianDiffusion(
