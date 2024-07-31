@@ -16,7 +16,7 @@ from einops import rearrange
 
 
 @hydra.main(config_path='/misc/no_backups/d1502/medicaldiffusion/config', config_name='base_cfg', version_base=None)
-def run(cfg: DictConfig):
+def test(cfg: DictConfig):
     torch.cuda.set_device(cfg.model.gpus)
     with open_dict(cfg):
         cfg.model.results_folder = os.path.join(
@@ -144,7 +144,7 @@ def video_tensor_to_gif(tensor, path, duration=120, loop=0, optimize=True):
 
 
 if __name__ == '__main__':
-    run()
+    test()
 
     # wandb.finish()
     # Incorporate GAN loss in DDPM training?
