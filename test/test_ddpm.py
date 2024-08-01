@@ -46,7 +46,7 @@ def test(cfg: DictConfig):
         raise ValueError(f"Model {cfg.model.denoising_fn} doesn't exist")
 
     if cfg.model.diffusion == 'SemanticGaussianDiffusion':
-        diffusion = SemanticGaussianDiffusion(
+        diffusion_model = SemanticGaussianDiffusion(
             model,
             vqgan_ckpt=None if cfg.model.vqgan_ckpt == 0 else cfg.model.vqgan_ckpt,
             vqgan_spade_ckpt=None if cfg.model.vqgan_spade_ckpt == 0 else cfg.model.vqgan_spade_ckpt,
@@ -60,7 +60,7 @@ def test(cfg: DictConfig):
             # objective=cfg.objective
         ).cuda()
     elif cfg.model.diffusion == 'GaussianDiffusion':
-        model = GaussianDiffusion(
+        diffusion_model = GaussianDiffusion(
             model,
             vqgan_ckpt=cfg.model.vqgan_ckpt,
             image_size=cfg.model.diffusion_img_size,
@@ -102,7 +102,7 @@ def test(cfg: DictConfig):
     os.makedirs(results_folder, exist_ok=True)
     _, val_dataset, _ = get_dataset(cfg)
     checkpoint_folder = os.path.join("/misc/no_backups/d1502/medicaldiffusion/checkpoints", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
-    model = load_checkpoint(model, checkpoint_folder)
+    diffusion_model = load_checkpoint(diffusion_model, checkpoint_folder)
     val_dl = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
     compute_matrics = True
@@ -116,7 +116,7 @@ def test(cfg: DictConfig):
             for i, data_i in enumerate(val_dl):
                 label_save = data_i['label']
                 image, label = preprocess_input(data_i)
-                generated = model.sample(cond=label)
+                generated = diffusion_model.sample(cond=label)
 
                 all_videos_list = F.pad(generated, (2, 2, 2, 2))
                 all_label_list = F.pad(label_save, (2, 2, 2, 2))
