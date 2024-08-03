@@ -114,7 +114,7 @@ def inference(cfg: DictConfig):
         metrics_computer = Metrics(results_folder, val_dl)
         metrics_computer.metrics_test(diffusion_model)
     if generate_gif:
-        model.eval()
+        diffusion_model.eval()
         with torch.no_grad():
             for i, data_i in enumerate(val_dl):
                 label_save = data_i['label']
