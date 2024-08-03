@@ -23,13 +23,13 @@ def inference(cfg: DictConfig):
             cfg.model.results_folder, cfg.dataset.name, cfg.model.results_folder_postfix)
     print(cfg.model.denoising_fn, "and", cfg.model.diffusion, 'are implemented')
     if cfg.model.denoising_fn == 'Unet3D':
-        model = Unet3D(
+        unet_model = Unet3D(
             dim=cfg.model.diffusion_img_size,
             dim_mults=cfg.model.dim_mults,
             channels=cfg.model.diffusion_num_channels,
         ).cuda()
     elif cfg.model.denoising_fn == 'Unet3D_SPADE':
-        model = Unet3D_SPADE(
+        unet_model = Unet3D_SPADE(
             dim=cfg.model.diffusion_img_size,
             dim_mults=cfg.model.dim_mults,
             channels=cfg.model.diffusion_num_channels,
@@ -37,7 +37,7 @@ def inference(cfg: DictConfig):
             segconv=cfg.model.segconv
         ).cuda()
     elif cfg.model.denoising_fn == 'UNet':
-        model = UNet(
+        unet_model = UNet(
             in_ch=cfg.model.diffusion_num_channels,
             out_ch=cfg.model.diffusion_num_channels,
             spatial_dims=3
@@ -47,7 +47,7 @@ def inference(cfg: DictConfig):
 
     if cfg.model.diffusion == 'SemanticGaussianDiffusion':
         diffusion = SemanticGaussianDiffusion(
-            model,
+            unet_model,
             vqgan_ckpt=None if cfg.model.vqgan_ckpt == 0 else cfg.model.vqgan_ckpt,
             vqgan_spade_ckpt=None if cfg.model.vqgan_spade_ckpt == 0 else cfg.model.vqgan_spade_ckpt,
             image_size=cfg.model.diffusion_img_size,
@@ -61,7 +61,7 @@ def inference(cfg: DictConfig):
         ).cuda()
     elif cfg.model.diffusion == 'GaussianDiffusion':
         diffusion = GaussianDiffusion(
-            model,
+            unet_model,
             vqgan_ckpt=cfg.model.vqgan_ckpt,
             image_size=cfg.model.diffusion_img_size,
             num_frames=cfg.model.diffusion_depth_size,
