@@ -222,14 +222,15 @@ class SDDResBlock(nn.Module):
     """
     def __init__(self, dim, dim_out, time_emb_dim=None, label_nc=37, groups=8):
         super().__init__()
+        self.label_nc = label_nc
         self.mlp = nn.Sequential(
             nn.SiLU(),
             nn.Linear(time_emb_dim, dim_out * 2)
         ) if exists(time_emb_dim) else None
         self.conv1 = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
         self.conv2 = nn.Conv3d(dim_out, dim_out, (1, 3, 3), padding=(0, 1, 1))
-        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=label_nc, eps=1e-5, groups=groups)
-        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=label_nc, eps=1e-5, groups=groups)
+        self.spade_norm1 = SPADEGroupNorm3D(dim, label_nc=self.label_nc, eps=1e-5, groups=groups)
+        self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=self.label_nc, eps=1e-5, groups=groups)
         self.act = nn.SiLU()
         self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
 
@@ -539,7 +540,7 @@ class Unet3D_SPADE(nn.Module):
         init_dim=None,
         init_kernel_size=7,
         use_sparse_linear_attn=True,
-        label_nc=37,
+        label_nc=64,
         block_type='resnet',
         resnet_groups=8,
         segconv=0
