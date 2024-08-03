@@ -16,7 +16,7 @@ from einops import rearrange
 
 
 @hydra.main(config_path='/misc/no_backups/d1502/medicaldiffusion/config', config_name='base_cfg', version_base=None)
-def test(cfg: DictConfig):
+def run(cfg: DictConfig):
     torch.cuda.set_device(cfg.model.gpus)
     with open_dict(cfg):
         cfg.model.results_folder = os.path.join(
@@ -46,7 +46,7 @@ def test(cfg: DictConfig):
         raise ValueError(f"Model {cfg.model.denoising_fn} doesn't exist")
 
     if cfg.model.diffusion == 'SemanticGaussianDiffusion':
-        diffusion_model = SemanticGaussianDiffusion(
+        diffusion = SemanticGaussianDiffusion(
             model,
             vqgan_ckpt=None if cfg.model.vqgan_ckpt == 0 else cfg.model.vqgan_ckpt,
             vqgan_spade_ckpt=None if cfg.model.vqgan_spade_ckpt == 0 else cfg.model.vqgan_spade_ckpt,
@@ -60,14 +60,16 @@ def test(cfg: DictConfig):
             # objective=cfg.objective
         ).cuda()
     elif cfg.model.diffusion == 'GaussianDiffusion':
-        diffusion_model = GaussianDiffusion(
+        diffusion = GaussianDiffusion(
             model,
             vqgan_ckpt=cfg.model.vqgan_ckpt,
             image_size=cfg.model.diffusion_img_size,
             num_frames=cfg.model.diffusion_depth_size,
             channels=cfg.model.diffusion_num_channels,
             timesteps=cfg.model.timesteps,
+            # sampling_timesteps=cfg.model.sampling_timesteps,
             loss_type=cfg.model.loss_type,
+            # objective=cfg.objective
         ).cuda()
     else:
         raise ValueError(f"Model {cfg.model.diffusion} doesn't exist")
@@ -102,7 +104,7 @@ def test(cfg: DictConfig):
     os.makedirs(results_folder, exist_ok=True)
     _, val_dataset, _ = get_dataset(cfg)
     checkpoint_folder = os.path.join("/misc/no_backups/d1502/medicaldiffusion/checkpoints", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
-    diffusion_model = load_checkpoint(diffusion_model, checkpoint_folder)
+    diffusion_model = load_checkpoint(diffusion, checkpoint_folder)
     val_dl = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
     compute_matrics = True
