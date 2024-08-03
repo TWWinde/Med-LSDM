@@ -93,9 +93,10 @@ def run(cfg: DictConfig):
         milestone = max(all_milestones)
 
         data = torch.load(os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
+        print('load checkpoint: ', os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
 
-        model.load_state_dict(data['model'], **kwargs)
-        # model.load_state_dict(data['ema'], **kwargs)
+        # model.load_state_dict(data['model'], **kwargs)
+        model.load_state_dict(data['ema'], **kwargs)
         print("checkpoint is successful loaded")
 
         return model
