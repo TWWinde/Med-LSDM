@@ -112,7 +112,7 @@ def inference(cfg: DictConfig):
     generate_gif = False
     if compute_matrics:
         metrics_computer = Metrics(results_folder, val_dl)
-        metrics_computer.metrics_test(model)
+        metrics_computer.metrics_test(diffusion_model)
     if generate_gif:
         model.eval()
         with torch.no_grad():
