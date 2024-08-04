@@ -1064,12 +1064,12 @@ class SemanticGaussianDiffusion(nn.Module):
         assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
             with torch.no_grad():
-                x = self.vqgan.encode(
-                    x, quantize=False, include_embeddings=True)
+                x = self.vqgan.encode(x, quantize=False, include_embeddings=True)
                 # normalize to -1 and 1
                 x = ((x - self.vqgan.codebook.embeddings.min()) /
                      (self.vqgan.codebook.embeddings.max() -
                       self.vqgan.codebook.embeddings.min())) * 2.0 - 1.0
+
         elif isinstance(self.vqgan_spade, VQGAN_SPADE):
             with torch.no_grad():
                 x = self.vqgan_spade.encode(
