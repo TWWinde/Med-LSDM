@@ -116,7 +116,7 @@ class metrics:
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 image = data_i['image']
-                x_recon, z, vq_output = model(input, evaluation=True)
+                x_recon, z, vq_output = model(image, evaluation=True)
 
                 input = (image + 1) / 2
                 recon = (x_recon + 1) / 2
