@@ -36,6 +36,7 @@ def run(cfg: DictConfig):
 
     # load the most recent checkpoint file
     base_dir = os.path.join(cfg.model.default_root_dir, 'lightning_logs')
+    print(base_dir)
     if os.path.exists(base_dir):
         log_folder = ckpt_file = ''
         version_id_used = step_used = 0
