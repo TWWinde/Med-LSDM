@@ -53,13 +53,12 @@ def run(cfg: DictConfig):
                 print('will start from the recent ckpt %s' %
                       cfg.model.resume_from_checkpoint)
     ckpt_path = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt"
-    with open(ckpt_path, 'rb') as f:
-        buffer = io.BytesIO(f.read())
+    #with open(ckpt_path, 'rb') as f:
+        #buffer = io.BytesIO(f.read())
     model = model.load_from_checkpoint(ckpt_path)    # (cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
-    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", cfg.model.name,
-                                  cfg.dataset.name, cfg.model.results_folder_postfix)
+    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", cfg.model.name, cfg.dataset.name)
     os.makedirs(results_folder, exist_ok=True)
     with torch.no_grad():
         for i, data_i in enumerate(val_dataloader):
