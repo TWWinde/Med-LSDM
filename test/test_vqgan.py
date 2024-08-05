@@ -13,6 +13,7 @@ from omegaconf import DictConfig, open_dict
 from torchvision import transforms as T
 import torch.nn.functional as F
 from einops import rearrange
+import io
 
 
 @hydra.main(config_path='/misc/no_backups/d1502/medicaldiffusion/config', config_name='base_cfg', version_base=None)
@@ -52,6 +53,8 @@ def run(cfg: DictConfig):
                 print('will start from the recent ckpt %s' %
                       cfg.model.resume_from_checkpoint)
     ckpt_path = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt"
+    with open(ckpt_path, 'rb') as f:
+        buffer = io.BytesIO(f.read())
     model = model.load_from_checkpoint(ckpt_path)    # (cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
