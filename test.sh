@@ -43,11 +43,17 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
 
 # diffusion with segconv 128 condition
-python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_128out' dataset.label_nc=37 \
-model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET1/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
-model.seggan_ckpt=0 model.spade_input_channel=128 \
-model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
-model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
+#python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_128out' dataset.label_nc=37 \
+#model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET1/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
+#model.seggan_ckpt=0 model.spade_input_channel=128 \
+#model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
 
+# autopet
+PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
+model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \  #8
+model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+model.discriminator_iter_start=10000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
+model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
 
