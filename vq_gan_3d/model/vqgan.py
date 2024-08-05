@@ -160,7 +160,7 @@ class VQGAN(pl.LightningModule):
         frames_recon = torch.gather(x_recon, 2, frame_idx_selected).squeeze(2)
 
         if evaluation:
-            return x_recon
+            return x_recon, z, vq_output
 
         if log_image:
             return frames, frames_recon, x, x_recon

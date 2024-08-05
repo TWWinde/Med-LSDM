@@ -179,14 +179,14 @@ class metrics:
                 video_tensor_to_gif(recon_gif, label_path)
 
                 # SSIM
-                ssim_value, _ = self.ssim_3d(input1, input2)
+                ssim_value, _ = self.ssim_3d(input, recon)
                 ssim.append(ssim_value.item())
                 # PIPS lpips
-                d = self.pips_3d(input1, input2)
+                d = self.pips_3d(input, recon)
                 pips.append(d.mean().item())
                 # PSNR, RMSE
-                psnr_value = self.psnr_3d(input1, input2)
-                rmse_value = self.rmse_3d(input1, input2)
+                psnr_value = self.psnr_3d(input, recon)
+                rmse_value = self.rmse_3d(input, recon)
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
 

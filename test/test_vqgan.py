@@ -3,6 +3,8 @@ import sys
 
 import torch
 
+from evaluation.metrics_vq_gan import metrics
+
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
 import os
 import pytorch_lightning as pl
@@ -63,8 +65,8 @@ def run(cfg: DictConfig):
         for i, data_i in enumerate(val_dataloader):
             input = data_i['image']
             output = model(input, evaluation=True)
-            metrics_computer = Metrics(results_folder, val_dl)
-            metrics_computer.metrics_test(diffusion_model)
+            metrics_computer = metrics(results_folder, val_dataloader)
+            metrics_computer.metrics_test(model)
 
             input_list = F.pad(input, (2, 2, 2, 2))
             recon_list = F.pad(output, (2, 2, 2, 2))
