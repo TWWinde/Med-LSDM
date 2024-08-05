@@ -112,6 +112,7 @@ class metrics:
     def compute_metrics_test(self, model):
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
         model.eval()
+        model.cuda()
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 input = data_i['image'].cuda()
