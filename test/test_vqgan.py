@@ -36,7 +36,6 @@ def run(cfg: DictConfig):
 
     # load the most recent checkpoint file
     base_dir = os.path.join(cfg.model.default_root_dir, 'lightning_logs')
-    print(base_dir)
     if os.path.exists(base_dir):
         log_folder = ckpt_file = ''
         version_id_used = step_used = 0
@@ -52,8 +51,8 @@ def run(cfg: DictConfig):
                     ckpt_folder, ckpt_file)
                 print('will start from the recent ckpt %s' %
                       cfg.model.resume_from_checkpoint)
-
-    model = model.load_from_checkpoint(cfg.model.resume_from_checkpoint)
+    ckpt_path = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt"
+    model = model.load_from_checkpoint(ckpt_path)    # (cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", cfg.model.name,
