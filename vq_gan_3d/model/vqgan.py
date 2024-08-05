@@ -131,6 +131,7 @@ class VQGAN(pl.LightningModule):
 
     def forward(self, x, optimizer_idx=None, log_image=False, evaluation=False):
 
+        x = x.cuda()
         #B, C, T, H, W = x.shape  # ([2, 1, 32, 256, 256])
         if self.label:
             x = self.preprocess_input(x)
@@ -155,7 +156,7 @@ class VQGAN(pl.LightningModule):
             # Selects one random 2D image from each 3D Image
 
         frame_idx = torch.randint(0, T, [B]).cuda()
-        frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
+        frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W).cuda()
         frames = torch.gather(x, 2, frame_idx_selected).squeeze(2)
         frames_recon = torch.gather(x_recon, 2, frame_idx_selected).squeeze(2)
 
