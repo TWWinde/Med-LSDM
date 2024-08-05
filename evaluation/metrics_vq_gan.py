@@ -112,66 +112,21 @@ class metrics:
     def compute_metrics_test(self, model):
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
         model.eval()
-        model.cuda()
-        with torch.no_grad():
-            for i, data_i in enumerate(self.val_dataloader):
-                input = data_i['image'].cuda()
-                output = model(input, evaluation=True)
-                input1 = (input + 1) / 2
-                input2 = (output + 1) / 2
-
-                # SSIM
-                ssim_value, _ = self.ssim_3d(input1, input2)
-                ssim.append(ssim_value.item())
-                # PIPS lpips
-                d = self.pips_3d(input1, input2)
-                pips.append(d.mean().item())
-                # PSNR, RMSE
-                psnr_value = self.psnr_3d(input1, input2)
-                rmse_value = self.rmse_3d(input1, input2)
-                psnr.append(psnr_value.item())
-                rmse.append(rmse_value.item())
-
-                # FID
-                fid_value = self.calculate_fid(input1, input2)
-                fid.append(fid_value.item())
-                #l1
-                l1_value = F.l1_loss(input1, input2).item()
-                l1.append(l1_value)
-
-                if i == 100:
-                    break
-
-
-        model.train()
-
-        avg_pips = torch.mean(torch.tensor(pips)).item()
-        avg_ssim = torch.mean(torch.tensor(ssim)).item()
-        avg_psnr = torch.mean(torch.tensor(psnr)).item()
-        avg_rmse = torch.mean(torch.tensor(rmse)).item()
-        avg_fid = torch.mean(torch.tensor(fid)).item()
-        avg_l1 = torch.mean(torch.tensor(l1)).item()
-
-        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_fid, avg_l1
-
-    def compute_metrics_test(self, model, encoder=None):
-        pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
-        model.eval()
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
-                input = data_i['image']
-                output = model(input, evaluation=True)
+                image = data_i['image']
+                x_recon, z, vq_output = model(input, evaluation=True)
 
-                input = (input + 1) / 2
-                recon = (output + 1) / 2
+                input = (image + 1) / 2
+                recon = (x_recon + 1) / 2
 
                 input_list = F.pad(input, (2, 2, 2, 2))
-                recon_list = F.pad(output, (2, 2, 2, 2))
+                recon_list = F.pad(recon, (2, 2, 2, 2))
 
                 input_gif = rearrange(input_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
                 recon_gif = rearrange(recon_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                path_video = os.path.join(results_folder, 'video_results')
+                path_video = os.path.join(self.root_dir, 'video_results')
                 os.makedirs(path_video, exist_ok=True)
 
                 image_path = os.path.join(path_video, f'{i}_input.gif')
@@ -190,6 +145,9 @@ class metrics:
                 rmse_value = self.rmse_3d(input, recon)
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
+
+                l1_value = F.l1_loss(x_recon, recon).item()
+                l1.append(l1_value)
 
                 if i ==100:
                     break
