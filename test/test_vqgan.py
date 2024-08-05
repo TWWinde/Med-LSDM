@@ -29,11 +29,11 @@ def run(cfg: DictConfig):
             cfg.model.default_root_dir, cfg.dataset.name, cfg.model.default_root_dir_postfix)
 
     if cfg.dataset.name == 'SemanticMap':
-        model = VQGAN(cfg, label=True, val_dataloader=val_dataloader)
+        model = VQGAN(cfg, label=True, val_dataloader=val_dataloader).cuda()
     elif cfg.model.name == 'vq_gan_spade':
-        model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader)
+        model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader).cuda()
     else:
-        model = VQGAN(cfg, val_dataloader=val_dataloader)
+        model = VQGAN(cfg, val_dataloader=val_dataloader).cuda()
 
     # load the most recent checkpoint file
     base_dir = os.path.join(cfg.model.default_root_dir, 'lightning_logs')
@@ -61,11 +61,11 @@ def run(cfg: DictConfig):
     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", cfg.model.name, cfg.dataset.name)
     os.makedirs(results_folder, exist_ok=True)
     with torch.no_grad():
+        metrics_computer = metrics(results_folder, val_dataloader)
+        metrics_computer.metrics_test(model)
         for i, data_i in enumerate(val_dataloader):
             input = data_i['image']
             output = model(input, evaluation=True)
-            metrics_computer = metrics(results_folder, val_dataloader)
-            metrics_computer.metrics_test(model)
 
             input_list = F.pad(input, (2, 2, 2, 2))
             recon_list = F.pad(output, (2, 2, 2, 2))

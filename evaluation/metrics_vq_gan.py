@@ -109,12 +109,12 @@ class metrics:
 
         return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_fid, avg_l1
 
-    def compute_metrics_test(self, model, encoder=None):
+    def compute_metrics_test(self, model):
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
         model.eval()
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
-                input = data_i['image']
+                input = data_i['image'].cuda()
                 output = model(input, evaluation=True)
                 input1 = (input + 1) / 2
                 input2 = (output + 1) / 2
