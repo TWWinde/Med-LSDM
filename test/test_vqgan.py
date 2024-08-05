@@ -1,11 +1,8 @@
 "Adapted from https://github.com/SongweiGe/TATS"
 import sys
-
 import torch
-
-from evaluation.metrics_vq_gan import metrics
-
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
+from evaluation.metrics_vq_gan import metrics
 import os
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
