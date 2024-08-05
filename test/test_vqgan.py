@@ -58,6 +58,7 @@ def run(cfg: DictConfig):
     model = model.load_from_checkpoint(ckpt_path)    # (cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
+    model.cuda()
     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", cfg.model.name, cfg.dataset.name)
     os.makedirs(results_folder, exist_ok=True)
     with torch.no_grad():
