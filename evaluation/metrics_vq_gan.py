@@ -121,8 +121,7 @@ class metrics:
 
                 input = (image + 1) / 2
                 recon = (x_recon + 1) / 2
-                print(input)
-                print(recon)
+
 
                 input_list = F.pad(input, (2, 2, 2, 2))
                 recon_list = F.pad(recon, (2, 2, 2, 2))
@@ -170,6 +169,64 @@ class metrics:
 
         return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_l1 #, #avg_fid
 
+    def compute_metrics_test_spade(self, model):
+        pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
+        model.eval()
+        total_samples = len(self.val_dataloader)
+        with torch.no_grad():
+            for i, data_i in enumerate(self.val_dataloader):
+                image = data_i['image'].to('cuda:0')
+                seg = data_i['label'].to('cuda:0')
+                x_recon, z, vq_output = model(image, seg, evaluation=True)
+
+                input = (image + 1) / 2
+                recon = (x_recon + 1) / 2
+
+                input_list = F.pad(input, (2, 2, 2, 2))
+                recon_list = F.pad(recon, (2, 2, 2, 2))
+
+                input_gif = rearrange(input_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                recon_gif = rearrange(recon_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                path_video = os.path.join(self.root_dir, 'video_results')
+                os.makedirs(path_video, exist_ok=True)
+
+                image_path = os.path.join(path_video, f'{i}_input.gif')
+                label_path = os.path.join(path_video, f'{i}_recon.gif')
+                video_tensor_to_gif(input_gif, image_path)
+                video_tensor_to_gif(recon_gif, label_path)
+
+                # SSIM
+                ssim_value, _ = self.ssim_3d(input, recon)
+                ssim.append(ssim_value.item())
+                # PIPS lpips
+                d = self.pips_3d(input, recon)
+                pips.append(d.mean().item())
+                # PSNR, RMSE
+                psnr_value = self.psnr_3d(input, recon)
+                rmse_value = self.rmse_3d(input, recon)
+                psnr.append(psnr_value.item())
+                rmse.append(rmse_value.item())
+
+                l1_value = F.l1_loss(x_recon, recon).item()
+                l1.append(l1_value)
+
+                if i == 200:
+                    break
+
+                # FID
+                # fid_value = self.calculate_fid(input1, input2)
+                # fid.append(fid_value.item())
+
+        model.train()
+
+        avg_pips = sum(pips) / len(pips)
+        avg_ssim = sum(ssim) / len(ssim)
+        avg_psnr = sum(psnr) / len(psnr)
+        avg_rmse = sum(rmse) / len(rmse)
+        avg_l1 = sum(l1) / len(l1)
+        # avg_fid = sum(fid) / total_samples
+
+        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_l1  # , #avg_fid
 
     def compute_metrics_during_training(self, image, recon):
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
@@ -363,6 +420,16 @@ class metrics:
         print("--- RMSE at test : ", "{:.2f}".format(rmse))
         #print("--- FID at test : ", "{:.2f}".format(fid))
         print("--- L1 at test : ", "{:.2f}".format(l1))
+
+    def metrics_test_spade(self, model):
+        pips, ssim, psnr, rmse, l1 = self.compute_metrics_test_spade(model)
+        print("--- PIPS at test : ", "{:.2f}".format(pips))
+        print("--- SSIM at test : ", "{:.5f}".format(ssim))
+        print("--- PSNR at test : ", "{:.2f}".format(psnr))
+        print("--- RMSE at test : ", "{:.2f}".format(rmse))
+        #print("--- FID at test : ", "{:.2f}".format(fid))
+        print("--- L1 at test : ", "{:.2f}".format(l1))
+
 
     def image_saver(self, fake, real, label, milestone):
 

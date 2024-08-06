@@ -63,7 +63,10 @@ def run(cfg: DictConfig):
     os.makedirs(results_folder, exist_ok=True)
     with torch.no_grad():
         metrics_computer = metrics(results_folder, val_dataloader)
-        metrics_computer.metrics_test(model)
+        if cfg.model.name == "vq_gan_3d":
+            metrics_computer.metrics_test(model)
+        elif cfg.model.name == "vq_gan_spade":
+            metrics_computer.metrics_test_spade(model)
         for i, data_i in enumerate(val_dataloader):
             input = data_i['image']
             output = model(input, evaluation=True)
