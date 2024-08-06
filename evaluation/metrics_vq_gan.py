@@ -150,7 +150,7 @@ class metrics:
                 l1_value = F.l1_loss(x_recon, recon).item()
                 l1.append(l1_value)
 
-                if i ==100:
+                if i == 200:
                     break
 
                 # FID
@@ -163,9 +163,10 @@ class metrics:
         avg_ssim = sum(ssim) / len(ssim)
         avg_psnr = sum(psnr) / len(psnr)
         avg_rmse = sum(rmse) / len(rmse)
+        avg_l1 = sum(l1) / len(l1)
         #avg_fid = sum(fid) / total_samples
 
-        return avg_pips, avg_ssim, avg_psnr, avg_rmse #, #avg_fid
+        return avg_pips, avg_ssim, avg_psnr, avg_rmse, avg_l1 #, #avg_fid
 
 
     def compute_metrics_during_training(self, image, recon):
@@ -194,7 +195,7 @@ class metrics:
         l1.append(l1_value)
 
         avg_pips = torch.mean(torch.tensor(pips)).item()
-        #avg_ssim = torch.mean(torch.tensor(ssim)).item()
+        avg_ssim = torch.mean(torch.tensor(ssim)).item()
         avg_psnr = torch.mean(torch.tensor(psnr)).item()
         avg_rmse = torch.mean(torch.tensor(rmse)).item()
         #avg_fid = torch.mean(torch.tensor(fid)).item()
@@ -352,12 +353,12 @@ class metrics:
         plt.close()
 
     def metrics_test(self, model):
-        pips, ssim, psnr, rmse, fid, l1 = self.compute_metrics_test(model)
+        pips, ssim, psnr, rmse, l1 = self.compute_metrics_test(model)
         print("--- PIPS at test : ", "{:.2f}".format(pips))
         print("--- SSIM at test : ", "{:.5f}".format(ssim))
         print("--- PSNR at test : ", "{:.2f}".format(psnr))
         print("--- RMSE at test : ", "{:.2f}".format(rmse))
-        print("--- FID at test : ", "{:.2f}".format(fid))
+        #print("--- FID at test : ", "{:.2f}".format(fid))
         print("--- L1 at test : ", "{:.2f}".format(l1))
 
     def image_saver(self, fake, real, label, milestone):

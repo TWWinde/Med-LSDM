@@ -21,7 +21,7 @@ def run(cfg: DictConfig):
     pl.seed_everything(cfg.model.seed)
 
     train_dataset, val_dataset, sampler = get_dataset(cfg)
-    val_dataloader = DataLoader(val_dataset, batch_size=cfg.model.batch_size,
+    val_dataloader = DataLoader(val_dataset, batch_size=1,
                                 shuffle=False, num_workers=cfg.model.num_workers)
 
     with open_dict(cfg):
