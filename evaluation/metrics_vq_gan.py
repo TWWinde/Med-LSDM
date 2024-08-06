@@ -205,7 +205,9 @@ class metrics:
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
         b, c, d, h, w = img1.shape
-        loss_lpips = lpips.LPIPS(net='vgg') #.to('cuda:0')
+        img1 = img1.to('cuda:0')
+        img2 = img2.to('cuda:0')
+        loss_lpips = lpips.LPIPS(net='vgg').to('cuda:0')
         total_loss = 0.0
         for i in range(d):
             total_loss += loss_lpips(img1[:, :, i, :, :], img2[:, :, i, :, :])
