@@ -53,6 +53,8 @@ def run(cfg: DictConfig):
                 print('will start from the recent ckpt %s' %
                       cfg.model.resume_from_checkpoint)
     print(cfg.model.resume_from_checkpoint)
+    cfg.model.resume_from_checkpoint = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan_spade/AutoPET" \
+                                       "/vq_gan_spade/lightning_logs/version_137357/checkpoints/latest_checkpoint.ckpt"
     model = model.load_from_checkpoint(cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
