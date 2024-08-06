@@ -121,6 +121,8 @@ class metrics:
 
                 input = (image + 1) / 2
                 recon = (x_recon + 1) / 2
+                print(input)
+                print(recon)
 
                 input_list = F.pad(input, (2, 2, 2, 2))
                 recon_list = F.pad(recon, (2, 2, 2, 2))
@@ -181,6 +183,7 @@ class metrics:
         # PIPS lpips
         d = self.pips_3d(input1, input2)
         pips.append(d.mean().item())
+
         # PSNR, RMSE
         psnr_value = self.psnr_3d(input1, input2)
         rmse_value = self.rmse_3d(input1, input2)
