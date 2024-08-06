@@ -277,7 +277,7 @@ class metrics:
 
         padd = 0
         (_, channel, depth, height, width) = img1.size()
-        window = create_window(window_size, channel=channel).cuda()
+        window = create_window(window_size, channel).to(img1.device)
 
         mu1 = F.conv3d(img1, window, padding=padd, groups=channel)
         mu2 = F.conv3d(img2, window, padding=padd, groups=channel)
