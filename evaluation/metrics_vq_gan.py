@@ -175,8 +175,7 @@ class metrics:
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
-                image = data_i['image'].to('cuda:0')
-                seg = data_i['label'].to('cuda:0')
+                image, seg = self.preprocess_input(data_i)
                 x_recon, z, vq_output = model(image, seg, evaluation=True)
 
                 input = (image + 1) / 2
@@ -430,6 +429,17 @@ class metrics:
         #print("--- FID at test : ", "{:.2f}".format(fid))
         print("--- L1 at test : ", "{:.2f}".format(l1))
 
+    def preprocess_input(self, data):
+
+        label = data['label'].cuda().long()
+        img = data['image'].cuda().float()
+        # create one-hot label map
+        bs, _, t, h, w = label.size()
+        nc = self.num_classes
+        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
+        input_semantics = input_label.scatter_(1, label, 1.0)
+
+        return img, input_semantics
 
     def image_saver(self, fake, real, label, milestone):
 
