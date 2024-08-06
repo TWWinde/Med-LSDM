@@ -52,7 +52,7 @@ def run(cfg: DictConfig):
                     ckpt_folder, ckpt_file)
                 print('will start from the recent ckpt %s' %
                       cfg.model.resume_from_checkpoint)
-
+    print(cfg.model.resume_from_checkpoint)
     model = model.load_from_checkpoint(cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
