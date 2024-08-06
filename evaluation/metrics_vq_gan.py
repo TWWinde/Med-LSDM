@@ -276,6 +276,8 @@ class metrics:
             L = val_range
 
         padd = 0
+        img1 = img1.cpu()
+        img2 = img2.cpu()
         (_, channel, depth, height, width) = img1.size()
         window = create_window(window_size, channel).to(img1.device)
 
