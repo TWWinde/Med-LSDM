@@ -125,7 +125,7 @@ class VQGAN_SPADE(pl.LightningModule):
         h = self.post_vq_conv(shift_dim(h, -1, 1))
         return self.decoder(h, seg)
 
-    def forward(self, x, seg, optimizer_idx=None, log_image=False):
+    def forward(self, x, seg, optimizer_idx=None, log_image=False, evaluation=False):
 
         #B, C, T, H, W = x.shape  # ([2, 1, 32, 256, 256])
         if self.label:
@@ -154,6 +154,9 @@ class VQGAN_SPADE(pl.LightningModule):
         frame_idx_selected = frame_idx.reshape(-1, 1, 1, 1, 1).repeat(1, C, 1, H, W)
         frames = torch.gather(x, 2, frame_idx_selected).squeeze(2)
         frames_recon = torch.gather(x_recon, 2, frame_idx_selected).squeeze(2)
+
+        if evaluation:
+            return x_recon, z, vq_output
 
         if log_image:
             return frames, frames_recon, x, x_recon
