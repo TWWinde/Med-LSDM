@@ -116,7 +116,7 @@ class metrics:
         total_samples = len(self.val_dataloader)
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
-                image = data_i['image']
+                image = data_i['image'].to('cuda:0')
                 x_recon, z, vq_output = model(image, evaluation=True)
 
                 input = (image + 1) / 2
@@ -205,8 +205,6 @@ class metrics:
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
         b, c, d, h, w = img1.shape
-        img1 = img1.to('cuda:0')
-        img2 = img2.to('cuda:0')
         loss_lpips = lpips.LPIPS(net='vgg').to('cuda:0')
         total_loss = 0.0
         for i in range(d):
