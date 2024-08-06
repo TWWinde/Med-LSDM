@@ -52,10 +52,8 @@ def run(cfg: DictConfig):
                     ckpt_folder, ckpt_file)
                 print('will start from the recent ckpt %s' %
                       cfg.model.resume_from_checkpoint)
-    ckpt_path = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt"
-    #with open(ckpt_path, 'rb') as f:
-        #buffer = io.BytesIO(f.read())
-    model = model.load_from_checkpoint(ckpt_path)    # (cfg.model.resume_from_checkpoint)
+
+    model = model.load_from_checkpoint(cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
     model.cuda()
