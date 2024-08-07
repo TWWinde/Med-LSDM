@@ -36,25 +36,6 @@ def run(cfg: DictConfig):
         model = VQGAN(cfg, val_dataloader=val_dataloader).cuda()
 
     # load the most recent checkpoint file
-    base_dir = os.path.join(cfg.model.default_root_dir, 'lightning_logs')
-    if os.path.exists(base_dir):
-        log_folder = ckpt_file = ''
-        version_id_used = step_used = 0
-        for folder in os.listdir(base_dir):
-            version_id = int(folder.split('_')[1])
-            if version_id > version_id_used:
-                version_id_used = version_id
-                log_folder = folder
-        if len(log_folder) > 0:
-            ckpt_folder = os.path.join(base_dir, log_folder, 'checkpoints')
-            if len(ckpt_file) > 0:
-                cfg.model.resume_from_checkpoint = os.path.join(
-                    ckpt_folder, ckpt_file)
-                print('will start from the recent ckpt %s' %
-                      cfg.model.resume_from_checkpoint)
-    print(cfg.model.resume_from_checkpoint)
-    cfg.model.resume_from_checkpoint = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan_spade/AutoPET" \
-                                       "/vq_gan_spade/lightning_logs/version_137357/checkpoints/latest_checkpoint.ckpt"
     model = model.load_from_checkpoint(cfg.model.resume_from_checkpoint)
     model.eval()
     model.freeze()
