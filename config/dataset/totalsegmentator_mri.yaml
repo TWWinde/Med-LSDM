@@ -1,5 +1,5 @@
 name: TotalSegmentator_mri
-root_dir: /data/private/autoPET/Totalsegmentator_mri_croped
-val_dir: /data/private/autoPET/Totalsegmentator_mri_croped
+root_dir:  /data/private/autoPET/SynthRad2024_withoutmask/train   #fintune /data/private/autoPET/Totalsegmentator_mri_croped
+val_dir:   /data/private/autoPET/SynthRad2024_withoutmask/test   #fintune /data/private/autoPET/Totalsegmentator_mri_croped
 image_channels: 1
 label_nc: 31
