@@ -91,6 +91,7 @@ def run(cfg: DictConfig):
             num_workers=cfg.model.num_workers,
             seggan_ckpt=None if cfg.model.seggan_ckpt == 0 else cfg.model.seggan_ckpt,
             # logger=cfg.model.logger
+            vqgan_spade_ckpt=None if cfg.model.vqgan_spade_ckpt == 0 else True
         )
 
     elif cfg.model.diffusion == 'GaussianDiffusion':

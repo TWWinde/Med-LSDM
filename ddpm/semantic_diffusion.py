@@ -1059,7 +1059,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
         return loss
 
-    def forward(self, x,  *args, cond, **kwargs):
+    def forward(self, x, seg=None,  *args, cond, **kwargs):
 
         assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
@@ -1073,7 +1073,7 @@ class SemanticGaussianDiffusion(nn.Module):
         elif isinstance(self.vqgan_spade, VQGAN_SPADE):
             with torch.no_grad():
                 x = self.vqgan_spade.encode(
-                    x, quantize=False, include_embeddings=True)
+                    x, seg, quantize=False, include_embeddings=True)
                 # normalize to -1 and 1
                 x = ((x - self.vqgan_spade.codebook.embeddings.min()) /
                      (self.vqgan_spade.codebook.embeddings.max() -
@@ -1219,7 +1219,8 @@ class Semantic_Trainer(object):
         max_grad_norm=None,
         num_workers=20,
         seggan_ckpt=None,
-        num_classes=37
+        num_classes=37,
+        vqgan_spade_ckpt
     ):
         super().__init__()
         self.model = diffusion_model
@@ -1240,7 +1241,7 @@ class Semantic_Trainer(object):
             print('seggan is implemented')
         else:
             self.seggan = None
-
+        self.vqgan_spade_ckpt = vqgan_spade_ckpt
         image_size = diffusion_model.image_size
         channels = diffusion_model.channels
         num_frames = diffusion_model.num_frames
@@ -1365,12 +1366,21 @@ class Semantic_Trainer(object):
                         assert seg.size()[-1] == 64   # torch.Size([1, 8, 8, 64, 64])
 
                 with autocast(enabled=self.amp):
-                    loss = self.model(
-                        input_image,
-                        cond=seg,
-                        prob_focus_present=prob_focus_present,
-                        focus_present_mask=focus_present_mask
-                    )
+                    if self.vqgan_spade_ckpt:
+                        loss = self.model(
+                            input_image,
+                            seg,
+                            cond=seg,
+                            prob_focus_present=prob_focus_present,
+                            focus_present_mask=focus_present_mask
+                        )
+                    else:
+                        loss = self.model(
+                            input_image,
+                            cond=seg,
+                            prob_focus_present=prob_focus_present,
+                            focus_present_mask=focus_present_mask
+                        )
 
                     self.scaler.scale( loss / self.gradient_accumulate_every).backward()
                 if self.step % 50 == 0:
