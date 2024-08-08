@@ -83,7 +83,7 @@ def run(cfg: DictConfig):
         gpus=cfg.model.gpus,
         accumulate_grad_batches=cfg.model.accumulate_grad_batches,
         default_root_dir=cfg.model.default_root_dir,
-        ckpt_path=cfg.model.resume_from_checkpoint,
+        resume_from_checkpoint=cfg.model.resume_from_checkpoint,
         callbacks=callbacks,
         max_steps=cfg.model.max_steps,
         max_epochs=cfg.model.max_epochs,
