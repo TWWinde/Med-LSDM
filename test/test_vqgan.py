@@ -43,7 +43,7 @@ def run(cfg: DictConfig):
     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", cfg.model.name, cfg.dataset.name)
     os.makedirs(results_folder, exist_ok=True)
     with torch.no_grad():
-        metrics_computer = metrics(results_folder, val_dataloader)
+        metrics_computer = metrics(results_folder, val_dataloader, num_classes=cfg.dataset.label_nc)
         if cfg.model.name == "vq_gan_3d":
             metrics_computer.metrics_test(model)
         elif cfg.model.name == "vq_gan_spade":
