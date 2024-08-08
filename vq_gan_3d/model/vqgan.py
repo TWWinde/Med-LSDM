@@ -151,7 +151,7 @@ class VQGAN(pl.LightningModule):
             criterion = torch.nn.CrossEntropyLoss()
             crossentropy_loss = criterion(recon_labels, target_labels)
         else:
-            crossentropy_loss = 0
+            crossentropy_loss = 0.0
 
             # Selects one random 2D image from each 3D Image
 
