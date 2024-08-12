@@ -1073,7 +1073,7 @@ class SemanticGaussianDiffusion(nn.Module):
         elif isinstance(self.vqgan_spade, VQGAN_SPADE):
             with torch.no_grad():
                 x = self.vqgan_spade.encode(
-                    x, seg, quantize=False, include_embeddings=True)
+                    x,  quantize=False, include_embeddings=True)
                 # normalize to -1 and 1
                 x = ((x - self.vqgan_spade.codebook.embeddings.min()) /
                      (self.vqgan_spade.codebook.embeddings.max() -
