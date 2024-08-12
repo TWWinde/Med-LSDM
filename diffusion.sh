@@ -81,7 +81,7 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=2 model.gpus=0
 
 # diffusion with segconv 64 condition vq_gan_spade autopet
-python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_64out' dataset.label_nc=37 \
+python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output_with_vq_spade_segconv_64out' dataset.label_nc=37 \
 model.vqgan_ckpt=0 \
 model.vqgan_spade_ckpt="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan_spade/AutoPET/vq_gan_spade/lightning_logs/version_137357/checkpoints/latest_checkpoint.ckpt" \
 model.seggan_ckpt=0 model.spade_input_channel=64 \
