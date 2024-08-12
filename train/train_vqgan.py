@@ -78,10 +78,7 @@ def run(cfg: DictConfig):
     accelerator = None
     if cfg.model.gpus > 1:
         accelerator = 'ddp'
-   # cfg.model.resume_from_checkpoint = "/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan" \
-                                       #"/TotalSegmentator_mri/results/lightning_logs/version_138552/checkpoints" \
-                                       #"/latest_checkpoint.ckpt"
-    print('#################get checkpoint from', cfg.model.resume_from_checkpoint, '#########################')
+
     trainer = pl.Trainer(
         gpus=cfg.model.gpus,
         accumulate_grad_batches=cfg.model.accumulate_grad_batches,
