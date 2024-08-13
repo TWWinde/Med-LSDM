@@ -89,3 +89,9 @@ model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_c
 model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
 model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
+# diffusion with segconv 64 condition and vq_spade
+#python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_64out' dataset.label_nc=37 \
+#model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET1/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
+#model.seggan_ckpt=0 model.spade_input_channel=64 \
+#model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
