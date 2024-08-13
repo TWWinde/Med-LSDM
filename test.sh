@@ -10,11 +10,11 @@
 #SBATCH --nodes=1
 #SBATCH --gpus=1
 #SBATCH --qos=batch
-# SBATCH --gpus=rtx_a5000:1
-# SBATCH --nodelist=linse19
-#SBATCH --nodelist=linse23
-#SBATCH --qos=shortbatch
-#SBATCH --partition=highperf
+#SBATCH --gpus=rtx_a5000:1
+#SBATCH --nodelist=linse19
+# SBATCH --nodelist=linse23
+# SBATCH --qos=shortbatch
+# SBATCH --partition=highperf
 
 
 # Activate everything you need
@@ -48,6 +48,17 @@ python -c "import torch; print(torch.__version__)"
 #model.seggan_ckpt=0 model.spade_input_channel=128 \
 #model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
+
+# diffusion with segconv 64 condition and vq_spade
+python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_vq_spade_segconv_64out' dataset.label_nc=37 \
+model.vqgan_ckpt=0 \
+model.vqgan_spade_ckpt="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan_spade/AutoPET/vq_gan_spade/lightning_logs/version_137357/checkpoints/latest_checkpoint.ckpt" \
+model.seggan_ckpt=0 model.spade_input_channel=64 \
+model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
+
+
+#######################################################
 
 # vq_gan autopet
 #PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
@@ -89,10 +100,3 @@ python -c "import torch; print(torch.__version__)"
 #model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
 #model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
-# diffusion with segconv 64 condition and vq_spade
-python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_vq_spade_segconv_64out' dataset.label_nc=37 \
-model.vqgan_ckpt=0 \
-model.vqgan_spade_ckpt="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan_spade/AutoPET/vq_gan_spade/lightning_logs/version_137357/checkpoints/latest_checkpoint.ckpt" \
-model.seggan_ckpt=0 model.spade_input_channel=64 \
-model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
-model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
