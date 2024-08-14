@@ -780,13 +780,16 @@ class SemanticGaussianDiffusion(nn.Module):
             self.vqgan = VQGAN.load_from_checkpoint(vqgan_ckpt).cuda()
             self.vqgan.eval()
             self.vqgan_spade = None
+            print("########using vqgan to mapping########")
         elif vqgan_spade_ckpt:
             self.vqgan_spade = VQGAN_SPADE.load_from_checkpoint(vqgan_spade_ckpt).cuda()
             self.vqgan_spade.eval()
             self.vqgan = None
+            print("########using vqgan_spade to mapping########")
         else:
             self.vqgan = None
             self.vqgan_spade = None
+            print("######## vqgan models are not implemented########")
 
         betas = cosine_beta_schedule(timesteps)
 
