@@ -4,6 +4,7 @@ import math
 import copy
 import os.path
 
+import numpy as np
 import torch
 from torch import nn, einsum
 import torch.nn.functional as F
@@ -28,6 +29,7 @@ from vq_gan_3d.model.vqgan import VQGAN
 from vq_gan_3d.model.vqgan_spade import VQGAN_SPADE
 from evaluation.metrics import Metrics
 import matplotlib.pyplot as plt
+
 
 # helpers functions
 
@@ -79,15 +81,16 @@ def is_list_str(x):
         return False
     return all([type(el) == str for el in x])
 
+
 # relative positional bias
 
 
 class RelativePositionBias(nn.Module):
     def __init__(
-        self,
-        heads=8,
-        num_buckets=32,
-        max_distance=128
+            self,
+            heads=8,
+            num_buckets=32,
+            max_distance=128
     ):
         super().__init__()
         self.num_buckets = num_buckets
@@ -107,8 +110,8 @@ class RelativePositionBias(nn.Module):
         is_small = n < max_exact
 
         val_if_large = max_exact + (
-            torch.log(n.float() / max_exact) / math.log(max_distance /
-                                                        max_exact) * (num_buckets - max_exact)
+                torch.log(n.float() / max_exact) / math.log(max_distance /
+                                                            max_exact) * (num_buckets - max_exact)
         ).long()
         val_if_large = torch.min(
             val_if_large, torch.full_like(val_if_large, num_buckets - 1))
@@ -124,6 +127,7 @@ class RelativePositionBias(nn.Module):
             rel_pos, num_buckets=self.num_buckets, max_distance=self.max_distance)
         values = self.relative_attention_bias(rp_bucket)
         return rearrange(values, 'i j h -> h i j')
+
 
 # small helper modules
 
@@ -189,7 +193,7 @@ class LayerNorm(nn.Module):
 
 
 class SPADEGroupNorm3D(nn.Module):
-    def __init__(self, dim_out, label_nc=64, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
+    def __init__(self, dim_out, label_nc=64, eps=1e-5, groups=8, dim_hidden=128):  # !!! dim_hidden ????
         super().__init__()
 
         self.norm = nn.GroupNorm(groups, dim_out, affine=False)
@@ -220,6 +224,7 @@ class SDDResBlock(nn.Module):
     scale_shift for time embedding
 
     """
+
     def __init__(self, dim, dim_out, time_emb_dim=None, label_nc=37, groups=8):
         super().__init__()
         self.label_nc = label_nc
@@ -233,7 +238,6 @@ class SDDResBlock(nn.Module):
         self.spade_norm2 = SPADEGroupNorm3D(dim_out, label_nc=self.label_nc, eps=1e-5, groups=groups)
         self.act = nn.SiLU()
         self.res_conv = nn.Conv3d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
-
 
     def forward(self, x, seg, time_emb=None):
 
@@ -264,6 +268,7 @@ class SDEResBlock(nn.Module):
      scale_shift for time embedding
 
     """
+
     def __init__(self, dim, dim_out, time_emb_dim=None, groups=8):
         super().__init__()
         self.mlp = nn.Sequential(
@@ -319,6 +324,7 @@ class Block(nn.Module):
      scale_shift for time embedding
 
     """
+
     def __init__(self, dim, dim_out, groups=8):
         super().__init__()
         self.proj = nn.Conv3d(dim, dim_out, (1, 3, 3), padding=(0, 1, 1))
@@ -341,6 +347,7 @@ class ResnetBlock(nn.Module):
      block = 3D Conv + Group norm + (scale_shift) + SiLU
      ResnetBlock = 2* block + residual connection
     """
+
     def __init__(self, dim, dim_out, *, time_emb_dim=None, groups=8):
         super().__init__()
         self.mlp = nn.Sequential(
@@ -354,7 +361,6 @@ class ResnetBlock(nn.Module):
             dim, dim_out, 1) if dim != dim_out else nn.Identity()
 
     def forward(self, x, time_emb=None):
-
         scale_shift = None
         if exists(self.mlp):
             assert exists(time_emb), 'time emb must be passed in'
@@ -397,6 +403,7 @@ class SpatialLinearAttention(nn.Module):
         out = self.to_out(out)
         return rearrange(out, '(b f) c h w -> b c f h w', b=b)
 
+
 # attention along space and time
 
 
@@ -420,11 +427,11 @@ class EinopsToAndFrom(nn.Module):
 
 class Attention(nn.Module):
     def __init__(
-        self,
-        dim,
-        heads=4,
-        dim_head=32,
-        rotary_emb=None
+            self,
+            dim,
+            heads=4,
+            dim_head=32,
+            rotary_emb=None
     ):
         super().__init__()
         self.scale = dim_head ** -0.5
@@ -436,10 +443,10 @@ class Attention(nn.Module):
         self.to_out = nn.Linear(hidden_dim, dim, bias=False)
 
     def forward(
-        self,
-        x,
-        pos_bias=None,
-        focus_present_mask=None
+            self,
+            x,
+            pos_bias=None,
+            focus_present_mask=None
     ):
         n, device = x.shape[-2], x.device
 
@@ -509,7 +516,8 @@ class SegConv3D(nn.Module):
         self.conv2 = nn.Conv3d(in_channels=64, out_channels=128, kernel_size=(1, 3, 3), stride=1, padding=1)
         self.pool2 = nn.MaxPool3d(kernel_size=2, stride=2)  # Reduce (16, 128, 128) to (8, 64, 64)
 
-        self.conv3 = nn.Conv3d(in_channels=128, out_channels=self.output_channels, kernel_size=(1, 3, 3), stride=1, padding=1)
+        self.conv3 = nn.Conv3d(in_channels=128, out_channels=self.output_channels, kernel_size=(1, 3, 3), stride=1,
+                               padding=1)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -528,22 +536,22 @@ class SegConv3D(nn.Module):
 
 class Unet3D_SPADE(nn.Module):
     def __init__(
-        self,
-        dim,    # 64
-        cond_dim=None,
-        out_dim=None,
-        dim_mults=(1, 2, 4, 8),
-        channels=3,  # 8
-        attn_heads=8,
-        attn_dim_head=32,
-        use_bert_text_cond=False,
-        init_dim=None,
-        init_kernel_size=7,
-        use_sparse_linear_attn=True,
-        label_nc=64,
-        block_type='resnet',
-        resnet_groups=8,
-        segconv=0
+            self,
+            dim,  # 64
+            cond_dim=None,
+            out_dim=None,
+            dim_mults=(1, 2, 4, 8),
+            channels=3,  # 8
+            attn_heads=8,
+            attn_dim_head=32,
+            use_bert_text_cond=False,
+            init_dim=None,
+            init_kernel_size=7,
+            use_sparse_linear_attn=True,
+            label_nc=64,
+            block_type='resnet',
+            resnet_groups=8,
+            segconv=0
     ):
         super().__init__()
         self.channels = channels
@@ -553,8 +561,9 @@ class Unet3D_SPADE(nn.Module):
 
         rotary_emb = RotaryEmbedding(min(32, attn_dim_head))
 
-        def temporal_attn(dim): return EinopsToAndFrom('b c f h w', 'b (h w) f c', Attention(
-            dim, heads=attn_heads, dim_head=attn_dim_head, rotary_emb=rotary_emb))
+        def temporal_attn(dim):
+            return EinopsToAndFrom('b c f h w', 'b (h w) f c', Attention(
+                dim, heads=attn_heads, dim_head=attn_dim_head, rotary_emb=rotary_emb))
 
         # realistically will not be able to generate that many frames of video... yet
         self.time_rel_pos_bias = RelativePositionBias(
@@ -567,7 +576,7 @@ class Unet3D_SPADE(nn.Module):
 
         init_padding = init_kernel_size // 2
         self.init_conv = nn.Conv3d(channels, init_dim, (1, init_kernel_size,
-                                   init_kernel_size), padding=(0, init_padding, init_padding))
+                                                        init_kernel_size), padding=(0, init_padding, init_padding))
 
         self.init_temporal_attn = Residual(
             PreNorm(init_dim, temporal_attn(init_dim)))
@@ -663,22 +672,22 @@ class Unet3D_SPADE(nn.Module):
             **kwargs
     ):
         logits = self.forward(*args, null_cond_prob=0., cond=cond, **kwargs)
-        #if cond_scale == 1:  # or not self.has_cond:
-            #return logits
+        # if cond_scale == 1:  # or not self.has_cond:
+        # return logits
         all_zero = torch.zeros_like(cond)
         null_logits = self.forward(*args, null_cond_prob=1., cond=all_zero, **kwargs)
         return logits + (logits - null_logits) * cond_scale
 
     def forward(
-        self,
-        x,
-        time,
-        cond=None,
-        null_cond_prob=0.,
-        focus_present_mask=None,
-        prob_focus_present=0.
+            self,
+            x,
+            time,
+            cond=None,
+            null_cond_prob=0.,
+            focus_present_mask=None,
+            prob_focus_present=0.
     ):
-        #assert not (self.has_cond and not exists(cond) ), 'cond must be passed in if cond_dim specified'
+        # assert not (self.has_cond and not exists(cond) ), 'cond must be passed in if cond_dim specified'
         batch, device = x.shape[0], x.device
 
         focus_present_mask = default(focus_present_mask, lambda: prob_mask_like(
@@ -702,7 +711,6 @@ class Unet3D_SPADE(nn.Module):
         h = []
 
         for block, spatial_attn, temporal_attn, downsample in self.downs:
-
             x = block(x, t)
             x = spatial_attn(x)
             x = temporal_attn(x, pos_bias=time_rel_pos_bias, focus_present_mask=focus_present_mask)
@@ -793,7 +801,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
         betas = cosine_beta_schedule(timesteps)
 
-        alphas = 1.-betas
+        alphas = 1. - betas
         alphas_cumprod = torch.cumprod(alphas, axis=0)
         alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.)
 
@@ -960,11 +968,11 @@ class SemanticGaussianDiffusion(nn.Module):
         """
         b, *_, device = *x.shape, x.device
         model_mean, _, model_log_variance = \
-            self.p_mean_variance(x=x,  t=t, clip_denoised=clip_denoised, cond=cond, cond_scale=cond_scale, seg=seg)
+            self.p_mean_variance(x=x, t=t, clip_denoised=clip_denoised, cond=cond, cond_scale=cond_scale, seg=seg)
         noise = torch.randn_like(x)
         # no noise when t == 0
         nonzero_mask = (1 - (t == 0).float()).reshape(b, *((1,) * (len(x.shape) - 1)))
-        return model_mean + nonzero_mask * torch.exp(0.5 * model_log_variance) * noise   # x_{t-1}
+        return model_mean + nonzero_mask * torch.exp(0.5 * model_log_variance) * noise  # x_{t-1}
 
     @torch.inference_mode()
     def p_sample_loop(self, shape, cond=None, cond_scale=1.5):
@@ -992,10 +1000,10 @@ class SemanticGaussianDiffusion(nn.Module):
            from latent space to image space
 
         """
-        #device = next(self.denoise_fn.parameters()).device
+        # device = next(self.denoise_fn.parameters()).device
 
-        #if is_list_str(cond):
-            #cond = bert_embed(tokenize(cond)).to(device)
+        # if is_list_str(cond):
+        # cond = bert_embed(tokenize(cond)).to(device)
 
         batch_size = cond.shape[0] if exists(cond) else batch_size
         image_size = self.image_size
@@ -1039,11 +1047,57 @@ class SemanticGaussianDiffusion(nn.Module):
 
         return img
 
+    def normal_kl(self, mean1, logvar1, mean2, logvar2):
+        """
+        Compute the KL divergence between two gaussians.
+
+        Shapes are automatically broadcasted, so batches can be compared to
+        scalars, among other use cases.
+        """
+        tensor = None
+        for obj in (mean1, logvar1, mean2, logvar2):
+            if isinstance(obj, torch.Tensor):
+                tensor = obj
+                break
+        assert tensor is not None, "at least one argument must be a Tensor"
+
+        # Force variances to be Tensors. Broadcasting helps convert scalars to
+        # Tensors, but it does not work for th.exp().
+        logvar1, logvar2 = [
+            x if isinstance(x, torch.Tensor) else torch.tensor(x).to(tensor)
+            for x in (logvar1, logvar2)
+        ]
+
+        return 0.5 * (
+                -1.0
+                + logvar2
+                - logvar1
+                + torch.exp(logvar1 - logvar2)
+                + ((mean1 - mean2) ** 2) * torch.exp(-logvar2)
+        )
+
+    def mean_flat(self, tensor):
+        """
+        Take the mean over all non-batch dimensions.
+        """
+        return tensor.mean(dim=list(range(1, len(tensor.shape))))
+
+    def vlb_loss(self, x_start, x_t, t, cond):
+        true_mean, _, true_log_variance_clipped = self.q_posterior(x_start=x_start, x_t=x_t, t=t)
+        model_mean, _, model_log_variance = \
+            self.p_mean_variance(x=x_t, t=t, clip_denoised=True, cond=cond, cond_scale=self.cond_scale)
+
+        kl = self.normal_kl(true_mean, true_log_variance_clipped, model_mean, model_log_variance)
+        kl = self.mean_flat(kl) / np.log(2.0)
+
+        return kl
+
     def p_losses(self, x_start, t, cond=None, noise=None, **kwargs):
         # b, c, f, h, w, device = *x_start.shape, x_start.device
         noise = default(noise, lambda: torch.randn_like(x_start))
 
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)  # x_{t}
+
         """
          if is_list_str(cond):
             cond = bert_embed(
@@ -1060,9 +1114,12 @@ class SemanticGaussianDiffusion(nn.Module):
         else:
             raise NotImplementedError()
 
-        return loss
+        vlb_loss = self.vlb_loss(x_start, x_noisy, t, cond)
+        total_loss = loss + 0.001 * vlb_loss
 
-    def forward(self, x, seg=None,  *args, cond, **kwargs):
+        return total_loss
+
+    def forward(self, x, seg=None, *args, cond, **kwargs):
 
         assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
@@ -1076,7 +1133,7 @@ class SemanticGaussianDiffusion(nn.Module):
         elif isinstance(self.vqgan_spade, VQGAN_SPADE):
             with torch.no_grad():
                 x = self.vqgan_spade.encode(
-                    x,  quantize=False, include_embeddings=True)
+                    x, quantize=False, include_embeddings=True)
                 # normalize to -1 and 1
                 x = ((x - self.vqgan_spade.codebook.embeddings.min()) /
                      (self.vqgan_spade.codebook.embeddings.max() -
@@ -1115,6 +1172,7 @@ def seek_all_images(img, channels=3):
             break
         i += 1
 
+
 # tensor of shape (channels, frames, height, width) -> gif
 
 
@@ -1125,6 +1183,7 @@ def video_tensor_to_gif(tensor, path, duration=120, loop=0, optimize=True):
     first_img.save(path, save_all=True, append_images=rest_imgs,
                    duration=duration, loop=loop, optimize=optimize)
     return images
+
 
 # gif -> (channels, frame, height, width) tensor
 
@@ -1161,14 +1220,14 @@ def cast_num_frames(t, *, frames):
 
 class Dataset(data.Dataset):
     def __init__(
-        self,
-        folder,
-        image_size,
-        channels=3,
-        num_frames=16,
-        horizontal_flip=False,
-        force_num_frames=True,
-        exts=['gif']
+            self,
+            folder,
+            image_size,
+            channels=3,
+            num_frames=16,
+            horizontal_flip=False,
+            force_num_frames=True,
+            exts=['gif']
     ):
         super().__init__()
         self.folder = folder
@@ -1195,35 +1254,36 @@ class Dataset(data.Dataset):
         tensor = gif_to_tensor(path, self.channels, transform=self.transform)
         return self.cast_num_frames_fn(tensor)
 
+
 # trainer class
 
 
 class Semantic_Trainer(object):
     def __init__(
-        self,
-        diffusion_model,
-        cfg,
-        folder=None,
-        train_dataset=None,
-        val_dataset=None,
-        *,
-        ema_decay=0.995,
-        num_frames=16,
-        train_batch_size=32,
-        train_lr=1e-4,
-        train_num_steps=100000,
-        gradient_accumulate_every=2,
-        amp=False,
-        step_start_ema=2000,
-        update_ema_every=10,
-        save_and_sample_every=1000,
-        results_folder='./results',
-        num_sample_rows=1,
-        max_grad_norm=None,
-        num_workers=20,
-        seggan_ckpt=None,
-        num_classes=37,
-        vqgan_spade_ckpt
+            self,
+            diffusion_model,
+            cfg,
+            folder=None,
+            train_dataset=None,
+            val_dataset=None,
+            *,
+            ema_decay=0.995,
+            num_frames=16,
+            train_batch_size=32,
+            train_lr=1e-4,
+            train_num_steps=100000,
+            gradient_accumulate_every=2,
+            amp=False,
+            step_start_ema=2000,
+            update_ema_every=10,
+            save_and_sample_every=1000,
+            results_folder='./results',
+            num_sample_rows=1,
+            max_grad_norm=None,
+            num_workers=20,
+            seggan_ckpt=None,
+            num_classes=37,
+            vqgan_spade_ckpt
     ):
         super().__init__()
         self.model = diffusion_model
@@ -1323,7 +1383,8 @@ class Semantic_Trainer(object):
         if milestone == -1:
             all_paths = os.listdir(os.path.join(self.results_folder, 'checkpoints'))
             all_milestones = [int((p.split('.')[0]).split("-")[-1]) for p in all_paths if p.endswith('.pt')]
-            assert len(all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
+            assert len(
+                all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
             milestone = max(all_milestones)
 
         if map_location:
@@ -1366,7 +1427,7 @@ class Semantic_Trainer(object):
                         seg = ((seg - self.seggan.codebook.embeddings.min()) /
                                (self.seggan.codebook.embeddings.max() -
                                 self.seggan.codebook.embeddings.min())) * 2.0 - 1.0
-                        assert seg.size()[-1] == 64   # torch.Size([1, 8, 8, 64, 64])
+                        assert seg.size()[-1] == 64  # torch.Size([1, 8, 8, 64, 64])
 
                 with autocast(enabled=self.amp):
                     if self.vqgan_spade_ckpt:
@@ -1385,7 +1446,7 @@ class Semantic_Trainer(object):
                             focus_present_mask=focus_present_mask
                         )
 
-                    self.scaler.scale( loss / self.gradient_accumulate_every).backward()
+                    self.scaler.scale(loss / self.gradient_accumulate_every).backward()
                 if self.step % 50 == 0:
                     print(f'{self.step}: {loss.item()}')
 
@@ -1419,7 +1480,7 @@ class Semantic_Trainer(object):
                 all_videos_list = F.pad(all_videos_list, (2, 2, 2, 2))
                 all_label_list = F.pad(label, (2, 2, 2, 2))
                 all_image_list = F.pad(input_image, (2, 2, 2, 2))
-                if self.step != 0 and self.step % (self.save_and_sample_every*5) == 0:
+                if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
                     sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
                     label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
                     image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=self.num_sample_rows)
@@ -1470,6 +1531,3 @@ class Semantic_Trainer(object):
             self.step += 1
 
         print('training completed')
-
-
-
