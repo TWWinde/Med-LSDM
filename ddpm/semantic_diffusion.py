@@ -23,6 +23,7 @@ from einops_exts import check_shape, rearrange_many
 
 from rotary_embedding_torch import RotaryEmbedding
 
+from ddpm.losses import discretized_gaussian_log_likelihood, normal_kl
 from ddpm.text import tokenize, bert_embed, BERT_MODEL_DIM
 from torch.utils.data import Dataset, DataLoader
 from vq_gan_3d.model.vqgan import VQGAN
@@ -1047,35 +1048,6 @@ class SemanticGaussianDiffusion(nn.Module):
 
         return img
 
-    def normal_kl(self, mean1, logvar1, mean2, logvar2):
-        """
-        Compute the KL divergence between two gaussians.
-
-        Shapes are automatically broadcasted, so batches can be compared to
-        scalars, among other use cases.
-        """
-        tensor = None
-        for obj in (mean1, logvar1, mean2, logvar2):
-            if isinstance(obj, torch.Tensor):
-                tensor = obj
-                break
-        assert tensor is not None, "at least one argument must be a Tensor"
-
-        # Force variances to be Tensors. Broadcasting helps convert scalars to
-        # Tensors, but it does not work for th.exp().
-        logvar1, logvar2 = [
-            x if isinstance(x, torch.Tensor) else torch.tensor(x).to(tensor)
-            for x in (logvar1, logvar2)
-        ]
-
-        return 0.5 * (
-                -1.0
-                + logvar2
-                - logvar1
-                + torch.exp(logvar1 - logvar2)
-                + ((mean1 - mean2) ** 2) * torch.exp(-logvar2)
-        )
-
     def mean_flat(self, tensor):
         """
         Take the mean over all non-batch dimensions.
@@ -1087,10 +1059,18 @@ class SemanticGaussianDiffusion(nn.Module):
         model_mean, _, model_log_variance = \
             self.p_mean_variance(x=x_t, t=t, clip_denoised=True, cond=cond, cond_scale=self.cond_scale)
 
-        kl = self.normal_kl(true_mean, true_log_variance_clipped, model_mean, model_log_variance)
+        kl = normal_kl(true_mean, true_log_variance_clipped, model_mean, model_log_variance)
         kl = self.mean_flat(kl) / np.log(2.0)
 
-        return kl
+        decoder_nll = -discretized_gaussian_log_likelihood(x_start, means=model_mean, log_scales=0.5 * model_log_variance)
+        assert decoder_nll.shape == x_start.shape
+        decoder_nll = self.mean_flat(decoder_nll) / np.log(2.0)
+
+        # At the first timestep return the decoder NLL,
+        # otherwise return KL(q(x_{t-1}|x_t,x_0) || p(x_{t-1}|x_t))
+        output = torch.where((t == 0), decoder_nll, kl)
+
+        return output
 
     def p_losses(self, x_start, t, cond=None, noise=None, **kwargs):
         # b, c, f, h, w, device = *x_start.shape, x_start.device
