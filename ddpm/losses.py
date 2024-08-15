@@ -58,7 +58,7 @@ def discretized_gaussian_log_likelihood(x, *, means, log_scales):
     :param log_scales: the Gaussian log stddev Tensor.
     :return: a tensor like x of log probabilities (in nats).
     """
-    assert x.shape == means.shape == log_scales.shape
+    assert x.shape == means.shape == log_scales.shape, f"{x.shape, means.shape, log_scales.shape}"
     centered_x = x - means
     inv_stdv = th.exp(-log_scales)
     plus_in = inv_stdv * (centered_x + 1.0 / 255.0)
