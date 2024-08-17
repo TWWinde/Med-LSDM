@@ -61,12 +61,12 @@ python -c "import torch; print(torch.__version__)"
 #######################################################
 
 # vq_gan autopet
-#PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
-#model.resume_from_checkpoint="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt" \
-#model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
-#model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
-#model.discriminator_iter_start=10000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
-#model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
+PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
+model.resume_from_checkpoint="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt" \
+model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
+model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+model.discriminator_iter_start=10000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
+model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
 # vq_gan_spade autopet
 #PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
@@ -101,9 +101,9 @@ python -c "import torch; print(torch.__version__)"
 #model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
 # vq_gan mr totalsegmentator fine tuned with mr
-PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=totalsegmentator_mri \
-model.resume_from_checkpoint="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/TotalSegmentator_mri/results/lightning_logs/version_139199/checkpoints/latest_checkpoint.ckpt" \
-model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
-model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
-model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
-model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
+#PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=totalsegmentator_mri \
+#model.resume_from_checkpoint="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/TotalSegmentator_mri/results/lightning_logs/version_139199/checkpoints/latest_checkpoint.ckpt" \
+#model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
+#model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+#model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
+#model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
