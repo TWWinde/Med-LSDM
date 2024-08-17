@@ -1,23 +1,14 @@
 """Adapted from https://github.com/SongweiGe/TATS"""
 # Copyright (c) Meta Platforms, Inc. All Rights Reserved
-
 import math
-import argparse
-import os.path
-
 import numpy as np
-import pickle as pkl
-
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.distributed as dist
-
-from vq_gan_3d.utils import shift_dim, adopt_weight, comp_getattr
-from vq_gan_3d.model.lpips import LPIPS
+from vq_gan_3d.utils import shift_dim
 from vq_gan_3d.model.codebook import Codebook
-from evaluation.metrics_vq_gan import metrics
+
 
 def silu(x):
     return x*torch.sigmoid(x)
@@ -86,10 +77,7 @@ class VQVAE(pl.LightningModule):
         self.codebook = Codebook(cfg.model.n_codes, cfg.model.embedding_dim,
                                  no_random_restart=cfg.model.no_random_restart, restart_thres=cfg.model.restart_thres)
 
-        self.gan_feat_weight = cfg.model.gan_feat_weight
 
-
-        self.l1_weight = cfg.model.l1_weight
         self.save_hyperparameters()
         self.num_classes = cfg.dataset.image_channels
         self.val_dataloader = val_dataloader
@@ -207,10 +195,7 @@ class VQVAE(pl.LightningModule):
         _, _, x, x_rec = self.forward(x, log_image=True)
         log["inputs"] = x
         log["reconstructions"] = x_rec
-        #log['mean_org'] = batch['mean_org']
-        #log['std_org'] = batch['std_org']
         return log
-
 
 def Normalize(in_channels, norm_type='group', num_groups=32):
     assert norm_type in ['group', 'batch']
@@ -382,111 +367,3 @@ class SamePadConvTranspose3d(nn.Module):
     def forward(self, x):
         return self.convt(F.pad(x, self.pad_input, mode=self.padding_type))
 
-
-class NLayerDiscriminator(nn.Module):
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.SyncBatchNorm, use_sigmoid=False, getIntermFeat=True):
-        # def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d, use_sigmoid=False, getIntermFeat=True):
-        super(NLayerDiscriminator, self).__init__()
-        self.getIntermFeat = getIntermFeat
-        self.n_layers = n_layers
-
-        kw = 4
-        padw = int(np.ceil((kw-1.0)/2))
-        sequence = [[nn.Conv2d(input_nc, ndf, kernel_size=kw,
-                               stride=2, padding=padw), nn.LeakyReLU(0.2, True)]]
-
-        nf = ndf
-        for n in range(1, n_layers):
-            nf_prev = nf
-            nf = min(nf * 2, 512)
-            sequence += [[
-                nn.Conv2d(nf_prev, nf, kernel_size=kw, stride=2, padding=padw),
-                norm_layer(nf), nn.LeakyReLU(0.2, True)
-            ]]
-
-        nf_prev = nf
-        nf = min(nf * 2, 512)
-        sequence += [[
-            nn.Conv2d(nf_prev, nf, kernel_size=kw, stride=1, padding=padw),
-            norm_layer(nf),
-            nn.LeakyReLU(0.2, True)
-        ]]
-
-        sequence += [[nn.Conv2d(nf, 1, kernel_size=kw,
-                                stride=1, padding=padw)]]
-
-        if use_sigmoid:
-            sequence += [[nn.Sigmoid()]]
-
-        if getIntermFeat:
-            for n in range(len(sequence)):
-                setattr(self, 'model'+str(n), nn.Sequential(*sequence[n]))
-        else:
-            sequence_stream = []
-            for n in range(len(sequence)):
-                sequence_stream += sequence[n]
-            self.model = nn.Sequential(*sequence_stream)
-
-    def forward(self, input):
-        if self.getIntermFeat:
-            res = [input]
-            for n in range(self.n_layers+2):
-                model = getattr(self, 'model'+str(n))
-                res.append(model(res[-1]))
-            return res[-1], res[1:]
-        else:
-            return self.model(input), _
-
-
-class NLayerDiscriminator3D(nn.Module):
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.SyncBatchNorm, use_sigmoid=False, getIntermFeat=True):
-        super(NLayerDiscriminator3D, self).__init__()
-        self.getIntermFeat = getIntermFeat
-        self.n_layers = n_layers
-
-        kw = 4
-        padw = int(np.ceil((kw-1.0)/2))
-        sequence = [[nn.Conv3d(input_nc, ndf, kernel_size=kw,
-                               stride=2, padding=padw), nn.LeakyReLU(0.2, True)]]
-
-        nf = ndf
-        for n in range(1, n_layers):
-            nf_prev = nf
-            nf = min(nf * 2, 512)
-            sequence += [[
-                nn.Conv3d(nf_prev, nf, kernel_size=kw, stride=2, padding=padw),
-                norm_layer(nf), nn.LeakyReLU(0.2, True)
-            ]]
-
-        nf_prev = nf
-        nf = min(nf * 2, 512)
-        sequence += [[
-            nn.Conv3d(nf_prev, nf, kernel_size=kw, stride=1, padding=padw),
-            norm_layer(nf),
-            nn.LeakyReLU(0.2, True)
-        ]]
-
-        sequence += [[nn.Conv3d(nf, 1, kernel_size=kw,
-                                stride=1, padding=padw)]]
-
-        if use_sigmoid:
-            sequence += [[nn.Sigmoid()]]
-
-        if getIntermFeat:
-            for n in range(len(sequence)):
-                setattr(self, 'model'+str(n), nn.Sequential(*sequence[n]))
-        else:
-            sequence_stream = []
-            for n in range(len(sequence)):
-                sequence_stream += sequence[n]
-            self.model = nn.Sequential(*sequence_stream)
-
-    def forward(self, input):
-        if self.getIntermFeat:
-            res = [input]
-            for n in range(self.n_layers+2):
-                model = getattr(self, 'model'+str(n))
-                res.append(model(res[-1]))
-            return res[-1], res[1:]
-        else:
-            return self.model(input), _
