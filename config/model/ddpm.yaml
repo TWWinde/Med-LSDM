@@ -1,5 +1,5 @@
 vqgan_ckpt: 0
-seggan_ckpt: 0
+vqvae_ckpt: 0
 vqgan_spade_ckpt: 0
 name: ddpm
 segconv: 0

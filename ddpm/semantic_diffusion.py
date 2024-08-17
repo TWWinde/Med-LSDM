@@ -26,6 +26,7 @@ from ddpm.text import tokenize, bert_embed, BERT_MODEL_DIM
 from torch.utils.data import Dataset, DataLoader
 from vq_gan_3d.model.vqgan import VQGAN
 from vq_gan_3d.model.vqgan_spade import VQGAN_SPADE
+from vq_gan_3d.model.vqvae import VQVAE
 from evaluation.metrics import Metrics
 import matplotlib.pyplot as plt
 
@@ -1248,7 +1249,7 @@ class Semantic_Trainer(object):
         num_sample_rows=1,
         max_grad_norm=None,
         num_workers=20,
-        seggan_ckpt=None,
+        vqvae_ckpt=None,
         num_classes=37,
         vqgan_spade_ckpt
     ):
@@ -1265,12 +1266,12 @@ class Semantic_Trainer(object):
         self.gradient_accumulate_every = gradient_accumulate_every
         self.train_num_steps = train_num_steps
 
-        if seggan_ckpt:
-            self.seggan = VQGAN.load_from_checkpoint(seggan_ckpt).cuda()
-            self.seggan.eval()
-            print('seggan is implemented')
+        if vqvae_ckpt:
+            self.vqvae = VQVAE.load_from_checkpoint(vqvae_ckpt).cuda()
+            self.vqvae.eval()
+            print('vqvae is implemented')
         else:
-            self.seggan = None
+            self.vqvae = None
         self.vqgan_spade_ckpt = vqgan_spade_ckpt
         image_size = diffusion_model.image_size
         channels = diffusion_model.channels
@@ -1386,13 +1387,13 @@ class Semantic_Trainer(object):
                 input_image, label = data_['image'].cuda(), data_['label'].cuda()
                 seg = self.preprocess_input(label)
 
-                if isinstance(self.seggan, VQGAN):
+                if isinstance(self.vqvae, VQVAE):
                     with torch.no_grad():
-                        seg = self.seggan.encode(seg, quantize=False, include_embeddings=True)
+                        seg = self.vqvae.encode(seg, quantize=False, include_embeddings=True)
                         # normalize to -1 and 1
-                        seg = ((seg - self.seggan.codebook.embeddings.min()) /
-                               (self.seggan.codebook.embeddings.max() -
-                                self.seggan.codebook.embeddings.min())) * 2.0 - 1.0
+                        seg = ((seg - self.vqvae.codebook.embeddings.min()) /
+                               (self.vqvae.codebook.embeddings.max() -
+                                self.vqvae.codebook.embeddings.min())) * 2.0 - 1.0
                         assert seg.size()[-1] == 64   # torch.Size([1, 8, 8, 64, 64])
 
                 with autocast(enabled=self.amp):
@@ -1433,7 +1434,7 @@ class Semantic_Trainer(object):
                 self.ema_model.eval()
                 milestone = self.step // self.save_and_sample_every
                 # update metrics
-                self.metrics_computer.update_metrics(self.ema_model, milestone, encoder=self.seggan)
+                self.metrics_computer.update_metrics(self.ema_model, milestone, encoder=self.vqvae)
 
                 with torch.no_grad():
                     num_samples = self.num_sample_rows ** 2
