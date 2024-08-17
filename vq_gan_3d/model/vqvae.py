@@ -166,12 +166,10 @@ class VQVAE(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         x = batch['image']  # TODO: batch['stft']
         _, bce_loss, vq_output = self.forward(x)
-        self.log("train/binary_crossentropy_loss", bce_loss, prog_bar=True,
-                 logger=True, on_step=True, on_epoch=True)
-        self.log("train/commitment_loss", vq_output['commitment_loss'],
-                 prog_bar=True, logger=True, on_step=True, on_epoch=True)
-        self.log('train/perplexity', vq_output['perplexity'],
-                 prog_bar=True, logger=True, on_step=True, on_epoch=True)
+
+        self.log('val/recon_loss', bce_loss, prog_bar=True)
+        self.log("val/binary_crossentropy_loss", bce_loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log('val/commitment_loss', vq_output['commitment_loss'], prog_bar=True)
 
     def configure_optimizers(self):
         lr = self.cfg.model.lr
