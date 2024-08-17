@@ -148,10 +148,10 @@ class VQVAE(pl.LightningModule):
 
         return x_recon, bce_loss, vq_output,
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(self, batch, batch_idx):
         x = batch['image']
 
-        _, bce_loss, vq_output = self.forward(x, optimizer_idx)
+        _, bce_loss, vq_output = self.forward(x)
         commitment_loss = vq_output['commitment_loss']
         loss = bce_loss + commitment_loss
 
