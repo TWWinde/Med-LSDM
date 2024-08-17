@@ -5,8 +5,7 @@ import os
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
-from ddpm.diffusion import default
-from vq_gan_3d.model import VQGAN, VQGAN_SPADE
+from vq_gan_3d.model import VQGAN, VQGAN_SPADE, VQVAE
 from train.callbacks import ImageLogger, VideoLogger
 from train.get_dataset import get_dataset
 import hydra
@@ -34,7 +33,7 @@ def run(cfg: DictConfig):
         cfg.model.lr, accumulate, ngpu/8, bs/4, base_lr))
 
     if cfg.dataset.name == 'SemanticMap':
-        model = VQGAN(cfg, label=True, val_dataloader=val_dataloader)
+        model = VQVAE(cfg, val_dataloader=val_dataloader)
     elif cfg.model.name == 'vq_gan_spade':
         model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader)
     else:

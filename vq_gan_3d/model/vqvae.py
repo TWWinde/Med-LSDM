@@ -65,10 +65,9 @@ class BCELossWithQuant(nn.Module):
 
 
 class VQVAE(pl.LightningModule):
-    def __init__(self, cfg,  label=False, val_dataloader=None):
+    def __init__(self, cfg, val_dataloader=None):
         super().__init__()
         self.cfg = cfg
-        self.label = label
         self.embedding_dim = cfg.model.embedding_dim
         self.n_codes = cfg.model.n_codes
 
