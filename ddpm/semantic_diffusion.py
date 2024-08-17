@@ -967,7 +967,7 @@ class SemanticGaussianDiffusion(nn.Module):
         return model_mean + nonzero_mask * torch.exp(0.5 * model_log_variance) * noise   # x_{t-1}
 
     @torch.inference_mode()
-    def p_sample_loop(self, shape, cond=None, cond_scale=1.5):
+    def p_sample_loop(self, shape, cond=None, cond_scale=1.5, get_middle_process=False):
         """
             Generate samples from the model. From noise to x_{t}
 
@@ -977,17 +977,44 @@ class SemanticGaussianDiffusion(nn.Module):
 
         b = shape[0]
         img = torch.randn(shape, device=device)
-
+        n = 1
         for i in reversed(range(0, self.num_timesteps)):
             img = self.p_sample(img, torch.full(
                 (b,), i, device=device, dtype=torch.long), cond=cond, cond_scale=cond_scale)
 
-        print('#################### sample finished ####################')
+            if get_middle_process:
+                if i % 30 == 0:
+                    if isinstance(self.vqgan, VQGAN):
+                        # denormalize TODO: Remove eventually
+                        img = (((img + 1.0) / 2.0) * (self.vqgan.codebook.embeddings.max() -
+                                                              self.vqgan.codebook.embeddings.min())) + self.vqgan.codebook.embeddings.min()
 
+                        img = self.vqgan.decode(img, quantize=True)
+                    elif isinstance(self.vqgan_spade, VQGAN_SPADE):
+                        # denormalize TODO: Remove eventually
+                        img = (((img + 1.0) / 2.0) * (self.vqgan_spade.codebook.embeddings.max() -
+                                                              self.vqgan_spade.codebook.embeddings.min())) + self.vqgan_spade.codebook.embeddings.min()
+
+                        img = self.vqgan_spade.decode(img, cond, quantize=True)
+                    else:
+                        unnormalize_img(img)
+
+                    img = F.pad(img, (2, 2, 2, 2))
+                    sample_gif = rearrange(img, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", self.cfg.model.name,
+                                                  self.cfg.dataset.name, "diffusion_middle_process")
+                    path_video = os.path.join(results_folder, 'video_results')
+                    os.makedirs(path_video, exist_ok=True)
+
+                    sample_path = os.path.join(path_video, f'{n}_{i}_sample.gif')
+                    video_tensor_to_gif(sample_gif, sample_path)
+
+        print('#################### sample finished ####################')
+        n+=1
         return img
 
     @torch.inference_mode()
-    def sample(self, cond=None, batch_size=16):
+    def sample(self, cond=None, batch_size=16, get_middle_process=False):
         """
            from latent space to image space
 
@@ -1002,7 +1029,7 @@ class SemanticGaussianDiffusion(nn.Module):
         channels = self.channels
         num_frames = self.num_frames
         _sample = self.p_sample_loop(
-            (batch_size, channels, num_frames, image_size, image_size), cond=cond, cond_scale=self.cond_scale)
+            (batch_size, channels, num_frames, image_size, image_size), cond=cond, cond_scale=self.cond_scale, get_middle_process=get_middle_process)
 
         assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
