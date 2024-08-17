@@ -31,7 +31,8 @@ def run(cfg: DictConfig):
             dim_mults=cfg.model.dim_mults,
             channels=cfg.model.diffusion_num_channels,
             label_nc=cfg.model.spade_input_channel if cfg.model.segconv == 1 else cfg.dataset.label_nc,
-            segconv=cfg.model.segconv
+            segconv=cfg.model.segconv,
+            vqvae=None if cfg.model.vqvae_ckpt == 0 else cfg.model.vqvae_ckpt
         ).cuda()
     elif cfg.model.denoising_fn == 'UNet':
         model = UNet(
