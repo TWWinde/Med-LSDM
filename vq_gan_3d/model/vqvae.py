@@ -1,6 +1,8 @@
 """Adapted from https://github.com/SongweiGe/TATS"""
 # Copyright (c) Meta Platforms, Inc. All Rights Reserved
 import math
+import os
+
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -8,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from vq_gan_3d.utils import shift_dim
 from vq_gan_3d.model.codebook import Codebook
-
+from einops import rearrange
 
 def silu(x):
     return x*torch.sigmoid(x)
@@ -154,6 +156,9 @@ class VQVAE(pl.LightningModule):
         _, bce_loss, vq_output = self.forward(x)
         commitment_loss = vq_output['commitment_loss']
         loss = bce_loss + commitment_loss
+        if self.global_step % 500 == 0:
+            label, recon_label, vq_output = self.forward(x, log_image=True)
+            self.save_images(label, recon_label)
 
         return loss
 
@@ -178,7 +183,8 @@ class VQVAE(pl.LightningModule):
 
         return [opt_ae], []
 
-    def log_videos(self, batch, **kwargs):
+    """
+       def log_videos(self, batch, **kwargs):
         log = dict()
         x = batch['image']
         x = x.to(self.device)
@@ -186,6 +192,34 @@ class VQVAE(pl.LightningModule):
         log["inputs"] = x
         log["reconstructions"] = x_recon
         return log
+
+    def log_videos(self, batch, **kwargs):
+        log = dict()
+        x = batch['image']
+        x = x.to(self.device)
+        x, x_recon, vq_output = self.forward(x, log_image=True)
+        log["inputs"] = x
+        log["reconstructions"] = x_recon
+
+        return log
+    
+    """
+
+    def save_images(self, label, recon_label):
+
+        label_list = F.pad(label, (2, 2, 2, 2))
+        recon_label_list = F.pad(recon_label, (2, 2, 2, 2))
+        if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
+            label_gif = rearrange(label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
+            recon_label_gif = rearrange(recon_label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
+            path_video = os.path.join(self.cfg.default_root_dir, self.cfg.dataset.name, 'results', 'videos')
+            os.makedirs(path_video, exist_ok=True)
+
+            recon_label_path = os.path.join(path_video, f'{self.global_step / 500}_recon_label.gif')
+            label_path = os.path.join(path_video, f'{self.global_step / 500}_label.gif')
+            video_tensor_to_gif(recon_label_gif, recon_label_path)
+            video_tensor_to_gif(label_gif, label_path)
+
 
 def Normalize(in_channels, norm_type='group', num_groups=32):
     assert norm_type in ['group', 'batch']
@@ -274,6 +308,14 @@ class Decoder(nn.Module):
         h = self.conv_last(h)
         return h
 
+
+def video_tensor_to_gif(tensor, path, duration=120, loop=0, optimize=True):
+    tensor = ((tensor - tensor.min()) / (tensor.max() - tensor.min())) * 1.0
+    images = map(T.ToPILImage(), tensor.unbind(dim=1))
+    first_img, *rest_imgs = images
+    first_img.save(path, save_all=True, append_images=rest_imgs,
+                   duration=duration, loop=loop, optimize=optimize)
+    return images
 
 class ResBlock(nn.Module):
     def __init__(self, in_channels, out_channels=None, conv_shortcut=False, dropout=0.0, norm_type='group', padding_type='replicate', num_groups=32):
