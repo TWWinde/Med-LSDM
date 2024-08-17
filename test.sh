@@ -11,7 +11,7 @@
 #SBATCH --gpus=1
 #SBATCH --qos=batch
 #SBATCH --gpus=rtx_a5000:1
-#SBATCH --nodelist=linse19
+#SBATCH --nodelist=linse20
 # SBATCH --nodelist=linse23
 # SBATCH --qos=shortbatch
 # SBATCH --partition=highperf
