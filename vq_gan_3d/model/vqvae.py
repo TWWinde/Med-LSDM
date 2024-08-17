@@ -209,16 +209,16 @@ class VQVAE(pl.LightningModule):
 
         label_list = F.pad(label, (2, 2, 2, 2))
         recon_label_list = F.pad(recon_label, (2, 2, 2, 2))
-        if self.step != 0 and self.step % (self.save_and_sample_every * 5) == 0:
-            label_gif = rearrange(label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
-            recon_label_gif = rearrange(recon_label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
-            path_video = os.path.join(self.cfg.default_root_dir, self.cfg.dataset.name, 'results', 'videos')
-            os.makedirs(path_video, exist_ok=True)
 
-            recon_label_path = os.path.join(path_video, f'{self.global_step / 500}_recon_label.gif')
-            label_path = os.path.join(path_video, f'{self.global_step / 500}_label.gif')
-            video_tensor_to_gif(recon_label_gif, recon_label_path)
-            video_tensor_to_gif(label_gif, label_path)
+        label_gif = rearrange(label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
+        recon_label_gif = rearrange(recon_label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
+        path_video = os.path.join(self.cfg.default_root_dir, self.cfg.dataset.name, 'results', 'videos')
+        os.makedirs(path_video, exist_ok=True)
+
+        recon_label_path = os.path.join(path_video, f'{self.global_step / 500}_recon_label.gif')
+        label_path = os.path.join(path_video, f'{self.global_step / 500}_label.gif')
+        video_tensor_to_gif(recon_label_gif, recon_label_path)
+        video_tensor_to_gif(label_gif, label_path)
 
 
 def Normalize(in_channels, norm_type='group', num_groups=32):
