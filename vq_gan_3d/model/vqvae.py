@@ -212,7 +212,7 @@ class VQVAE(pl.LightningModule):
 
         label_gif = rearrange(label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
         recon_label_gif = rearrange(recon_label_list, '(i j) c f h w -> c f (i h) (j w)', i=2)
-        path_video = os.path.join(self.cfg.default_root_dir, self.cfg.dataset.name, 'results', 'videos')
+        path_video = os.path.join(self.cfg.model.default_root_dir, self.cfg.dataset.name, 'results', 'videos')
         os.makedirs(path_video, exist_ok=True)
 
         recon_label_path = os.path.join(path_video, f'{self.global_step / 500}_recon_label.gif')
