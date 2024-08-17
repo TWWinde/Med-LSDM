@@ -11,6 +11,7 @@ import torch.nn.functional as F
 from vq_gan_3d.utils import shift_dim
 from vq_gan_3d.model.codebook import Codebook
 from einops import rearrange
+from torchvision import transforms as T
 
 def silu(x):
     return x*torch.sigmoid(x)
