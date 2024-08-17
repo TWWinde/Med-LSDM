@@ -208,6 +208,8 @@ class VQVAE(pl.LightningModule):
 
     def save_images(self, label, recon_label):
 
+        label = torch.argmax(label, dim=1, keepdim=False)
+        recon_label = torch.argmax(recon_label, dim=1, keepdim=False)
         label_list = F.pad(label, (2, 2, 2, 2))
         recon_label_list = F.pad(recon_label, (2, 2, 2, 2))
 
