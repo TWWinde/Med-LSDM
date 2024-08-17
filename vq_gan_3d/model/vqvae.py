@@ -131,9 +131,9 @@ class VQVAE(pl.LightningModule):
             #self.metrics_computer.update_metrics(x, x_recon, self.global_step)
 
         bce_loss = F.binary_cross_entropy_with_logits(
-                x_recon.permute(0, 2, 3, 1),
-                x.permute(0, 2, 3, 1),
-                pos_weight=torch.ones(self.num_classes).index_fill(0, 0, 0.05),
+                x_recon.permute(0, 2, 3, 4, 1),
+                x.permute(0, 2, 3, 4, 1),
+                #pos_weight=torch.ones(self.num_classes).index_fill(0, 0, 0.05),
             )
 
         if log_image:
