@@ -137,7 +137,7 @@ class VQVAE(pl.LightningModule):
             )
 
         if log_image:
-            return x_recon, z, vq_output
+            return x, x_recon, vq_output
 
         self.log("train/binary_crossentropy_loss", bce_loss, prog_bar=True,
                      logger=True, on_step=True, on_epoch=True)
@@ -178,23 +178,13 @@ class VQVAE(pl.LightningModule):
 
         return [opt_ae], []
 
-    def log_images(self, batch, **kwargs):
-        log = dict()
-        x = batch['image']
-        x = x.to(self.device)
-        frames, frames_rec, _, _ = self.forward(x, log_image=True)
-        log["inputs"] = frames
-        log["reconstructions"] = frames_rec
-        #log['mean_org'] = batch['mean_org']
-        #log['std_org'] = batch['std_org']
-        return log
-
     def log_videos(self, batch, **kwargs):
         log = dict()
         x = batch['image']
-        _, _, x, x_rec = self.forward(x, log_image=True)
+        x = x.to(self.device)
+        x, x_recon, vq_output = self.forward(x, log_image=True)
         log["inputs"] = x
-        log["reconstructions"] = x_rec
+        log["reconstructions"] = x_recon
         return log
 
 def Normalize(in_channels, norm_type='group', num_groups=32):
