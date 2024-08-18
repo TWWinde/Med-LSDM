@@ -1004,7 +1004,7 @@ class SemanticGaussianDiffusion(nn.Module):
                         img_save = self.vqgan_spade.decode(img_save, cond, quantize=True)
                     else:
                         unnormalize_img(img)
-                    random_numbers = random.sample(range(101), 101)
+                    random_number = random.randint(0, 100)
                     img_save = F.pad(img_save, (2, 2, 2, 2))
                     sample_gif = rearrange(img_save, '(i j) c f h w -> c f (i h) (j w)', i=1)
                     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", self.cfg.model.name,
@@ -1012,7 +1012,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
                     os.makedirs(results_folder, exist_ok=True)
 
-                    sample_path = os.path.join(results_folder, f'{random_numbers}_{600-i}_sample.gif')
+                    sample_path = os.path.join(results_folder, f'{random_number}_{600-i}_sample.gif')
                     video_tensor_to_gif(sample_gif, sample_path)
 
         print('#################### sample finished ####################')
