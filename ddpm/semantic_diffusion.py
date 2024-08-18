@@ -990,21 +990,21 @@ class SemanticGaussianDiffusion(nn.Module):
                 if i % 30 == 0:
                     if isinstance(self.vqgan, VQGAN):
                         # denormalize TODO: Remove eventually
-                        img = (((img + 1.0) / 2.0) * (self.vqgan.codebook.embeddings.max() -
+                        img_save = (((img + 1.0) / 2.0) * (self.vqgan.codebook.embeddings.max() -
                                                               self.vqgan.codebook.embeddings.min())) + self.vqgan.codebook.embeddings.min()
 
-                        img = self.vqgan.decode(img, quantize=True)
+                        img_save = self.vqgan.decode(img_save, quantize=True)
                     elif isinstance(self.vqgan_spade, VQGAN_SPADE):
                         # denormalize TODO: Remove eventually
-                        img = (((img + 1.0) / 2.0) * (self.vqgan_spade.codebook.embeddings.max() -
+                        img_save = (((img + 1.0) / 2.0) * (self.vqgan_spade.codebook.embeddings.max() -
                                                               self.vqgan_spade.codebook.embeddings.min())) + self.vqgan_spade.codebook.embeddings.min()
 
-                        img = self.vqgan_spade.decode(img, cond, quantize=True)
+                        img_save = self.vqgan_spade.decode(img_save, cond, quantize=True)
                     else:
                         unnormalize_img(img)
 
-                    img = F.pad(img, (2, 2, 2, 2))
-                    sample_gif = rearrange(img, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    img_save = F.pad(img_save, (2, 2, 2, 2))
+                    sample_gif = rearrange(img_save, '(i j) c f h w -> c f (i h) (j w)', i=1)
                     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", self.cfg.model.name,
                                                   self.cfg.dataset.name, "diffusion_middle_process")
 
@@ -1014,8 +1014,8 @@ class SemanticGaussianDiffusion(nn.Module):
                     video_tensor_to_gif(sample_gif, sample_path)
 
         print('#################### sample finished ####################')
-
         n+=1
+
         return img
 
     @torch.inference_mode()
