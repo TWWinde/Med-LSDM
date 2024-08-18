@@ -3,6 +3,7 @@
 import math
 import copy
 import os.path
+import random
 
 import torch
 from torch import nn, einsum
@@ -970,6 +971,8 @@ class SemanticGaussianDiffusion(nn.Module):
         nonzero_mask = (1 - (t == 0).float()).reshape(b, *((1,) * (len(x.shape) - 1)))
         return model_mean + nonzero_mask * torch.exp(0.5 * model_log_variance) * noise   # x_{t-1}
 
+
+    number=1
     @torch.inference_mode()
     def p_sample_loop(self, shape, cond=None, cond_scale=1.5, get_middle_process=False):
         """
@@ -981,7 +984,6 @@ class SemanticGaussianDiffusion(nn.Module):
 
         b = shape[0]
         img = torch.randn(shape, device=device)
-        n = 1
         for i in reversed(range(0, self.num_timesteps)):
             img = self.p_sample(img, torch.full(
                 (b,), i, device=device, dtype=torch.long), cond=cond, cond_scale=cond_scale)
@@ -1002,7 +1004,7 @@ class SemanticGaussianDiffusion(nn.Module):
                         img_save = self.vqgan_spade.decode(img_save, cond, quantize=True)
                     else:
                         unnormalize_img(img)
-
+                    random_numbers = random.sample(range(101), 101)
                     img_save = F.pad(img_save, (2, 2, 2, 2))
                     sample_gif = rearrange(img_save, '(i j) c f h w -> c f (i h) (j w)', i=1)
                     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", self.cfg.model.name,
@@ -1010,11 +1012,10 @@ class SemanticGaussianDiffusion(nn.Module):
 
                     os.makedirs(results_folder, exist_ok=True)
 
-                    sample_path = os.path.join(results_folder, f'{n}_{i}_sample.gif')
+                    sample_path = os.path.join(results_folder, f'{random_numbers}_{600-i}_sample.gif')
                     video_tensor_to_gif(sample_gif, sample_path)
 
         print('#################### sample finished ####################')
-        n+=1
 
         return img
 
