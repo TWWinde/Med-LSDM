@@ -984,6 +984,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
         b = shape[0]
         img = torch.randn(shape, device=device)
+        random_number = random.randint(0, 100)
         for i in reversed(range(0, self.num_timesteps)):
             img = self.p_sample(img, torch.full(
                 (b,), i, device=device, dtype=torch.long), cond=cond, cond_scale=cond_scale)
@@ -1004,7 +1005,7 @@ class SemanticGaussianDiffusion(nn.Module):
                         img_save = self.vqgan_spade.decode(img_save, cond, quantize=True)
                     else:
                         unnormalize_img(img)
-                    random_number = random.randint(0, 100)
+
                     img_save = F.pad(img_save, (2, 2, 2, 2))
                     sample_gif = rearrange(img_save, '(i j) c f h w -> c f (i h) (j w)', i=1)
                     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", self.cfg.model.name,
