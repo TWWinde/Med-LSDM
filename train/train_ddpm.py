@@ -45,6 +45,7 @@ def run(cfg: DictConfig):
 
     if cfg.model.diffusion == 'SemanticGaussianDiffusion':
         diffusion = SemanticGaussianDiffusion(
+            cfg,
             model,
             vqgan_ckpt=None if cfg.model.vqgan_ckpt == 0 else cfg.model.vqgan_ckpt,
             vqgan_spade_ckpt=None if cfg.model.vqgan_spade_ckpt == 0 else cfg.model.vqgan_spade_ckpt,

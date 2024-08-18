@@ -757,6 +757,7 @@ def cosine_beta_schedule(timesteps, s=0.008):
 class SemanticGaussianDiffusion(nn.Module):
     def __init__(
             self,
+            cfg,
             denoise_fn,
             *,
             image_size,
@@ -772,6 +773,7 @@ class SemanticGaussianDiffusion(nn.Module):
             cond_scale=1.5
     ):
         super().__init__()
+        self.cfg = cfg
         self.channels = channels
         self.image_size = image_size
         self.num_frames = num_frames
