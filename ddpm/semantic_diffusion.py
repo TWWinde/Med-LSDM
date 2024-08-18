@@ -984,32 +984,32 @@ class SemanticGaussianDiffusion(nn.Module):
             img = self.p_sample(img, torch.full(
                 (b,), i, device=device, dtype=torch.long), cond=cond, cond_scale=cond_scale)
 
-            if get_middle_process:
-                if i % 30 == 0:
-                    if isinstance(self.vqgan, VQGAN):
-                        # denormalize TODO: Remove eventually
-                        img = (((img + 1.0) / 2.0) * (self.vqgan.codebook.embeddings.max() -
-                                                              self.vqgan.codebook.embeddings.min())) + self.vqgan.codebook.embeddings.min()
 
-                        img = self.vqgan.decode(img, quantize=True)
-                    elif isinstance(self.vqgan_spade, VQGAN_SPADE):
-                        # denormalize TODO: Remove eventually
-                        img = (((img + 1.0) / 2.0) * (self.vqgan_spade.codebook.embeddings.max() -
-                                                              self.vqgan_spade.codebook.embeddings.min())) + self.vqgan_spade.codebook.embeddings.min()
+            if isinstance(self.vqgan, VQGAN):
+                # denormalize TODO: Remove eventually
+                img = (((img + 1.0) / 2.0) * (self.vqgan.codebook.embeddings.max() -
+                                              self.vqgan.codebook.embeddings.min())) + self.vqgan.codebook.embeddings.min()
 
-                        img = self.vqgan_spade.decode(img, cond, quantize=True)
-                    else:
-                        unnormalize_img(img)
+                img = self.vqgan.decode(img, quantize=True)
+            elif isinstance(self.vqgan_spade, VQGAN_SPADE):
+                # denormalize TODO: Remove eventually
+                img = (((img + 1.0) / 2.0) * (self.vqgan_spade.codebook.embeddings.max() -
+                                              self.vqgan_spade.codebook.embeddings.min())) + self.vqgan_spade.codebook.embeddings.min()
 
-                    img = F.pad(img, (2, 2, 2, 2))
-                    sample_gif = rearrange(img, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", self.cfg.model.name,
-                                                  self.cfg.dataset.name, "diffusion_middle_process")
-                    path_video = os.path.join(results_folder, 'video_results')
-                    os.makedirs(path_video, exist_ok=True)
+                img = self.vqgan_spade.decode(img, cond, quantize=True)
+            else:
+                unnormalize_img(img)
 
-                    sample_path = os.path.join(path_video, f'{n}_{i}_sample.gif')
-                    video_tensor_to_gif(sample_gif, sample_path)
+            img = F.pad(img, (2, 2, 2, 2))
+            sample_gif = rearrange(img, '(i j) c f h w -> c f (i h) (j w)', i=1)
+            results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/", self.cfg.model.name,
+                                          self.cfg.dataset.name, "diffusion_middle_process")
+
+            os.makedirs(results_folder, exist_ok=True)
+
+            sample_path = os.path.join(results_folder, f'{n}_{i}_sample.gif')
+            video_tensor_to_gif(sample_gif, sample_path)
+
 
         print('#################### sample finished ####################')
         n+=1
