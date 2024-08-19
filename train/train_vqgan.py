@@ -32,7 +32,7 @@ def run(cfg: DictConfig):
     print("Setting learning rate to {:.2e} = {} (accumulate_grad_batches) * {} (num_gpus/8) * {} (batchsize/4) * {:.2e} (base_lr)".format(
         cfg.model.lr, accumulate, ngpu/8, bs/4, base_lr))
 
-    if cfg.dataset.name == 'SemanticMap' or cfg.model.name == 'vqvae':
+    if cfg.dataset.name == 'SemanticMap' or cfg.model.name == 'vq_vae':
         model = VQVAE(cfg, val_dataloader=val_dataloader)
     elif cfg.model.name == 'vq_gan_spade':
         model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader)
