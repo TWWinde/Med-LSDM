@@ -550,7 +550,7 @@ class Unet3D_SPADE(nn.Module):
     ):
         super().__init__()
         self.channels = channels
-        self.label_nc = label_nc
+        self.label_nc = label_nc if not vqvae else 8
 
         # temporal attention and its relative positional encoding
 
@@ -625,7 +625,7 @@ class Unet3D_SPADE(nn.Module):
             ]))
 
         mid_dim = dims[-1]
-        self.mid_block1 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc if not vqvae else 8)
+        self.mid_block1 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc)
 
         spatial_attn = EinopsToAndFrom(
             'b c f h w', 'b f (h w) c', Attention(mid_dim, heads=attn_heads))
@@ -634,13 +634,13 @@ class Unet3D_SPADE(nn.Module):
         self.mid_temporal_attn = Residual(
             PreNorm(mid_dim, temporal_attn(mid_dim)))
 
-        self.mid_block2 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc if not vqvae else 8)
+        self.mid_block2 = SDDResBlock(mid_dim, mid_dim, label_nc=self.label_nc)
 
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out)):
             is_last = ind >= (num_resolutions - 1)
 
             self.ups.append(nn.ModuleList([
-                SDDResBlock(dim_out * 2, dim_in, time_emb_dim=cond_dim, groups=resnet_groups, label_nc=self.label_nc if not vqvae else 8),
+                SDDResBlock(dim_out * 2, dim_in, time_emb_dim=cond_dim, groups=resnet_groups, label_nc=self.label_nc),
                 Residual(PreNorm(dim_in, SpatialLinearAttention(
                     dim_in, heads=attn_heads))) if use_sparse_linear_attn else nn.Identity(),
                 Residual(PreNorm(dim_in, temporal_attn(dim_in))),
@@ -654,9 +654,12 @@ class Unet3D_SPADE(nn.Module):
         )
 
         # add 3d conv for input segmap
+
         self.segconv = segconv
         if self.segconv == 1:
             self.segconv3d = SegConv3D(self.label_nc)
+        else:
+            self.segconv3d = None
 
     def forward_with_cond_scale(
             self,
