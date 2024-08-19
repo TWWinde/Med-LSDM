@@ -1013,7 +1013,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
                     os.makedirs(results_folder, exist_ok=True)
 
-                    sample_path = os.path.join(results_folder, f'{random_number}_{600-i}_sample.gif')
+                    sample_path = os.path.join(results_folder, f'{random_number}_{480-i}_sample.gif')
                     video_tensor_to_gif(sample_gif, sample_path)
 
         print('#################### sample finished ####################')
