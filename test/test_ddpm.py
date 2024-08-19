@@ -1,9 +1,7 @@
 import sys
-
-from vq_gan_3d.model import VQVAE
-
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
 from ddpm import Unet3D, GaussianDiffusion, Unet3D_SPADE, SemanticGaussianDiffusion
+from vq_gan_3d.model import VQVAE
 import hydra
 from omegaconf import DictConfig, open_dict
 from train.get_dataset import get_dataset
