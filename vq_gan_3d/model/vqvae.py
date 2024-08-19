@@ -124,7 +124,7 @@ class VQVAE(pl.LightningModule):
 
         x = x.cuda()
 
-        x = self.preprocess_input(x)
+        #x = self.preprocess_input(x)
 
         z = self.pre_vq_conv(self.encoder(x))
         vq_output = self.codebook(z)
@@ -133,11 +133,18 @@ class VQVAE(pl.LightningModule):
         #if self.global_step % 500 == 0:
             #self.metrics_computer.update_metrics(x, x_recon, self.global_step)
 
-        bce_loss = F.binary_cross_entropy_with_logits(
-                x_recon.permute(0, 2, 3, 4, 1),
-                x.permute(0, 2, 3, 4, 1),
+        #bce_loss = F.binary_cross_entropy_with_logits(
+                #x_recon.permute(0, 2, 3, 4, 1),
+                #x.permute(0, 2, 3, 4, 1),
                 #pos_weight=torch.ones(self.num_classes).index_fill(0, 0, 0.05),
-            )
+            #)
+
+        bce_loss = F.l1_loss(
+            x_recon.permute(0, 2, 3, 4, 1),
+            x.permute(0, 2, 3, 4, 1),
+
+        )
+
 
         if log_image:
             return x, x_recon, vq_output
