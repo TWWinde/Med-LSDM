@@ -164,9 +164,9 @@ class VQVAE(pl.LightningModule):
         _, bce_loss, vq_output = self.forward(x)
         commitment_loss = vq_output['commitment_loss']
         loss = bce_loss + commitment_loss
-        if self.global_step % 500 == 0:
-            label, recon_label, vq_output = self.forward(x, log_image=True)
-            self.save_images(label, recon_label)
+        #if self.global_step % 500 == 0:
+           # label, recon_label, vq_output = self.forward(x, log_image=True)
+            #self.save_images(label, recon_label)
 
         return loss
 
@@ -189,8 +189,8 @@ class VQVAE(pl.LightningModule):
 
         return [opt_ae], []
 
-    """
-       def log_videos(self, batch, **kwargs):
+
+    def log_videos(self, batch, **kwargs):
         log = dict()
         x = batch['image']
         x = x.to(self.device)
@@ -208,8 +208,7 @@ class VQVAE(pl.LightningModule):
         log["reconstructions"] = x_recon
 
         return log
-    
-    """
+
 
     def save_images(self, label, recon_label):
 
