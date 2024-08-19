@@ -92,7 +92,7 @@ def inference(cfg: DictConfig):
         all_milestones = [int((p.split('.')[0]).split("-")[-1]) for p in all_paths if p.endswith('.pt')]
         assert len(all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
         milestone = max(all_milestones)
-
+        print("laoding checkpoint from", os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
         data = torch.load(os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
         print('load checkpoint: ', os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
 
