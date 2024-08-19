@@ -1,4 +1,7 @@
 import sys
+
+from vq_gan_3d.model import VQVAE
+
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
 from ddpm import Unet3D, GaussianDiffusion, Unet3D_SPADE, SemanticGaussianDiffusion
 import hydra
@@ -110,11 +113,18 @@ def inference(cfg: DictConfig):
     diffusion_model = load_checkpoint(diffusion, checkpoint_folder)
     val_dl = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
+    if cfg.model.vqvae_ckpt != 0:
+        vqvae = VQVAE.load_from_checkpoint(cfg.model.vqvae_ckpt).cuda()
+        vqvae.eval()
+        print('vqvae is implemented')
+    else:
+        vqvae = None
+
     compute_matrics = True
     generate_gif = False
     if compute_matrics:
         metrics_computer = Metrics(results_folder, val_dl)
-        metrics_computer.metrics_test(diffusion_model)
+        metrics_computer.metrics_test(diffusion_model, encoder=vqvae)
     if generate_gif:
         diffusion_model.eval()
         with torch.no_grad():

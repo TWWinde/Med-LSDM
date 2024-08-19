@@ -302,8 +302,8 @@ class Metrics:
         plt.savefig(os.path.join(self.path_to_save, mode, f"plot_{mode}"), dpi=600)
         plt.close()
 
-    def metrics_test(self, model):
-        pips, ssim, psnr, rmse= self.compute_metrics_test(model)
+    def metrics_test(self, model, encoder=None):
+        pips, ssim, psnr, rmse= self.compute_metrics_test(model, encoder=encoder)
         print("--- PIPS at test : ", "{:.2f}".format(pips))
         print("--- SSIM at test : ", "{:.5f}".format(ssim))
         print("--- PSNR at test : ", "{:.2f}".format(psnr))
