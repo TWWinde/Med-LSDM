@@ -796,15 +796,17 @@ class SemanticGaussianDiffusion(nn.Module):
             self.vqgan = None
             print("########using vqgan_spade to mapping########")
         elif vqvae_ckpt:
-            self.vqgan_spade = VQVAE.load_from_checkpoint(vqgan_spade_ckpt).cuda()
-            self.vqgan_spade.eval()
+            self.vqvae = VQVAE.load_from_checkpoint(vqgan_spade_ckpt).cuda()
+            self.vqvae.eval()
             self.vqgan = None
-            print("########using vqgan_spade to mapping########")
+
+            print("########using vqvae to mapping########")
 
         else:
             self.vqgan = None
             self.vqgan_spade = None
-            print("######## vqgan models are not implemented########")
+            self.vqvae = None
+            print("######## vqgan vqvae vqgan_spade models are not implemented########")
 
         betas = cosine_beta_schedule(timesteps)
 
@@ -1013,6 +1015,12 @@ class SemanticGaussianDiffusion(nn.Module):
                                                               self.vqgan_spade.codebook.embeddings.min())) + self.vqgan_spade.codebook.embeddings.min()
 
                         img_save = self.vqgan_spade.decode(img_save, cond, quantize=True)
+                    elif isinstance(self.vqvae, VQVAE):
+                        # denormalize TODO: Remove eventually
+                        img_save = (((img + 1.0) / 2.0) * (self.vqvae.codebook.embeddings.max() -
+                                                              self.vqvae.codebook.embeddings.min())) + self.vqvae.codebook.embeddings.min()
+
+                        img_save = self.vqvae.decode(img_save, quantize=True)
                     else:
                         unnormalize_img(img)
 
@@ -1061,6 +1069,13 @@ class SemanticGaussianDiffusion(nn.Module):
                                                   self.vqgan_spade.codebook.embeddings.min())) + self.vqgan_spade.codebook.embeddings.min()
 
             _sample = self.vqgan_spade.decode(_sample, cond, quantize=True)
+        elif isinstance(self.vqvae, VQVAE):
+            # denormalize TODO: Remove eventually
+            _sample = (((_sample + 1.0) / 2.0) * (self.vqvae.codebook.embeddings.max() -
+                                                  self.vqvae.codebook.embeddings.min())) + self.vqvae.codebook.embeddings.min()
+
+            _sample = self.vqvae.decode(_sample, quantize=True)
+
         else:
             unnormalize_img(_sample)
 
@@ -1125,6 +1140,14 @@ class SemanticGaussianDiffusion(nn.Module):
                 x = ((x - self.vqgan_spade.codebook.embeddings.min()) /
                      (self.vqgan_spade.codebook.embeddings.max() -
                       self.vqgan_spade.codebook.embeddings.min())) * 2.0 - 1.0
+        elif isinstance(self.vqvae, VQVAE):
+            with torch.no_grad():
+                x = self.vqvae.encode(
+                    x, quantize=False, include_embeddings=True)
+                # normalize to -1 and 1
+                x = ((x - self.vqvae.codebook.embeddings.min()) /
+                     (self.vqvae.codebook.embeddings.max() -
+                      self.vqvae.codebook.embeddings.min())) * 2.0 - 1.0
         else:
             print("Hi")
             x = normalize_img(x)  # (-1,1)
