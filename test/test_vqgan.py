@@ -2,11 +2,12 @@
 import sys
 import torch
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
+
 from evaluation.metrics_vq_gan import metrics
 import os
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from vq_gan_3d.model import VQGAN, VQGAN_SPADE
+from vq_gan_3d.model import VQGAN, VQGAN_SPADE, VQVAE
 from train.get_dataset import get_dataset
 import hydra
 from omegaconf import DictConfig, open_dict
@@ -28,12 +29,12 @@ def run(cfg: DictConfig):
         cfg.model.default_root_dir = os.path.join(
             cfg.model.default_root_dir, cfg.dataset.name, cfg.model.default_root_dir_postfix)
 
-    if cfg.dataset.name == 'SemanticMap':
-        model = VQGAN(cfg, label=True, val_dataloader=val_dataloader).cuda()
+    if cfg.dataset.name == 'SemanticMap' or cfg.model.name == 'vq_vae':
+        model = VQVAE(cfg, val_dataloader=val_dataloader)
     elif cfg.model.name == 'vq_gan_spade':
-        model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader).cuda()
+        model = VQGAN_SPADE(cfg, val_dataloader=val_dataloader)
     else:
-        model = VQGAN(cfg, val_dataloader=val_dataloader).cuda()
+        model = VQGAN(cfg, val_dataloader=val_dataloader)
 
     # load the most recent checkpoint file
     model = model.load_from_checkpoint(cfg.model.resume_from_checkpoint)
@@ -48,6 +49,9 @@ def run(cfg: DictConfig):
             metrics_computer.metrics_test(model)
         elif cfg.model.name == "vq_gan_spade":
             metrics_computer.metrics_test_spade(model)
+        elif cfg.model.name == "vq_vae":
+            metrics_computer.metrics_test(model)
+
         for i, data_i in enumerate(val_dataloader):
             input = data_i['image']
             output = model(input, evaluation=True)
