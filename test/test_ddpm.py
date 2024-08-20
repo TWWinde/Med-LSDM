@@ -53,6 +53,7 @@ def inference(cfg: DictConfig):
             unet_model,
             vqgan_ckpt=None if cfg.model.vqgan_ckpt == 0 else cfg.model.vqgan_ckpt,
             vqgan_spade_ckpt=None if cfg.model.vqgan_spade_ckpt == 0 else cfg.model.vqgan_spade_ckpt,
+            vqvae_ckpt=None if cfg.model.vqvae_ckpt == 0 else cfg.model.vqgvae_ckpt,
             image_size=cfg.model.diffusion_img_size,
             num_frames=cfg.model.diffusion_depth_size,
             channels=cfg.model.diffusion_num_channels,
