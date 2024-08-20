@@ -774,6 +774,7 @@ class SemanticGaussianDiffusion(nn.Module):
             dynamic_thres_percentile=0.9,
             vqgan_ckpt=None,
             vqgan_spade_ckpt=None,
+            vqvae_ckpt=None,
             cond_scale=1.5
     ):
         super().__init__()
@@ -794,6 +795,12 @@ class SemanticGaussianDiffusion(nn.Module):
             self.vqgan_spade.eval()
             self.vqgan = None
             print("########using vqgan_spade to mapping########")
+        elif vqvae_ckpt:
+            self.vqgan_spade = VQVAE.load_from_checkpoint(vqgan_spade_ckpt).cuda()
+            self.vqgan_spade.eval()
+            self.vqgan = None
+            print("########using vqgan_spade to mapping########")
+
         else:
             self.vqgan = None
             self.vqgan_spade = None
@@ -1500,7 +1507,7 @@ class Semantic_Trainer(object):
                 save_image(label_frames, path_label)
                 save_image(image_frames, path_image)
 
-                if self.step != 0 and self.step % (self.save_and_sample_every * 10) == 0:
+                if self.step != 0 and self.step % (self.save_and_sample_every * 50) == 0:
                     self.save(milestone)
 
             log_fn(log)
