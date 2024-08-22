@@ -112,7 +112,7 @@ def inference(cfg: DictConfig):
     diffusion_model = load_checkpoint(diffusion, checkpoint_folder)
     val_dl = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
-    if cfg.model.vqvae_ckpt != 0:
+    if cfg.model.vqvae_seg_-ckpt != 0:
         vqvae = VQVAE.load_from_checkpoint(cfg.model.vqvae_ckpt).cuda()
         vqvae.eval()
         print('vqvae is implemented')
