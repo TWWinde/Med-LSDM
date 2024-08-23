@@ -1289,10 +1289,10 @@ class Semantic_Trainer(object):
         max_grad_norm=None,
         num_workers=20,
         vqvae_ckpt=None,
-        num_classes=37,
         vqgan_spade_ckpt
     ):
         super().__init__()
+        self.cfg = cfg
         self.model = diffusion_model
         self.ema = EMA(ema_decay)
         self.ema_model = copy.deepcopy(self.model)
@@ -1315,7 +1315,7 @@ class Semantic_Trainer(object):
         image_size = diffusion_model.image_size
         channels = diffusion_model.channels
         num_frames = diffusion_model.num_frames
-        self.num_classes = num_classes
+        self.num_classes = self.cfg.dataset.label_nc
 
         self.cfg = cfg
         if train_dataset:
@@ -1348,7 +1348,7 @@ class Semantic_Trainer(object):
         self.results_folder.mkdir(exist_ok=True, parents=True)
         self.metrics_folder = os.path.join(self.results_folder)
         os.makedirs(self.metrics_folder, exist_ok=True)
-        self.metrics_computer = Metrics(self.metrics_folder, val_dl)
+        self.metrics_computer = Metrics(self.metrics_folder, val_dl, num_classes=self.num_classes)
         self.reset_parameters()
 
     def preprocess_input(self, data):
