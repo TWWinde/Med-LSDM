@@ -675,8 +675,8 @@ class Unet3D_SPADE(nn.Module):
         # add 3d conv for input segmap
 
         self.segconv = segconv
-        if self.segconv == 1:
-            self.segconv3d = SegConv3D(31, self.label_nc)
+        if self.segconv:
+            self.segconv3d = SegConv3D(self.label_nc, self.spade_input_nc)
         else:
             self.segconv3d = None
 
