@@ -678,7 +678,7 @@ class Unet3D_SPADE(nn.Module):
         if self.segconv:
             self.segconv3d = SegConv3D(self.label_nc, self.spade_input_nc)
         else:
-            self.segconv3d = None
+            self.segconv3d = False
 
     def forward_with_cond_scale(
             self,
@@ -719,7 +719,7 @@ class Unet3D_SPADE(nn.Module):
         t = self.time_mlp(time) if exists(self.time_mlp) else None
 
         # add 3d conv for input segmap
-        if self.segconv == 1:
+        if self.segconv:
             seg = self.segconv3d(cond)
         else:
             seg = cond
