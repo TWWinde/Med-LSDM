@@ -529,6 +529,32 @@ def save_cropped_total_mr(image_in_files, image_out_files, crop_size, length=32)
             n+=1
 
 
+def dicom_serie2nifti(dicom_folder, nifti_save_path):
+    reader = sitk.ImageSeriesReader()
+    dicom_names = reader.GetGDCMSeriesFileNames(dicom_folder)
+    reader.SetFileNames(dicom_names)
+
+    image_3d = reader.Execute()
+
+    sitk.WriteImage(image_3d, nifti_save_path)
+
+
+def process_duck_breast(input_root, output_root):
+    input_mr_root = os.path.join(input_root, 'MR')
+    input_seg_root = os.path.join(input_root, 'SEG')
+    seg_path_list = os.listdir(input_seg_root)
+    output_path_mr = os.path.join(output_root, 'MR')
+    output_path_seg = os.path.join(output_root, 'SEG')
+    os.makedirs(output_path_mr, exist_ok=True)
+    os.makedirs(output_path_seg, exist_ok=True)
+    for item in seg_path_list:
+        mr_path = os.path.join(input_mr_root, item)
+        output_name = item + '.nii.gz'
+        output_path = os.path.join(output_path_mr, output_name)
+        dicom_serie2nifti(mr_path, output_path)
+
+
+
 
 
 if __name__ == '__main__':
@@ -552,8 +578,9 @@ if __name__ == '__main__':
     Total_mri_root = "/misc/data/private/autoPET/TotalSegmentator"
     Total_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/'
     croped_total_mr = '/data/private/autoPET/Totalsegmentator_mri_croped/'
-
-    autopet = True
+    duke_input_root = '/data/public/Duke/MRI_Breast/'
+    duke_output_root = '/data/private/autoPET/duke/'
+    autopet = False
     if autopet:
         preprocess_raw = False
         crop = True
@@ -584,4 +611,9 @@ if __name__ == '__main__':
             image_process_total_mri(Total_mri_root, Total_label_out, Total_out)
         if crop:
             save_cropped_total_mr(Total_out, croped_total_mr, (256, 256), length=32)
+
+    duke = True
+    if duke:
+        process_duck_breast(duke_input_root, duke_output_root)
+
 
