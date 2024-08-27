@@ -547,7 +547,7 @@ def process_duck_breast(input_root, output_root):
     output_path_seg = os.path.join(output_root, 'SEG')
     os.makedirs(output_path_mr, exist_ok=True)
     os.makedirs(output_path_seg, exist_ok=True)
-    for item in seg_path_list:
+    for item in sorted(seg_path_list):
         mr_path = os.path.join(input_mr_root, item)
         output_name = item + '.nii.gz'
         output_path = os.path.join(output_path_mr, output_name)
