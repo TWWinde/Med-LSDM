@@ -569,6 +569,8 @@ class Unet3D_SPADE(nn.Module):
         else:
             self.spade_input_nc = self.label_nc
 
+        self.add_seg_to_noise = True
+
         # temporal attention and its relative positional encoding
 
         rotary_emb = RotaryEmbedding(min(32, attn_dim_head))
@@ -587,8 +589,15 @@ class Unet3D_SPADE(nn.Module):
         assert is_odd(init_kernel_size)
 
         init_padding = init_kernel_size // 2
-        self.init_conv = nn.Conv3d(channels, init_dim, (1, init_kernel_size,
-                                                        init_kernel_size), padding=(0, init_padding, init_padding))
+
+        if self.add_seg_to_noise:
+            self.init_conv = nn.Conv3d(self.channels+self.spade_input_nc, init_dim, (1, init_kernel_size,init_kernel_size),
+                                       padding=(0, init_padding, init_padding))
+        else:
+            self.init_conv = nn.Conv3d(self.channels, init_dim, (1, init_kernel_size,
+                                                                 init_kernel_size),
+                                       padding=(0, init_padding, init_padding))
+
 
         self.init_temporal_attn = Residual(
             PreNorm(init_dim, temporal_attn(init_dim)))
@@ -666,7 +675,7 @@ class Unet3D_SPADE(nn.Module):
                 Upsample(dim_in) if not is_last else nn.Identity()
             ]))
 
-        out_dim = default(out_dim, channels)
+        out_dim = default(out_dim, self.channels)
         self.final_conv = nn.Sequential(
             block_klass(dim * 2, dim),
             nn.Conv3d(dim, out_dim, 1)
@@ -678,7 +687,7 @@ class Unet3D_SPADE(nn.Module):
         if self.segconv:
             self.segconv3d = SegConv3D(self.label_nc, self.spade_input_nc)
         else:
-            self.segconv3d = False
+            self.segconv3d = None
 
     def forward_with_cond_scale(
             self,
@@ -885,7 +894,10 @@ class SemanticGaussianDiffusion(nn.Module):
         self.use_dynamic_thres = use_dynamic_thres
         self.dynamic_thres_percentile = dynamic_thres_percentile
 
-    def q_sample(self, x_start, t, noise=None):  # x_{t}
+    def add_seg_to_noise(self,):
+        pass
+
+    def q_sample(self, x_start, t, noise=None):  # x_{t} get noisy images
         """
             Diffuse the data for a given number of diffusion steps.
 
@@ -897,12 +909,13 @@ class SemanticGaussianDiffusion(nn.Module):
             :return: A noisy version of x_start.
         """
         noise = default(noise, lambda: torch.randn_like(x_start))
-
-        return (
+        x_t = (
                 extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
                 extract(self.sqrt_one_minus_alphas_cumprod,
                         t, x_start.shape) * noise
         )
+
+        return x_t
 
     def q_mean_variance(self, x_start, t):  # q(x_{t} | x_0)
         """
