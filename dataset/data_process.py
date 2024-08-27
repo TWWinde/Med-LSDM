@@ -541,7 +541,7 @@ def dicom_serie2nifti(dicom_folder, nifti_save_path):
 
 def process_duck_breast(input_root, output_root):
     input_mr_root = os.path.join(input_root, 'MR')
-    input_seg_root = os.path.join(input_root, 'SEG')
+    input_seg_root = os.path.join("/data/private/autoPET/duke/SEG", 'SEG')
     seg_path_list = os.listdir(input_seg_root)
     output_path_mr = os.path.join(output_root, 'MR')
     output_path_seg = os.path.join(output_root, 'SEG')
@@ -553,8 +553,6 @@ def process_duck_breast(input_root, output_root):
         output_path = os.path.join(output_path_mr, output_name)
         dicom_serie2nifti(mr_path, output_path)
         print("finished", output_path)
-
-
 
 
 
