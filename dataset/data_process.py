@@ -552,6 +552,7 @@ def process_duck_breast(input_root, output_root):
         output_name = item + '.nii.gz'
         output_path = os.path.join(output_path_mr, output_name)
         dicom_serie2nifti(mr_path, output_path)
+        print("finished", output_path)
 
 
 
