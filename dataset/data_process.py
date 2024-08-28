@@ -578,7 +578,7 @@ def process_duck_breast(input_root, output_root):
     for item in sorted(seg_path_list): # different patients
         i = 0
         seg_shape = combine_label(input_seg_root, output_path_seg, item)
-        len = seg_shape[0]
+        length = seg_shape[0]
         patient_mr_path = os.path.join(input_mr_root, item)
         patient_path_list = os.listdir(patient_mr_path)
         for x in patient_path_list:    # the unuseful middle path
@@ -589,7 +589,7 @@ def process_duck_breast(input_root, output_root):
                 num = len(os.listdir(mr_path_ab))
                 if num < 20:
                     continue
-                if num == len:
+                if num == length:
                     output_name = item + '.nii.gz'
                     output_path = os.path.join(output_path_labeled_mr, output_name)
                     mr_size = dicom_serie2nifti(mr_path_ab, output_path)
