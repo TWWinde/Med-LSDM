@@ -553,12 +553,12 @@ def combine_label(in_path, out_path, item):
     seg_vessels_array = sitk.GetArrayFromImage(seg_vessels)
     seg_breast_array = sitk.GetArrayFromImage(seg_breast)
     assert seg_vessels_array.shape == seg_breast_array.shape
-    seg_shape = seg_breast_array.shape
     seg_breast = sitk.Mask(seg_breast, seg_breast, outsideValue=0, maskingValue=1)
     seg_breast = sitk.Cast(seg_breast, sitk.sitkUInt8) * 2
 
     combined_label = seg_vessels + seg_breast
     combined_label = sitk.Mask(combined_label, combined_label < 3)
+    seg_shape = combined_label.GetSize()
     seg_output_path = os.path.join(out_path, seg_name)
     sitk.WriteImage(combined_label, seg_output_path)
 
