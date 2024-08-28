@@ -1,4 +1,6 @@
 import os
+from glob import glob
+
 import nibabel as nib
 import SimpleITK as sitk
 import numpy as np
@@ -533,26 +535,77 @@ def dicom_serie2nifti(dicom_folder, nifti_save_path):
     reader = sitk.ImageSeriesReader()
     dicom_names = reader.GetGDCMSeriesFileNames(dicom_folder)
     reader.SetFileNames(dicom_names)
-
     image_3d = reader.Execute()
-
+    image_size = image_3d.GetSize()
     sitk.WriteImage(image_3d, nifti_save_path)
+    return image_size
+
+
+def combine_label(in_path, out_path, item):
+
+    breast_seg_name = 'Segmentation_' + item + '_Breast.seg.nrrd'
+    vessels_seg_name = 'Segmentation_' + item + '_Dense_and_Vessels.seg.nrrd'
+    seg_name = item + '.nii.gz'
+    breast_seg_path = os.path.join(in_path, item, breast_seg_name)
+    vessels_seg_path = os.path.join(in_path, item, vessels_seg_name)
+    seg_breast = sitk.ReadImage(breast_seg_path)
+    seg_vessels = sitk.ReadImage(vessels_seg_path)
+    seg_vessels_array = sitk.GetArrayFromImage(seg_vessels)
+    seg_breast_array = sitk.GetArrayFromImage(seg_breast)
+    assert seg_vessels_array.shape == seg_breast_array.shape
+    seg_shape = seg_breast_array.shape
+    seg_breast = sitk.Mask(seg_breast, seg_breast, outsideValue=0, maskingValue=1)
+    seg_breast = sitk.Cast(seg_breast, sitk.sitkUInt8) * 2
+
+    combined_label = seg_vessels + seg_breast
+    combined_label = sitk.Mask(combined_label, combined_label < 3)
+    seg_output_path = os.path.join(out_path, seg_name)
+    sitk.WriteImage(combined_label, seg_output_path)
+
+    return seg_shape
 
 
 def process_duck_breast(input_root, output_root):
-    input_mr_root = os.path.join(input_root, 'MR')
-    input_seg_root = os.path.join("/data/private/autoPET/duke/SEG")
+    input_mr_root = os.path.join(input_root, 'Duke-Breast-Cancer-MRI')
+    input_seg_root = os.path.join("/data/private/autoPET/duke/SEG_raw")
     seg_path_list = os.listdir(input_seg_root)
-    output_path_mr = os.path.join(output_root, 'MR')
+    output_path_labeled_mr = os.path.join(output_root, 'labeled_MR')
+    output_path_unlabeled_mr = os.path.join(output_root, 'unlabeled_MR')
     output_path_seg = os.path.join(output_root, 'SEG')
-    os.makedirs(output_path_mr, exist_ok=True)
+    os.makedirs(output_path_labeled_mr, exist_ok=True)
+    os.makedirs(output_path_unlabeled_mr, exist_ok=True)
     os.makedirs(output_path_seg, exist_ok=True)
-    for item in sorted(seg_path_list):
-        mr_path = os.path.join(input_mr_root, item)
-        output_name = item + '.nii.gz'
-        output_path = os.path.join(output_path_mr, output_name)
-        dicom_serie2nifti(mr_path, output_path)
-        print("finished", output_path)
+    for item in sorted(seg_path_list): # different patients
+        i = 0
+        seg_shape = combine_label(input_seg_root, output_path_seg, item)
+        len = seg_shape[0]
+        patient_mr_path = os.path.join(input_mr_root, item)
+        patient_path_list = os.listdir(input_seg_root)
+        for x in patient_path_list:    # the unuseful middle path
+            for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
+                found = False
+                mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
+                num = os.listdir(mr_path_ab)
+                if num<20:
+                    continue
+                if num==len:
+                    output_name = item + '.nii.gz'
+                    output_path = os.path.join(output_path_labeled_mr, output_name)
+                    mr_size = dicom_serie2nifti(mr_path_ab, output_path)
+                    assert seg_shape == mr_size
+                    found = True
+                else:
+                    output_name = item + f'_{i}.nii.gz'
+                    output_path = os.path.join(output_path_unlabeled_mr, output_name)
+                    mr_size = dicom_serie2nifti(mr_path_ab, output_path)
+                    i += 1
+            break
+
+        print("finished", item)
+        if not found:
+            print("not find labeled mr for", item)
+
+    print('finished all')
 
 
 
@@ -577,7 +630,7 @@ if __name__ == '__main__':
     Total_mri_root = "/misc/data/private/autoPET/TotalSegmentator"
     Total_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/'
     croped_total_mr = '/data/private/autoPET/Totalsegmentator_mri_croped/'
-    duke_input_root = '/data/public/Duke/MRI_Breast/'
+    duke_input_root = '/data/private/autoPET/duke/'
     duke_output_root = '/data/private/autoPET/duke/'
     autopet = False
     if autopet:
@@ -614,5 +667,6 @@ if __name__ == '__main__':
     duke = True
     if duke:
         process_duck_breast(duke_input_root, duke_output_root)
+
 
 
