@@ -585,6 +585,7 @@ def process_duck_breast(input_root, output_root):
             for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                 found = False
                 mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
+                print(mr_path_ab)
                 num = len(os.listdir(mr_path_ab))
                 if num < 20:
                     continue
