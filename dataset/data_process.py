@@ -585,7 +585,6 @@ def process_duck_breast(input_root, output_root):
             for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                 found = False
                 mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
-                print(mr_path_ab)
                 num = len(os.listdir(mr_path_ab))
                 if num < 20:
                     continue
@@ -593,7 +592,7 @@ def process_duck_breast(input_root, output_root):
                     output_name = item + '.nii.gz'
                     output_path = os.path.join(output_path_labeled_mr, output_name)
                     mr_size = dicom_serie2nifti(mr_path_ab, output_path)
-                    assert seg_shape == mr_size
+                    assert seg_shape == mr_size, f"{seg_shape},{mr_size}"
                     found = True
                 else:
                     output_name = item + f'_{i}.nii.gz'
