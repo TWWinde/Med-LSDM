@@ -537,7 +537,7 @@ def dicom_serie2nifti(dicom_folder, nifti_save_path):
     reader.SetFileNames(dicom_names)
     image_3d = reader.Execute()
     image_size = image_3d.GetSize()
-    image_3d = rescale(image_3d)
+    #image_3d = rescale(image_3d)
     sitk.WriteImage(image_3d, nifti_save_path)
     return image_size
 
@@ -593,7 +593,7 @@ def combine_label(in_path, out_path, item):
 
     combined_label = seg_vessels + seg_breast
     combined_label = sitk.Mask(combined_label, combined_label < 3)
-    combined_label = rescale(combined_label)
+    #combined_label = rescale(combined_label)
     seg_shape = combined_label.GetSize()
     seg_output_path = os.path.join(out_path, seg_name)
     sitk.WriteImage(combined_label, seg_output_path)
@@ -613,7 +613,10 @@ def process_duck_breast(input_root, output_root):
     os.makedirs(output_path_seg, exist_ok=True)
     for item in sorted(seg_path_list): # different patients
         i = 0
-        seg_shape = combine_label(input_seg_root, output_path_seg, item)
+        try:
+            seg_shape = combine_label(input_seg_root, output_path_seg, item)
+        except:
+            continue
         length = seg_shape[2]
         patient_mr_path = os.path.join(input_mr_root, item)
         patient_path_list = os.listdir(patient_mr_path)
