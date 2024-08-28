@@ -541,6 +541,28 @@ def dicom_serie2nifti(dicom_folder, nifti_save_path):
     return image_size
 
 
+def resample_image(image, reference_image):
+    """
+    Resample the image to match the spatial properties of the reference_image.
+    """
+    # Create resampler
+    resampler = sitk.ResampleImageFilter()
+
+    # Set the reference image properties
+    resampler.SetSize(reference_image.GetSize())
+    resampler.SetOutputSpacing(reference_image.GetSpacing())
+    resampler.SetOutputOrigin(reference_image.GetOrigin())
+    resampler.SetOutputDirection(reference_image.GetDirection())
+
+    # Set the interpolator (linear interpolation)
+    resampler.SetInterpolator(sitk.sitkLinear)
+
+    # Execute resampling
+    resampled_image = resampler.Execute(image)
+
+    return resampled_image
+
+
 def combine_label(in_path, out_path, item):
 
     breast_seg_name = 'Segmentation_' + item + '_Breast.seg.nrrd'
@@ -559,12 +581,14 @@ def combine_label(in_path, out_path, item):
     seg_breast = sitk.Mask(seg_breast, seg_breast, outsideValue=0, maskingValue=1)
     seg_breast = sitk.Cast(seg_breast, sitk.sitkUInt8) * 2
     if seg_vessels.GetPixelID() == sitk.sitkVectorUInt8:
-        # 如果是向量图像，提取第一个通道
         seg_vessels = sitk.VectorIndexSelectionCast(seg_vessels, 0, sitk.sitkUInt8)
-
     if seg_breast.GetPixelID() == sitk.sitkVectorUInt8:
-        # 如果是向量图像，提取第一个通道
         seg_breast = sitk.VectorIndexSelectionCast(seg_breast, 0, sitk.sitkUInt8)
+    if (seg_vessels.GetSpacing() != seg_breast.GetSpacing() or
+            seg_vessels.GetOrigin() != seg_breast.GetOrigin() or
+            seg_vessels.GetDirection() != seg_breast.GetDirection()):
+        # 对齐 seg_breast 到 seg_vessels
+        seg_breast = resample_image(seg_breast, seg_vessels)
 
     combined_label = seg_vessels + seg_breast
     combined_label = sitk.Mask(combined_label, combined_label < 3)
@@ -638,6 +662,30 @@ def process_images_buke(source_folder, train_folder, test_folder, crop_size=(256
     save_cropped_synthrad2023(mr_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
     save_cropped_synthrad2023(mr_test_files, test_folder, crop_size, crop_2_block=crop_2_block)
     print('all finished')
+
+
+def rescale(image):
+
+    # rescale
+    shape = image.GetSize()
+    assert shape[0] == shape[1]
+
+    scale_factor = shape[1] / 256.0
+
+    original_spacing = image.GetSpacing()
+    original_size = image.GetSize()
+
+    new_spacing = [osz * scale_factor for osz in original_spacing]
+    new_size = [int(round(osz / scale_factor)) for osz in original_size]
+    resampler = sitk.ResampleImageFilter()
+    resampler.SetOutputSpacing(new_spacing)
+    resampler.SetSize(new_size)
+    resampler.SetOutputDirection(image.GetDirection())
+    resampler.SetOutputOrigin(image.GetOrigin())
+    resampler.SetInterpolator(sitk.sitkNearestNeighbor)
+    resampled_image = resampler.Execute(image)
+
+    return resampled_image
 
 
 if __name__ == '__main__':
