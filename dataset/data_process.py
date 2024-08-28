@@ -578,8 +578,7 @@ def process_duck_breast(input_root, output_root):
     for item in sorted(seg_path_list): # different patients
         i = 0
         seg_shape = combine_label(input_seg_root, output_path_seg, item)
-        print(seg_shape)
-        length = seg_shape[0]
+        length = seg_shape[2]
         patient_mr_path = os.path.join(input_mr_root, item)
         patient_path_list = os.listdir(patient_mr_path)
         for x in patient_path_list:    # the unuseful middle path
