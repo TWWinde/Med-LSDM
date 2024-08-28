@@ -580,15 +580,15 @@ def process_duck_breast(input_root, output_root):
         seg_shape = combine_label(input_seg_root, output_path_seg, item)
         len = seg_shape[0]
         patient_mr_path = os.path.join(input_mr_root, item)
-        patient_path_list = os.listdir(input_seg_root)
+        patient_path_list = os.listdir(patient_mr_path)
         for x in patient_path_list:    # the unuseful middle path
             for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                 found = False
                 mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                 num = os.listdir(mr_path_ab)
-                if num<20:
+                if num < 20:
                     continue
-                if num==len:
+                if num == len:
                     output_name = item + '.nii.gz'
                     output_path = os.path.join(output_path_labeled_mr, output_name)
                     mr_size = dicom_serie2nifti(mr_path_ab, output_path)
