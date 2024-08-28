@@ -558,9 +558,13 @@ def combine_label(in_path, out_path, item):
     assert seg_vessels_array.shape == seg_breast_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape}"
     seg_breast = sitk.Mask(seg_breast, seg_breast, outsideValue=0, maskingValue=1)
     seg_breast = sitk.Cast(seg_breast, sitk.sitkUInt8) * 2
-    if seg_vessels.GetPixelID() != seg_breast.GetPixelID():
-        seg_vessels = sitk.Cast(seg_vessels, sitk.sitkUInt8)
-        seg_breast = sitk.Cast(seg_breast, sitk.sitkUInt8)
+    if seg_vessels.GetPixelID() == sitk.sitkVectorUInt8:
+        # 如果是向量图像，提取第一个通道
+        seg_vessels = sitk.VectorIndexSelectionCast(seg_vessels, 0, sitk.sitkUInt8)
+
+    if seg_breast.GetPixelID() == sitk.sitkVectorUInt8:
+        # 如果是向量图像，提取第一个通道
+        seg_breast = sitk.VectorIndexSelectionCast(seg_breast, 0, sitk.sitkUInt8)
 
     combined_label = seg_vessels + seg_breast
     combined_label = sitk.Mask(combined_label, combined_label < 3)
@@ -613,6 +617,7 @@ def process_duck_breast(input_root, output_root):
 
     print('finished all')
 
+
 def process_images_buke(source_folder, train_folder, test_folder, crop_size=(256, 256)):
 
     mr_train_folder = os.path.join(train_folder, 'labeled_mr')
@@ -620,20 +625,18 @@ def process_images_buke(source_folder, train_folder, test_folder, crop_size=(256
     label_train_folder = os.path.join(train_folder, 'label')
     label_test_folder = os.path.join(test_folder, 'label')
 
-    os.makedirs(ct_train_folder, exist_ok=True)
-    os.makedirs(ct_test_folder, exist_ok=True)
     os.makedirs(mr_train_folder, exist_ok=True)
     os.makedirs(mr_test_folder, exist_ok=True)
     os.makedirs(label_test_folder, exist_ok=True)
     os.makedirs(label_train_folder, exist_ok=True)
 
-    ct_files = [os.path.join(source_folder, f, 'ct.nii.gz') for f in os.listdir(source_folder) if f != 'overview']
+    mr_files = [os.path.join(source_folder, f) for f in os.listdir(source_folder)]
 
-    ct_train_files, ct_test_files = train_test_split(ct_files, test_proportion=0.1)
+    mr_train_files, mr_test_files = train_test_split(mr_files, test_proportion=0.1)
 
     crop_2_block = True
-    save_cropped_synthrad2023(ct_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
-    save_cropped_synthrad2023(ct_test_files, test_folder, crop_size, crop_2_block=crop_2_block)
+    save_cropped_synthrad2023(mr_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
+    save_cropped_synthrad2023(mr_test_files, test_folder, crop_size, crop_2_block=crop_2_block)
     print('all finished')
 
 
