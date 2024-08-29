@@ -59,6 +59,13 @@ def crop_block(img, label, new_x, new_y, start_z, length):
         label[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length]
 
 
+def crop_block_single(img, new_x, new_y, start_z, length):
+    x, y, z = img.shape
+    start_x = x // 2 - new_x // 2
+    start_y = y // 2 - new_y // 2
+    return img[start_x:start_x + new_x, start_y:start_y + new_y, start_z:start_z + length]
+
+
 def is_all_zero(array1, array2):
     return np.all(array1 == 0) or np.all(array2 == 0)
 
@@ -70,8 +77,8 @@ def save_cropped_autopet(image_in_files, image_out_files, crop_size, crop_2_bloc
         img = nib.load(image_path)
         label = nib.load(label_path)
         img_data = img.get_fdata()
-        label_data = label.get_fdata()
-        assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
+        #label_data = label.get_fdata()
+        #assert img_data.shape == label_data.shape, "Error: The shapes of image data and label data do not match."
         n = 0
         if crop_2_block:
             for i in range(0, img_data.shape[2] // 4):
@@ -564,7 +571,7 @@ def resample_image(image, reference_image):
     return resampled_image
 
 
-def combine_label(in_path, out_path, item):
+def combine_label_duke(in_path, out_path, item):
 
     breast_seg_name = 'Segmentation_' + item + '_Breast.seg.nrrd'
     vessels_seg_name = 'Segmentation_' + item + '_Dense_and_Vessels.seg.nrrd'
@@ -601,7 +608,7 @@ def combine_label(in_path, out_path, item):
     return seg_shape
 
 
-def process_duck_breast(input_root, output_root):
+def stack_mr_combine_labels_duck_breast(input_root, output_root):
     input_mr_root = os.path.join(input_root, 'Duke-Breast-Cancer-MRI')
     input_seg_root = os.path.join("/data/private/autoPET/duke/SEG_raw")
     seg_path_list = os.listdir(input_seg_root)
@@ -614,7 +621,7 @@ def process_duck_breast(input_root, output_root):
     for item in sorted(seg_path_list): # different patients
         i = 0
         try:
-            seg_shape = combine_label(input_seg_root, output_path_seg, item)
+            seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
         except:
             continue
         length = seg_shape[2]
@@ -647,26 +654,65 @@ def process_duck_breast(input_root, output_root):
     print('finished all')
 
 
-def process_images_buke(source_folder, train_folder, test_folder, crop_size=(256, 256)):
+def rescal_crop_duke(root_path, train_folder, test_folder, crop_size=(256, 256)):
 
-    mr_train_folder = os.path.join(train_folder, 'labeled_mr')
-    mr_test_folder = os.path.join(test_folder, 'label_mr')
-    label_train_folder = os.path.join(train_folder, 'label')
-    label_test_folder = os.path.join(test_folder, 'label')
+    label_input = os.path.join(root_path, 'SEG')
+    labeled_mr_input = os.path.join(root_path, 'labeled_MR')
+    unlabeled_mr_input = os.path.join(root_path, 'unlabeled_MR')
 
-    os.makedirs(mr_train_folder, exist_ok=True)
-    os.makedirs(mr_test_folder, exist_ok=True)
-    os.makedirs(label_test_folder, exist_ok=True)
-    os.makedirs(label_train_folder, exist_ok=True)
+    label_output = os.path.join(root_path, 'label')
+    labeled_mr_output = os.path.join(root_path, 'labeled_mr')
+    mr_output = os.path.join(root_path, 'mr')
 
-    mr_files = [os.path.join(source_folder, f) for f in os.listdir(source_folder)]
+    os.makedirs(label_output, exist_ok=True)
+    os.makedirs(labeled_mr_output, exist_ok=True)
+    os.makedirs(mr_output, exist_ok=True)
 
-    mr_train_files, mr_test_files = train_test_split(mr_files, test_proportion=0.1)
+    labeled_mr_files = [os.path.join(labeled_mr_input, f) for f in os.listdir(labeled_mr_input)]
+    labeled_files = [os.path.join(label_input, f) for f in os.listdir(label_input)]
+    unlabeled_mr_files = [os.path.join(unlabeled_mr_input, f) for f in os.listdir(unlabeled_mr_input)]
 
-    crop_2_block = True
+    for item in unlabeled_mr_files:
+        name = item.split('/')[-1]
+        mr = sitk.ReadImage(item)
+        mr = rescale(mr)
+        sitk.WriteImage(mr, os.path.join(mr_output, f'scaled_{name}'))
+        crop_save(name, os.path.join(mr_output, f'scaled_{name}'), mr_output)
+
+
+
     save_cropped_synthrad2023(mr_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
     save_cropped_synthrad2023(mr_test_files, test_folder, crop_size, crop_2_block=crop_2_block)
     print('all finished')
+
+
+def crop_save(name, image_path, image_out_files,  label_path=None, label_out_files=None, crop_size=(256, 256), length=32, labelandimage=False):
+
+    niffti_data = nib.load(image_path)
+    image_data = niffti_data.get_fdata()
+    n = 0
+    for i in range(0, image_data.shape[2] // 4):
+        if image_data.shape[2] < 32:
+            continue
+        number = random.randint(0, image_data.shape[2] - length)
+        if labelandimage:
+            label_niffti_data = nib.load(label_path)
+            label_data = label_niffti_data.get_fdata()
+            assert image_data.shape == label_data.shape, "Error: The shapes of arrayys do not match."
+            cropped_image, cropped_label = crop_block(image_data, label_data, *crop_size, number, length)
+            if is_all_zero(cropped_image, cropped_label):
+                print("Array is all zeros. Skipping rescaling.")
+                continue
+            label_output_path = os.path.join(label_out_files, name + f'_{n}.' + 'nii.gz')
+            cropped_label = nib.Nifti1Image(cropped_label, affine=label_niffti_data.affine)
+            nib.save(cropped_label, label_output_path)
+        else:
+            cropped_image = crop_block_single(image_data, *crop_size, number, length)
+
+        image_output_path = os.path.join(image_out_files,  name + f'_{n}.' + 'nii.gz')
+        cropped_image = nib.Nifti1Image(cropped_image, affine=niffti_data.affine)
+        nib.save(cropped_image, image_output_path)
+        n += 1
 
 
 def rescale(image):
@@ -750,7 +796,7 @@ if __name__ == '__main__':
 
     duke = True
     if duke:
-        process_duck_breast(duke_input_root, duke_output_root)
+        stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
 
 
 
