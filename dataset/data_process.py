@@ -654,7 +654,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
     print('finished all')
 
 
-def rescal_crop_duke(root_path, train_folder, test_folder, crop_size=(256, 256)):
+def rescal_crop_duke(root_path):
 
     label_input = os.path.join(root_path, 'SEG')
     labeled_mr_input = os.path.join(root_path, 'labeled_MR')
@@ -679,10 +679,6 @@ def rescal_crop_duke(root_path, train_folder, test_folder, crop_size=(256, 256))
         sitk.WriteImage(mr, os.path.join(mr_output, f'scaled_{name}'))
         crop_save(name, os.path.join(mr_output, f'scaled_{name}'), mr_output)
 
-
-
-    save_cropped_synthrad2023(mr_train_files, train_folder, crop_size, crop_2_block=crop_2_block)
-    save_cropped_synthrad2023(mr_test_files, test_folder, crop_size, crop_2_block=crop_2_block)
     print('all finished')
 
 
@@ -796,7 +792,8 @@ if __name__ == '__main__':
 
     duke = True
     if duke:
-        stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
+        #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
+        rescal_crop_duke(duke_output_root)
 
 
 
