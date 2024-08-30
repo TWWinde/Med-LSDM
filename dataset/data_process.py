@@ -654,7 +654,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
     print('finished all')
 
 
-def rescal_crop_duke(root_path):
+def rescale_crop_duke(root_path):
 
     label_input = os.path.join(root_path, 'SEG')
     labeled_mr_input = os.path.join(root_path, 'labeled_MR')
@@ -794,7 +794,7 @@ if __name__ == '__main__':
     duke = True
     if duke:
         #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
-        rescal_crop_duke(duke_output_root)
+        rescale_crop_duke(duke_output_root)
 
 
 
