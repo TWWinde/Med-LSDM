@@ -10,7 +10,7 @@ diffusion_img_size: 64
 diffusion_depth_size: 8
 diffusion_num_channels: 8
 dim_mults: ???
-results_folder: /misc/no_backups/d1502/medicaldiffusion/checkpoints/ddpm/
+results_folder: /data/private/autoPET/medicaldiffusion_results/results/checkpoints/ddpm
 results_folder_postfix: 'diff'
 load_milestone: -1
 

@@ -4,7 +4,7 @@ num_workers: 4
 name: vq_gan_spade
 gpus: 1
 accumulate_grad_batches: 1
-default_root_dir: /misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan_spade/
+default_root_dir: /data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan_spade
 default_root_dir_postfix: ''
 resume_from_checkpoint:
 max_steps: -1

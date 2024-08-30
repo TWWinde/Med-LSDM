@@ -27,12 +27,20 @@ def get_dataset(cfg):
         sampler = None
         return train_dataset, val_dataset, sampler
     if cfg.dataset.name == 'DUKE':
-        train_dataset = DUKEDataset(
-            root_dir=cfg.dataset.root_dir)
-        val_dataset = DUKEDataset(
-            root_dir=cfg.dataset.root_dir)
-        sampler = None
-        return train_dataset, val_dataset, sampler
+        if cfg.model.name == 'vq_gan_3d':
+            train_dataset = DUKEDataset(
+                root_dir=cfg.dataset.root_dir)
+            val_dataset = DUKEDataset(
+                root_dir=cfg.dataset.val_dir)
+            sampler = None
+            return train_dataset, val_dataset, sampler
+        elif cfg.model.name == 'ddpm' or 'vq_gan_spade':
+            train_dataset = DUKEDataset(
+                root_dir=cfg.dataset.root_dir, sem_map=True)
+            val_dataset = DUKEDataset(
+                root_dir=cfg.dataset.val_dir, sem_map=True)
+            sampler = None
+            return train_dataset, val_dataset, sampler
     if cfg.dataset.name == 'LIDC':
         train_dataset = LIDCDataset(
             root_dir=cfg.dataset.root_dir, augmentation=True)
