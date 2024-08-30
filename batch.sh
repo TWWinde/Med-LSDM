@@ -99,7 +99,7 @@ model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 #model.batch_size=2 model.n_codes=16384
 
 # vq_vae seg_map synthrad mr
-PL_TORCH_DISTRIBUTED_BACKEND=gloo python train/train_vqgan.py dataset=synthrad2023 \
-model=vq_vae model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
-model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
-model.batch_size=2 model.n_codes=16384
+#PL_TORCH_DISTRIBUTED_BACKEND=gloo python train/train_vqgan.py dataset=synthrad2023 \
+#model=vq_vae model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
+#model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+#model.batch_size=2 model.n_codes=16384
