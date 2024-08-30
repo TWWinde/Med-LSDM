@@ -654,7 +654,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
     print('finished all')
 
 
-def rescale_crop_duke(root_path):
+def rescale_crop_duke(root_path, both_label_image=False):
 
     label_input = os.path.join(root_path, 'SEG')
     labeled_mr_input = os.path.join(root_path, 'labeled_MR')
@@ -671,14 +671,28 @@ def rescale_crop_duke(root_path):
     labeled_mr_files = [os.path.join(labeled_mr_input, f) for f in os.listdir(labeled_mr_input)]
     labeled_files = [os.path.join(label_input, f) for f in os.listdir(label_input)]
     unlabeled_mr_files = [os.path.join(unlabeled_mr_input, f) for f in os.listdir(unlabeled_mr_input)]
+    if both_label_image:
+        for label_path in labeled_files:
+            name = label_path.split('/')[-1]
+            image_path = label_path.replace('SEG', 'labeled_MR')
+            label = sitk.ReadImage(label_path)
+            image = sitk.ReadImage(image_path)
+            image = rescale(image)
+            label = rescale(label)
+            sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{name}'))
+            sitk.WriteImage(label, os.path.join(label_output, f'scaled_{name}'))
+            crop_save(name, os.path.join(labeled_mr_output, f'scaled_{name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{name}'), label_out_files=label_output, crop_size=(256, 256), length=32, labelandimage=True)
 
-    for item in labeled_mr_files:
-        name = item.split('/')[-1]
-        mr = sitk.ReadImage(item)
-        mr = rescale(mr)
-        sitk.WriteImage(mr, os.path.join(mr_output, f'scaled_{name}'))
-        crop_save(name, os.path.join(mr_output, f'scaled_{name}'), mr_output)
-        print("finished", name)
+        pass
+    else:
+        path = labeled_mr_files + unlabeled_mr_files
+        for item in path:  # get all mr blocks from all mr raw data
+            name = item.split('/')[-1]
+            mr = sitk.ReadImage(item)
+            mr = rescale(mr)
+            sitk.WriteImage(mr, os.path.join(mr_output, f'scaled_{name}'))
+            crop_save(name, os.path.join(mr_output, f'scaled_{name}'), mr_output)
+            print("finished", name)
 
     print('all finished')
 
