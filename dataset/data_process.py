@@ -806,9 +806,14 @@ if __name__ == '__main__':
             save_cropped_total_mr(Total_out, croped_total_mr, (256, 256), length=32)
 
     duke = True
+    combine_label_and_dicom2niffti = False
+    rescale_crop2blocks = True
     if duke:
-        #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
-        rescale_crop_duke(duke_output_root)
+        if combine_label_and_dicom2niffti:
+            stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
+        if rescale_crop2blocks:
+            rescale_crop_duke(duke_output_root, both_label_image=True)
+
 
 
 
