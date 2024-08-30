@@ -672,7 +672,7 @@ def rescale_crop_duke(root_path):
     labeled_files = [os.path.join(label_input, f) for f in os.listdir(label_input)]
     unlabeled_mr_files = [os.path.join(unlabeled_mr_input, f) for f in os.listdir(unlabeled_mr_input)]
 
-    for item in unlabeled_mr_files:
+    for item in labeled_mr_files:
         name = item.split('/')[-1]
         mr = sitk.ReadImage(item)
         mr = rescale(mr)
