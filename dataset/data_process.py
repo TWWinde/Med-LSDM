@@ -682,8 +682,7 @@ def rescale_crop_duke(root_path, both_label_image=False):
             sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{name}'))
             sitk.WriteImage(label, os.path.join(label_output, f'scaled_{name}'))
             crop_save(name, os.path.join(labeled_mr_output, f'scaled_{name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{name}'), label_out_files=label_output, crop_size=(256, 256), length=32, labelandimage=True)
-
-        pass
+            print("finished", name)
     else:
         path = labeled_mr_files + unlabeled_mr_files
         for item in path:  # get all mr blocks from all mr raw data
