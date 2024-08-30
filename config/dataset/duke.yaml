@@ -1,3 +1,4 @@
 name: DUKE
 root_dir: /misc/data/private/autoPET/duke/mr
+val_dir: /misc/data/private/autoPET/duke/mr
 image_channels: 1
