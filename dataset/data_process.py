@@ -746,6 +746,7 @@ def rescale(image, label=False):
 
     # rescale
     shape = image.GetSize()
+    print(shape)
     assert shape[0] == shape[1]
 
     scale_factor = shape[1] / 256.0
