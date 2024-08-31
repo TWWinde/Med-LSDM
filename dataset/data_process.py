@@ -598,16 +598,14 @@ def combine_label_duke(in_path, out_path, item):
     combined_label = combined_label.transpose(3, 0, 1, 2)
     print(combined_label.shape)
 
-    combined_label_sitk = sitk.GetImageFromArray(combined_label)
+    # Create a NIfTI image
+    combined_label_nifti = nib.Nifti1Image(combined_label, affine=np.eye(4))
 
-    #combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
-    #combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
-    #combined_label_sitk.SetDirection(seg_vessels.GetDirection())
-
+    # Save the NIfTI image
     seg_output_path = os.path.join(out_path, seg_name)
-    sitk.WriteImage(combined_label_sitk, seg_output_path)
+    nib.save(combined_label_nifti, seg_output_path)
 
-    return combined_label_sitk.GetSize()
+    return combined_label.shape[1:]  # Return the shape of the 3D volume (x, y, z)
 
 
 def stack_mr_combine_labels_duck_breast(input_root, output_root):
