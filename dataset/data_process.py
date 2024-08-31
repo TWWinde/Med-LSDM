@@ -583,18 +583,19 @@ def combine_label_duke(in_path, out_path, item):
     seg_vessels_array = sitk.GetArrayFromImage(seg_vessels)
     seg_breast_array = sitk.GetArrayFromImage(seg_breast)
     if len(seg_vessels_array.shape) == 4:  # 0： breast， 1： vessel， 3： fibroglandular/dense tissue
-        seg_vessels_array = seg_vessels_array[:, :, :, 1]
-        seg_dense_array = seg_vessels_array[:, :, :, 0]
-        seg_breast_array = seg_breast_array
+        seg_vessels_array = np.expand_dims(seg_vessels_array[:, :, :, 1], axis=-1)
+        seg_dense_array = np.expand_dims(seg_vessels_array[:, :, :, 0], axis=-1)
+        seg_breast_array = np.expand_dims(seg_breast_array, axis=-1)
 
     elif len(seg_vessels_array.shape) == 3:
-        seg_vessels_array = seg_vessels_array
-        seg_dense_array = np.zeros(seg_vessels_array.shape, dtype=np.uint8)
-        seg_breast_array = seg_breast_array
+        seg_vessels_array = np.expand_dims(seg_vessels_array, axis=-1)
+        seg_dense_array = np.expand_dims(np.zeros(seg_vessels_array.shape, dtype=np.uint8), axis=-1)
+        seg_breast_array = np.expand_dims(seg_breast_array, axis=-1)
 
     assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape},{seg_dense_array.shape}"
 
     combined_label = np.concatenate((seg_breast_array, seg_vessels_array, seg_dense_array), axis=-1)
+    combined_label.transpose(3, 0, 1, 2)
     print(combined_label.shape)
 
     combined_label_sitk = sitk.GetImageFromArray(combined_label)
