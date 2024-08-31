@@ -614,9 +614,12 @@ def combine_label_duke(in_path, out_path, item):
 
     combined_label_sitk = sitk.GetImageFromArray(combined_label)
 
-    #combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
-    #combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
-    #combined_label_sitk.SetDirection(seg_vessels.GetDirection())
+    combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
+    combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
+    combined_label_sitk.SetDirection(seg_vessels.GetDirection())
+
+    seg_output_path = os.path.join(out_path, seg_name)
+    sitk.WriteImage(combined_label_sitk, seg_output_path)
 
     return combined_label_sitk.GetSize()
 
