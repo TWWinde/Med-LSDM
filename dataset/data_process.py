@@ -602,7 +602,7 @@ def combine_label_duke(in_path, out_path, item):
     combined_label[seg_dense_array == 1] = 3
     combined_label = combined_label.transpose(1, 2, 0)
     print(combined_label.shape)
-    
+
 
     # Create a NIfTI image
     combined_label_nifti = nib.Nifti1Image(combined_label, affine=np.eye(4))
@@ -693,7 +693,7 @@ def rescale_crop_duke(root_path, both_label_image=False):
     labeled_files = [os.path.join(label_input, f) for f in os.listdir(label_input)]
     unlabeled_mr_files = [os.path.join(unlabeled_mr_input, f) for f in os.listdir(unlabeled_mr_input)]
     if both_label_image:
-        for label_path in labeled_files:
+        for label_path in sorted(labeled_files):
             name = label_path.split('/')[-1]
             image_path = label_path.replace('SEG', 'labeled_MR')
             label = sitk.ReadImage(label_path)
@@ -835,8 +835,8 @@ if __name__ == '__main__':
     combine_label_and_dicom2niffti = True
     rescale_crop2blocks = True
     if duke:
-        if combine_label_and_dicom2niffti:
-            stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
+        #if combine_label_and_dicom2niffti:
+            #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
         if rescale_crop2blocks:
             #rescale_crop_duke(duke_output_root)
             rescale_crop_duke(duke_output_root, both_label_image=True)
