@@ -594,29 +594,14 @@ def combine_label_duke(in_path, out_path, item):
 
     #assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape}"
 
-    """
-     if seg_vessels.GetPixelID() == sitk.sitkVectorUInt8:
-        seg_vessels = sitk.VectorIndexSelectionCast(seg_vessels, 0, sitk.sitkUInt8)
-    if seg_breast.GetPixelID() == sitk.sitkVectorUInt8:
-        seg_breast = sitk.VectorIndexSelectionCast(seg_breast, 0, sitk.sitkUInt8)
-    if (seg_vessels.GetSpacing() != seg_breast.GetSpacing() or
-            seg_vessels.GetOrigin() != seg_breast.GetOrigin() or
-            seg_vessels.GetDirection() != seg_breast.GetDirection()):
-        # 对齐 seg_breast 到 seg_vessels
-        seg_breast = resample_image(seg_breast, seg_vessels)
-
-    combined_label = seg_vessels + seg_breast
-    combined_label = sitk.Mask(combined_label, combined_label < 3)
-    
-    """
     combined_label = np.concatenate((seg_breast_array, seg_vessels_array, seg_dense_array), axis=-1)
     print(combined_label.shape)
 
     combined_label_sitk = sitk.GetImageFromArray(combined_label)
 
-    combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
-    combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
-    combined_label_sitk.SetDirection(seg_vessels.GetDirection())
+    #combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
+    #combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
+    #combined_label_sitk.SetDirection(seg_vessels.GetDirection())
 
     seg_output_path = os.path.join(out_path, seg_name)
     sitk.WriteImage(combined_label_sitk, seg_output_path)
@@ -642,6 +627,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
             seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
         except:
             print("label mistake") # even label has problem, save mr to unlabeled one
+            """
             for x in patient_path_list:  # the unuseful middle path
                 for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                     found = False
@@ -679,7 +665,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
         print("finished", item)
         if not found:
             print("not find labeled mr for", item)
-
+        """
     print('finished all')
 
 
@@ -841,8 +827,8 @@ if __name__ == '__main__':
     combine_label_and_dicom2niffti = True
     rescale_crop2blocks = True
     if duke:
-        #if combine_label_and_dicom2niffti:
-            #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
+        if combine_label_and_dicom2niffti:
+            stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
         if rescale_crop2blocks:
             #rescale_crop_duke(duke_output_root)
             rescale_crop_duke(duke_output_root, both_label_image=True)
