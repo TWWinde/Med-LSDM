@@ -678,7 +678,7 @@ def rescale_crop_duke(root_path, both_label_image=False):
             label = sitk.ReadImage(label_path)
             image = sitk.ReadImage(image_path)
             image = rescale(image)
-            label = rescale(label)
+            label = rescale(label, label=True)
             sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{name}'))
             sitk.WriteImage(label, os.path.join(label_output, f'scaled_{name}'))
             crop_save(name, os.path.join(labeled_mr_output, f'scaled_{name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{name}'), label_out_files=label_output, crop_size=(256, 256), length=32, labelandimage=True)
@@ -725,7 +725,7 @@ def crop_save(name, image_path, image_out_files,  label_path=None, label_out_fil
         n += 1
 
 
-def rescale(image):
+def rescale(image, label=False):
 
     # rescale
     shape = image.GetSize()
@@ -743,7 +743,10 @@ def rescale(image):
     resampler.SetSize(new_size)
     resampler.SetOutputDirection(image.GetDirection())
     resampler.SetOutputOrigin(image.GetOrigin())
-    resampler.SetInterpolator(sitk.sitkNearestNeighbor)
+    if label:
+        resampler.SetInterpolator(sitk.sitkNearestNeighbor)
+    else:
+        resampler.SetInterpolator(sitk.sitkLanczosWindowedSinc)
     resampled_image = resampler.Execute(image)
 
     return resampled_image
@@ -811,6 +814,7 @@ if __name__ == '__main__':
         if combine_label_and_dicom2niffti:
             stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
         if rescale_crop2blocks:
+            rescale_crop_duke(duke_output_root)
             rescale_crop_duke(duke_output_root, both_label_image=True)
 
 
