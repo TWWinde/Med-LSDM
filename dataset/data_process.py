@@ -589,7 +589,7 @@ def combine_label_duke(in_path, out_path, item):
 
     elif len(seg_vessels_array.shape) == 3:
         seg_vessels_array = np.expand_dims(seg_vessels_array, axis=-1)
-        seg_dense_array = np.zeros(seg_vessels_array.shape, axis=-1)
+        seg_dense_array = np.zeros(seg_vessels_array.shape, dtype=np.uint8)
         seg_breast_array = np.expand_dims(seg_breast_array, axis=-1)
 
     assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape}"
