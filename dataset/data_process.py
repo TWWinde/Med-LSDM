@@ -625,6 +625,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
         patient_path_list = os.listdir(patient_mr_path)
         try:
             seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
+            print("finished label", item)
         except:
             print("label mistake") # even label has problem, save mr to unlabeled one
             """
