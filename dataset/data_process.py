@@ -636,7 +636,10 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
     os.makedirs(output_path_seg, exist_ok=True)
     for item in sorted(seg_path_list): # different patients
         i = 0
-        seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
+        try:
+            seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
+        except:
+            continue
         print(seg_shape)
         length = seg_shape[2]
         patient_mr_path = os.path.join(input_mr_root, item)
