@@ -675,8 +675,8 @@ def rescale_crop_duke(root_path, both_label_image=False):
     unlabeled_mr_input = os.path.join(root_path, 'unlabeled_MR')
 
     label_output = os.path.join(root_path, 'label')
-    labeled_mr_output = os.path.join(root_path, 'labeled_mr')
-    mr_output = os.path.join(root_path, 'mr')
+    labeled_mr_output = os.path.join(root_path, 'labeled_mr_bspline')
+    mr_output = os.path.join(root_path, 'mr_bspline')
 
     os.makedirs(label_output, exist_ok=True)
     os.makedirs(labeled_mr_output, exist_ok=True)
@@ -760,7 +760,7 @@ def rescale(image, label=False):
     if label:
         resampler.SetInterpolator(sitk.sitkNearestNeighbor)
     else:
-        resampler.SetInterpolator(sitk.sitkLanczosWindowedSinc)   # sitk.sitkBSpline
+        resampler.SetInterpolator(sitk.sitkBSpline)   # sitk.sitkBSpline
     resampled_image = resampler.Execute(image)
 
     return resampled_image
