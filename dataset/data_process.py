@@ -662,7 +662,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
                 found = False
                 mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                 num = len(os.listdir(mr_path_ab))
-                if num < 10:
+                if num < 10:  # filter the slice label file.
                     continue
                 if num == length:
                     output_name = item + '.nii.gz'
