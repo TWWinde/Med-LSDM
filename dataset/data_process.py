@@ -595,7 +595,7 @@ def combine_label_duke(in_path, out_path, item):
     assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape},{seg_dense_array.shape}"
 
     combined_label = np.concatenate((seg_breast_array, seg_vessels_array, seg_dense_array), axis=-1)
-    combined_label.transpose(3, 0, 1, 2)
+    combined_label = combined_label.transpose(3, 0, 1, 2)
     print(combined_label.shape)
 
     combined_label_sitk = sitk.GetImageFromArray(combined_label)
@@ -628,7 +628,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
             seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
             print("finished label", item)
         except:
-            print("label mistake") # even label has problem, save mr to unlabeled one
+            print("label mistake",  item) # even label has problem, save mr to unlabeled one
             """
             for x in patient_path_list:  # the unuseful middle path
                 for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
