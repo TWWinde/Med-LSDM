@@ -582,13 +582,20 @@ def combine_label_duke(in_path, out_path, item):
     seg_vessels = sitk.ReadImage(vessels_seg_path)
     seg_vessels_array = sitk.GetArrayFromImage(seg_vessels)
     seg_breast_array = sitk.GetArrayFromImage(seg_breast)
-    if len(seg_vessels_array.shape) == 4:
-        seg_vessels_array = seg_vessels_array[:, :, :, 1]
+    if len(seg_vessels_array.shape) == 4:  # 0： breast， 1： vessel， 3： fibroglandular/dense tissue
+        seg_vessels_array = np.expand_dims(seg_vessels_array[:, :, :, 1], axis=-1)
+        seg_dense_array = np.expand_dims(seg_vessels_array[:, :, :, 0], axis=-1)
+        seg_breast_array = np.expand_dims(seg_breast_array, axis=-1)
 
-    assert seg_vessels_array.shape == seg_breast_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape}"
-    seg_breast = sitk.Mask(seg_breast, seg_breast, outsideValue=0, maskingValue=1)
-    seg_breast = sitk.Cast(seg_breast, sitk.sitkUInt8) * 2
-    if seg_vessels.GetPixelID() == sitk.sitkVectorUInt8:
+    elif len(seg_vessels_array.shape) == 3:
+        seg_vessels_array = np.expand_dims(seg_vessels_array, axis=-1)
+        seg_dense_array = np.zeros(seg_vessels_array.shape, axis=-1)
+        seg_breast_array = np.expand_dims(seg_breast_array, axis=-1)
+
+    assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape}"
+
+    """
+     if seg_vessels.GetPixelID() == sitk.sitkVectorUInt8:
         seg_vessels = sitk.VectorIndexSelectionCast(seg_vessels, 0, sitk.sitkUInt8)
     if seg_breast.GetPixelID() == sitk.sitkVectorUInt8:
         seg_breast = sitk.VectorIndexSelectionCast(seg_breast, 0, sitk.sitkUInt8)
@@ -600,12 +607,17 @@ def combine_label_duke(in_path, out_path, item):
 
     combined_label = seg_vessels + seg_breast
     combined_label = sitk.Mask(combined_label, combined_label < 3)
-    #combined_label = rescale(combined_label)
-    seg_shape = combined_label.GetSize()
-    seg_output_path = os.path.join(out_path, seg_name)
-    sitk.WriteImage(combined_label, seg_output_path)
+    
+    """
+    combined_label = np.concatenate((seg_breast_array, seg_vessels_array, seg_dense_array), axis=-1)
 
-    return seg_shape
+    combined_label_sitk = sitk.GetImageFromArray(combined_label)
+
+    combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
+    combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
+    combined_label_sitk.SetDirection(seg_vessels.GetDirection())
+
+    return combined_label_sitk.GetSize()
 
 
 def stack_mr_combine_labels_duck_breast(input_root, output_root):
@@ -620,10 +632,8 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
     os.makedirs(output_path_seg, exist_ok=True)
     for item in sorted(seg_path_list): # different patients
         i = 0
-        try:
-            seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
-        except:
-            continue
+        seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
+        print(seg_shape)
         length = seg_shape[2]
         patient_mr_path = os.path.join(input_mr_root, item)
         patient_path_list = os.listdir(patient_mr_path)
@@ -632,7 +642,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
                 found = False
                 mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                 num = len(os.listdir(mr_path_ab))
-                if num < 20:
+                if num < 10:
                     continue
                 if num == length:
                     output_name = item + '.nii.gz'
@@ -746,7 +756,7 @@ def rescale(image, label=False):
     if label:
         resampler.SetInterpolator(sitk.sitkNearestNeighbor)
     else:
-        resampler.SetInterpolator(sitk.sitkLanczosWindowedSinc)
+        resampler.SetInterpolator(sitk.sitkLanczosWindowedSinc)   # sitk.sitkBSpline
     resampled_image = resampler.Execute(image)
 
     return resampled_image
@@ -808,8 +818,8 @@ if __name__ == '__main__':
             save_cropped_total_mr(Total_out, croped_total_mr, (256, 256), length=32)
 
     duke = True
-    combine_label_and_dicom2niffti = False
-    rescale_crop2blocks = True
+    combine_label_and_dicom2niffti = True
+    rescale_crop2blocks = False
     if duke:
         if combine_label_and_dicom2niffti:
             stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
