@@ -601,6 +601,7 @@ def combine_label_duke(in_path, out_path, item):
     combined_label[seg_vessels_array == 1] = 2
     combined_label[seg_dense_array == 1] = 3
     print(combined_label.shape)
+    combined_label = combined_label.transpose(1, 2, 0)
 
     # Create a NIfTI image
     combined_label_nifti = nib.Nifti1Image(combined_label, affine=np.eye(4))
