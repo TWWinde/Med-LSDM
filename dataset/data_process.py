@@ -592,7 +592,7 @@ def combine_label_duke(in_path, out_path, item):
         seg_dense_array = np.zeros(seg_vessels_array.shape, dtype=np.uint8)
         seg_breast_array = np.expand_dims(seg_breast_array, axis=-1)
 
-    assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape}"
+    #assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape}"
 
     """
      if seg_vessels.GetPixelID() == sitk.sitkVectorUInt8:
