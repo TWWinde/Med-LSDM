@@ -610,12 +610,13 @@ def combine_label_duke(in_path, out_path, item):
     
     """
     combined_label = np.concatenate((seg_breast_array, seg_vessels_array, seg_dense_array), axis=-1)
+    print(combined_label.shape)
 
     combined_label_sitk = sitk.GetImageFromArray(combined_label)
 
-    #combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
-    #combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
-    #combined_label_sitk.SetDirection(seg_vessels.GetDirection())
+    combined_label_sitk.SetSpacing(seg_vessels.GetSpacing())
+    combined_label_sitk.SetOrigin(seg_vessels.GetOrigin())
+    combined_label_sitk.SetDirection(seg_vessels.GetDirection())
 
     return combined_label_sitk.GetSize()
 
