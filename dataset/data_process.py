@@ -602,6 +602,7 @@ def combine_label_duke(in_path, out_path, item):
     combined_label[seg_dense_array == 1] = 3
     combined_label = combined_label.transpose(1, 2, 0)
     print(combined_label.shape)
+    assert len(combined_label.shape)==3
 
 
     # Create a NIfTI image
