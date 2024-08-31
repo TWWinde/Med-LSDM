@@ -636,14 +636,27 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
     os.makedirs(output_path_seg, exist_ok=True)
     for item in sorted(seg_path_list): # different patients
         i = 0
+        patient_mr_path = os.path.join(input_mr_root, item)
+        patient_path_list = os.listdir(patient_mr_path)
         try:
             seg_shape = combine_label_duke(input_seg_root, output_path_seg, item)
         except:
+            print("label mistake")
+            for x in patient_path_list:  # the unuseful middle path
+                for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
+                    found = False
+                    mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
+                    num = len(os.listdir(mr_path_ab))
+                    if num < 10:
+                        continue
+                    else:
+                        output_name = item + f'_{i}.nii.gz'
+                        output_path = os.path.join(output_path_unlabeled_mr, output_name)
+                        mr_size = dicom_serie2nifti(mr_path_ab, output_path)
+                        i += 1
             continue
         print(seg_shape)
         length = seg_shape[2]
-        patient_mr_path = os.path.join(input_mr_root, item)
-        patient_path_list = os.listdir(patient_mr_path)
         for x in patient_path_list:    # the unuseful middle path
             for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                 found = False
@@ -663,7 +676,6 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
                     mr_size = dicom_serie2nifti(mr_path_ab, output_path)
                     i += 1
             break
-
         print("finished", item)
         if not found:
             print("not find labeled mr for", item)
