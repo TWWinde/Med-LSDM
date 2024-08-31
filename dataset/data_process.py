@@ -627,7 +627,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
         print("finished label", item)
         #except:
             #print("label mistake",  item) # even label has problem, save mr to unlabeled one
-            """
+        """
             for x in patient_path_list:  # the unuseful middle path
                 for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                     found = False
