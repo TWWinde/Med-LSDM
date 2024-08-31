@@ -737,7 +737,7 @@ def crop_save(name, image_path, image_out_files,  label_path=None, label_out_fil
         if labelandimage:
             label_niffti_data = nib.load(label_path)
             label_data = label_niffti_data.get_fdata()
-            assert image_data.shape == label_data.shape, "Error: The shapes of arrayys do not match."
+            assert image_data.shape == label_data.shape, f"Error: The shapes of arrayys do not match.{image_data.shape},{label_data.shape},{name}"
             cropped_image, cropped_label = crop_block(image_data, label_data, *crop_size, number, length)
             if is_all_zero(cropped_image, cropped_label):
                 print("Array is all zeros. Skipping rescaling.")
@@ -840,10 +840,10 @@ if __name__ == '__main__':
     combine_label_and_dicom2niffti = True
     rescale_crop2blocks = True
     if duke:
-        if combine_label_and_dicom2niffti:
-            stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
+        #if combine_label_and_dicom2niffti:
+            #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
         if rescale_crop2blocks:
-            rescale_crop_duke(duke_output_root)
+            #rescale_crop_duke(duke_output_root)
             rescale_crop_duke(duke_output_root, both_label_image=True)
 
 
