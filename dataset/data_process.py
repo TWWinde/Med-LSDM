@@ -757,7 +757,7 @@ def rescale(image, label=False):
     # rescale
     shape = image.shape
     print(shape)
-    assert shape[0] == shape[1]
+    assert shape[1] == shape[2]
 
     scale_factor = shape[1] / 256.0
     transform = tio.Rescale(scale_factor)
