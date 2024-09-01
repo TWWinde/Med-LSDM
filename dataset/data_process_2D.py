@@ -18,6 +18,7 @@ def get_2d_images(ct_path, ct_label_path, test=False):
         for z in range(5, ct_3d.shape[2] - 5):
             ct_slice = ct_3d[:, :, z]
             ct_label_slice = ct_label_3d[:, :, z]
+            print(ct_label_slice)
             if ct_label_slice.max() != ct_label_slice.min() and ct_slice.max() != ct_slice.min():
 
                 ct_image = (((ct_slice - ct_slice.min()) / (ct_slice.max() - ct_slice.min())) * 255).astype(np.uint8)
