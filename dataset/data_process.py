@@ -596,12 +596,13 @@ def combine_label_duke(in_path, out_path, item):
     assert seg_vessels_array.shape == seg_breast_array.shape == seg_dense_array.shape, f"{seg_vessels_array.shape},{seg_breast_array.shape},{seg_dense_array.shape}"
 
     #combined_label = np.concatenate((seg_breast_array, seg_vessels_array, seg_dense_array), axis=-1)
-    combined_label = np.zeros_like(seg_vessels_array)
+    combined_label = np.zeros_like(seg_breast_array)
     combined_label[seg_breast_array == 1] = 1
     combined_label[seg_vessels_array == 1] = 2
     combined_label[seg_dense_array == 1] = 3
     combined_label = combined_label.transpose(1, 2, 0)
     print(combined_label.shape)
+    assert len(combined_label.shape)==3
 
 
     # Create a NIfTI image
