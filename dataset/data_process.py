@@ -5,6 +5,7 @@ import nibabel as nib
 import SimpleITK as sitk
 import numpy as np
 import random
+import torchio as tio
 
 Totalsegmentator_ct_classes = {
                     #"0": "background",
@@ -683,8 +684,8 @@ def rescale_crop_duke(root_path, both_label_image=False):
     unlabeled_mr_input = os.path.join(root_path, 'unlabeled_MR')
 
     label_output = os.path.join(root_path, 'label')
-    labeled_mr_output = os.path.join(root_path, 'labeled_mr_bspline')
-    mr_output = os.path.join(root_path, 'mr_bspline')
+    labeled_mr_output = os.path.join(root_path, 'labeled_mr_tio')
+    mr_output = os.path.join(root_path, 'mr_tio')
 
     os.makedirs(label_output, exist_ok=True)
     os.makedirs(labeled_mr_output, exist_ok=True)
@@ -709,9 +710,11 @@ def rescale_crop_duke(root_path, both_label_image=False):
         path = labeled_mr_files + unlabeled_mr_files
         for item in path:  # get all mr blocks from all mr raw data
             name = item.split('/')[-1]
-            mr = sitk.ReadImage(item)
+            #mr = sitk.ReadImage(item)
+            mr = tio.Image(item, type=tio.INTENSITY)
             mr = rescale(mr)
-            sitk.WriteImage(mr, os.path.join(mr_output, f'scaled_{name}'))
+            mr.save(os.path.join(mr_output, f'scaled_{name}'))
+            #sitk.WriteImage(mr, os.path.join(mr_output, f'scaled_{name}'))
             crop_save(name, os.path.join(mr_output, f'scaled_{name}'), mr_output)
             print("finished", name)
 
@@ -752,15 +755,18 @@ def crop_save(name, image_path, image_out_files,  label_path=None, label_out_fil
 def rescale(image, label=False):
 
     # rescale
-    shape = image.GetSize()
+    shape = image.shape
     print(shape)
     assert shape[0] == shape[1]
 
     scale_factor = shape[1] / 256.0
+    transform = tio.Rescale(scale_factor)
+
+    scaled_image = transform(image)
+    """
 
     original_spacing = image.GetSpacing()
     original_size = image.GetSize()
-
     new_spacing = [osz * scale_factor for osz in original_spacing]
     new_size = [int(round(osz / scale_factor)) for osz in original_size]
     resampler = sitk.ResampleImageFilter()
@@ -773,8 +779,9 @@ def rescale(image, label=False):
     else:
         resampler.SetInterpolator(sitk.sitkBSpline)   # sitk.sitkBSpline
     resampled_image = resampler.Execute(image)
+    """
 
-    return resampled_image
+    return scaled_image    #resampled_image
 
 
 if __name__ == '__main__':
@@ -839,8 +846,8 @@ if __name__ == '__main__':
         if combine_label_and_dicom2niffti:
             stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
         if rescale_crop2blocks:
-            #rescale_crop_duke(duke_output_root)
-            rescale_crop_duke(duke_output_root, both_label_image=True)
+            rescale_crop_duke(duke_output_root)
+            #rescale_crop_duke(duke_output_root, both_label_image=True)
 
 
 
