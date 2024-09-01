@@ -41,10 +41,10 @@ class DUKEDataset(Dataset):
 
     def get_data_files(self):
 
-        mr_names_1 = [os.path.join(self.root_dir, 'labeled_MR', subfolder) for subfolder in os.listdir(os.path.join(self.root_dir))
+        mr_names_1 = [os.path.join(self.root_dir, 'labeled_MR', subfolder) for subfolder in os.listdir(os.path.join(self.root_dir, 'labeled_MR'))
                     if subfolder.endswith('nii.gz')]
         mr_names_2 = [os.path.join(self.root_dir, 'unlabeled_MR', subfolder) for subfolder in
-                      os.listdir(os.path.join(self.root_dir))
+                      os.listdir(os.path.join(self.root_dir, 'unlabeled_MR'))
                       if subfolder.endswith('nii.gz')]
         mr_names = mr_names_1 + mr_names_2
         if self.sem_map:
