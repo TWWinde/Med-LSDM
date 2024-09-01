@@ -17,7 +17,7 @@ def get_2d_images(ct_path, ct_label_path, test=False):
 
         for z in range(5, ct_3d.shape[2] - 5):
             ct_slice = ct_3d[:, :, z]
-            ct_label_slice = ct_label_3d[:, :, z]
+            ct_label_slice = ct_label_3d[:, :, z].astype(int)
             print(ct_label_slice)
             if ct_label_slice.max() != ct_label_slice.min() and ct_slice.max() != ct_slice.min():
 
@@ -25,7 +25,6 @@ def get_2d_images(ct_path, ct_label_path, test=False):
 
                 ct_image = Image.fromarray(ct_image)
                 ct_label = Image.fromarray(ct_label_slice)
-
 
                 ct_image.save(f'/data/private/autoPET/autopet_2d/{file}/image/slice_{k}.png')
                 ct_label.save(f'/data/private/autoPET/autopet_2d/{file}/label/slice_{k}.png')
