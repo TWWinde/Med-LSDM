@@ -612,7 +612,7 @@ def combine_label_duke(in_path, out_path, item):
     seg_output_path = os.path.join(out_path, seg_name)
     nib.save(combined_label_nifti, seg_output_path)
 
-    return combined_label.shape[1:]  # Return the shape of the 3D volume (x, y, z)
+    return combined_label.shape  # Return the shape of the 3D volume (x, y, z)
 
 
 def stack_mr_combine_labels_duck_breast(input_root, output_root):
