@@ -68,10 +68,16 @@ class DUKEDataset(Dataset):
         img = tio.ScalarImage(self.mr_paths[idx])
         shape = img.shape
         print(shape)
-        start_x = random.randint(0, shape[1] - 256)
-        start_y = random.randint(0, shape[2] - 256)
-        start_z = random.randint(0, shape[3] - 32)
-        crop = tio.transforms.Crop((start_x, shape[1] - 256-start_x, start_y, shape[2] - 256-start_y, start_z, shape[3] -32-start_z))
+        depth, height, width = shape[-3:]
+        crop_size = (256, 256, 32)
+
+        start_x = max(0, min(random.randint(0, height - crop_size[1]), height - crop_size[1]))
+        start_y = max(0, min(random.randint(0, width - crop_size[2]), width - crop_size[2]))
+        start_z = max(0, min(random.randint(0, depth - crop_size[0]), depth - crop_size[0]))
+
+        crop = tio.transforms.Crop((start_z, depth - crop_size[0] - start_z,
+                                    start_y, width - crop_size[2] - start_y,
+                                    start_x, height - crop_size[1] - start_x))
         img = crop(img)
         #img = self.Crop(img)
         img = self.Norm(img)
