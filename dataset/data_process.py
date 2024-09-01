@@ -633,13 +633,12 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
             print("finished label", item)
         except:
             print("label mistake",  item) # even label has problem, save mr to unlabeled one
-        """
             for x in patient_path_list:  # the unuseful middle path
                 for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                     found = False
                     mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                     num = len(os.listdir(mr_path_ab))
-                    if num < 10:
+                    if num < 32:
                         continue
                     else:
                         output_name = item + f'_{i}.nii.gz'
@@ -654,7 +653,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
                 found = False
                 mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                 num = len(os.listdir(mr_path_ab))
-                if num < 10:  # filter the slice label file.
+                if num < 32:  # filter the slice label file.
                     continue
                 if num == length:
                     output_name = item + '.nii.gz'
@@ -671,7 +670,6 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
         print("finished", item)
         if not found:
             print("not find labeled mr for", item)
-        """
     print('finished all')
 
 
@@ -833,7 +831,7 @@ if __name__ == '__main__':
 
     duke = True
     combine_label_and_dicom2niffti = True
-    rescale_crop2blocks = True
+    rescale_crop2blocks = False
     if duke:
         if combine_label_and_dicom2niffti:
             stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
