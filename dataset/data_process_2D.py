@@ -26,8 +26,8 @@ def get_2d_images(ct_path, ct_label_path, test=False):
                 ct_label = Image.fromarray(ct_label_slice)
 
 
-                ct_image.save(f'/data/private/autoPET/autopet_3d_only_crop/{file}/image/slice_{k}.png')
-                ct_label.save(f'data/private/autoPET/autopet_3d_only_crop/{file}/label/slice_{k}.png')
+                ct_image.save(f'/data/private/autoPET/autopet_2d/{file}/image/slice_{k}.png')
+                ct_label.save(f'data/private/autoPET/autopet_2d/{file}/label/slice_{k}.png')
                 k += 1
 
 def list_images(path):
