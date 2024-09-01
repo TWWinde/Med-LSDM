@@ -34,6 +34,7 @@ def get_2d_images(ct_path, ct_label_path, file="train"):
                     ct_image.save(f'/data/private/autoPET/autopet_2d/image/val/val_{k}.png')
                     ct_label.save(f'/data/private/autoPET/autopet_2d/label/val/val_{k}.png')
                 k += 1
+        print("finished", ct_path[i] )
 
 def list_images(path):
     image_path = []
