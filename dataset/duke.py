@@ -1,3 +1,5 @@
+import random
+
 from torch.utils.data import Dataset
 import torchio as tio
 import os
@@ -15,6 +17,7 @@ crop = tio.Compose([
 
 ])
 
+
 TRAIN_TRANSFORMS = tio.Compose([
     # tio.RandomAffine(scales=(0.03, 0.03, 0), degrees=(
     # 0, 0, 3), translation=(4, 4, 0)),
@@ -30,6 +33,7 @@ class DUKEDataset(Dataset):
         self.sem_map = sem_map
         self.Norm = normalization
         self.Crop = crop
+        #self.RandomCrop = tio.transforms.Crop((256, 256, 32))
         if self.sem_map:
             self.mr_paths, self.label_paths = self.get_data_files()
         else:
@@ -37,8 +41,12 @@ class DUKEDataset(Dataset):
 
     def get_data_files(self):
 
-        mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(os.path.join(self.root_dir))
+        mr_names_1 = [os.path.join(self.root_dir, 'labeled_MR', subfolder) for subfolder in os.listdir(os.path.join(self.root_dir))
                     if subfolder.endswith('nii.gz')]
+        mr_names_2 = [os.path.join(self.root_dir, 'unlabeled_MR', subfolder) for subfolder in
+                      os.listdir(os.path.join(self.root_dir))
+                      if subfolder.endswith('nii.gz')]
+        mr_names = mr_names_1 + mr_names_2
         if self.sem_map:
             label_names, mr_names_ = [], []
             for mr_path in mr_names:
@@ -58,7 +66,14 @@ class DUKEDataset(Dataset):
     def __getitem__(self, idx: int):
 
         img = tio.ScalarImage(self.mr_paths[idx])
-        img = self.Crop(img)
+        shape = img.shape
+        print(shape)
+        start_x = random.randint(0, shape[0] - 256)
+        start_y = random.randint(0, shape[1] - 256)
+        start_z = random.randint(0, shape[2] - 32)
+        crop = tio.transforms.Crop((start_x, shape[0] - 256-start_x, start_y, shape[1] - 256-start_y, start_z, shape[0] -256-start_z))
+        img = crop(img)
+        #img = self.Crop(img)
         img = self.Norm(img)
         if self.sem_map:
             label = tio.ScalarImage(self.label_paths[idx])
