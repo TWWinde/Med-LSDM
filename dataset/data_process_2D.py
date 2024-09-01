@@ -5,9 +5,9 @@ import numpy as np
 from PIL import Image
 
 
-def get_2d_images(ct_path, ct_label_path, test=False):
+def get_2d_images(ct_path, ct_label_path, file="train"):
     k = 0
-    file = "test" if test else "train"
+    image_name ="tr" if file=="train" else "val"
     for i in range(len(ct_path)):
 
         nifti_ct = nib.load(ct_path[i])
@@ -25,9 +25,14 @@ def get_2d_images(ct_path, ct_label_path, test=False):
 
                 ct_image = Image.fromarray(ct_image)
                 ct_label = Image.fromarray(ct_label_slice)
-
-                ct_image.save(f'/data/private/autoPET/autopet_2d/{file}/image/slice_{k}.png')
-                ct_label.save(f'/data/private/autoPET/autopet_2d/{file}/label/slice_{k}.png')
+                if file == "train":
+                    ct_image.save(f'/data/private/autoPET/autopet_2d/image/train/tr_{k}.png')
+                    ct_label.save(f'/data/private/autoPET/autopet_2d/label/train/tr_{k}.png')
+                else:
+                    ct_image.save(f'/data/private/autoPET/autopet_2d/image/test/ts_{k}.png')
+                    ct_label.save(f'/data/private/autoPET/autopet_2d/label/test/ts_{k}.png')
+                    ct_image.save(f'/data/private/autoPET/autopet_2d/image/val/val_{k}.png')
+                    ct_label.save(f'/data/private/autoPET/autopet_2d/label/val/val_{k}.png')
                 k += 1
 
 def list_images(path):
@@ -46,10 +51,12 @@ def list_images(path):
 
 
 if __name__ == '__main__':
-    os.makedirs('/misc/data/private/autoPET/autopet_2d/train/image', exist_ok=True)
-    os.makedirs('/misc/data/private/autoPET/autopet_2d/train/label', exist_ok=True)
-    os.makedirs('/misc/data/private/autoPET/autopet_2d/val/image', exist_ok=True)
-    os.makedirs('/misc/data/private/autoPET/autopet_2d/val/label', exist_ok=True)
+    os.makedirs('/misc/data/private/autoPET/autopet_2d/image/train/', exist_ok=True)
+    os.makedirs('/misc/data/private/autoPET/autopet_2d/image/test/', exist_ok=True)
+    os.makedirs('/misc/data/private/autoPET/autopet_2d/image/val/', exist_ok=True)
+    os.makedirs('/misc/data/private/autoPET/autopet_2d/label/train/', exist_ok=True)
+    os.makedirs('/misc/data/private/autoPET/autopet_2d/label/test/', exist_ok=True)
+    os.makedirs('/misc/data/private/autoPET/autopet_2d/label/val/', exist_ok=True)
 
     path_image_train = "/data/private/autoPET/autopet_3d_only_crop/train"
     path_image_test = "/data/private/autoPET/autopet_3d_only_crop/test"
@@ -57,5 +64,5 @@ if __name__ == '__main__':
     ct_image_train, ct_label_train = list_images(path_image_train)
     ct_image_test, ct_label_test = list_images(path_image_test)
 
-    get_2d_images(ct_image_test, ct_label_test)
-    get_2d_images(ct_image_train, ct_label_train, test=True)
+    get_2d_images(ct_image_test, ct_label_test, file="test")
+    get_2d_images(ct_image_train, ct_label_train, file="train")
