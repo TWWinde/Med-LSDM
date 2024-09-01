@@ -840,7 +840,7 @@ if __name__ == '__main__':
             save_cropped_total_mr(Total_out, croped_total_mr, (256, 256), length=32)
 
     duke = True
-    combine_label_and_dicom2niffti = True
+    combine_label_and_dicom2niffti = False
     rescale_crop2blocks = True
     if duke:
         if combine_label_and_dicom2niffti:
