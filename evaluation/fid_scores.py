@@ -182,7 +182,7 @@ def get_feature_extractor():
     model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)),
                                    Flatten()) # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
-    ckpt = torch.load("../gnn_shared/ckpt/pretrain/resnet_50.pth")
+    ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
     ckpt = trim_state_dict_name(ckpt["state_dict"])
     model.load_state_dict(ckpt) # No conv_seg module in ckpt
     model = nn.DataParallel(model).cuda()
@@ -202,7 +202,7 @@ def calculate_fid_real(args):
     data_loader = torch.utils.data.DataLoader(dataset,batch_size=args.batch_size,drop_last=False,
                                                shuffle=False,num_workers=args.num_workers)
     act = get_activations_from_dataloader(model, data_loader, args)
-    np.save("./results/fid/pred_arr_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", act)
+    np.save("/data/private/autoPET/medicaldiffusion_results/results/fid/pred_arr_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", act)
     #np.save("./results/fid/pred_arr_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", act)
     #calculate_mmd(args, act)
     m, s = post_process(act)
