@@ -37,7 +37,8 @@ def inference(cfg: DictConfig):
             label_nc=cfg.dataset.label_nc,
             spade_input_nc=cfg.model.spade_input_channel if cfg.model.segconv != 0 else None,
             segconv=False if cfg.model.segconv == 0 else True,
-            vqvae=False if cfg.model.vqvae_ckpt == 0 else cfg.model.vqvae_ckpt
+            vqvae=False if cfg.model.vqvae_ckpt == 0 else cfg.model.vqvae_ckpt,
+            add_seg_to_noise=False if cfg.model.add_seg_to_noise == 0 else True,
         ).cuda()
     elif cfg.model.denoising_fn == 'UNet':
         unet_model = UNet(
@@ -61,7 +62,8 @@ def inference(cfg: DictConfig):
             timesteps=cfg.model.timesteps,
             # sampling_timesteps=cfg.model.sampling_timesteps,
             loss_type=cfg.model.loss_type,
-            cond_scale=cfg.model.cond_scale
+            cond_scale=cfg.model.cond_scale,
+            add_seg_to_noise=False if cfg.model.add_seg_to_noise == 0 else True,
             # objective=cfg.objective
         ).cuda()
     elif cfg.model.diffusion == 'GaussianDiffusion':

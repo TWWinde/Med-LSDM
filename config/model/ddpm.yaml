@@ -4,7 +4,7 @@ vqgan_spade_ckpt: 0
 name: ddpm
 segconv: 0
 spade_input_channel: 64
-
+add_seg_to_noise: 0
 # Have to be derived from VQ-GAN Latent space dimensions
 diffusion_img_size: 64
 diffusion_depth_size: 8

@@ -556,7 +556,8 @@ class Unet3D_SPADE(nn.Module):
             block_type='resnet',
             resnet_groups=8,
             segconv=False,
-            vqvae=None
+            vqvae=None,
+            add_seg_to_noise=False
     ):
         super().__init__()
         self.channels = channels
@@ -569,7 +570,7 @@ class Unet3D_SPADE(nn.Module):
         else:
             self.spade_input_nc = self.label_nc
 
-        self.add_seg_to_noise = False
+        self.add_seg_to_noise = add_seg_to_noise
 
         # temporal attention and its relative positional encoding
 
@@ -802,7 +803,8 @@ class SemanticGaussianDiffusion(nn.Module):
             vqgan_ckpt=None,
             vqgan_spade_ckpt=None,
             vqvae_ckpt=None,
-            cond_scale=1.5
+            cond_scale=1.5,
+            add_seg_to_noise=False
     ):
         super().__init__()
         self.cfg = cfg
@@ -844,7 +846,7 @@ class SemanticGaussianDiffusion(nn.Module):
         timesteps, = betas.shape
         self.num_timesteps = int(timesteps)
         self.loss_type = loss_type
-
+        self.add_seg_to_noise = add_seg_to_noise
         # register buffer helper function that casts float64 to float32
 
         def register_buffer(name, val):
@@ -893,9 +895,6 @@ class SemanticGaussianDiffusion(nn.Module):
 
         self.use_dynamic_thres = use_dynamic_thres
         self.dynamic_thres_percentile = dynamic_thres_percentile
-
-    def add_seg_to_noise(self,):
-        pass
 
     def q_sample(self, x_start, t, noise=None):  # x_{t} get noisy images
         """
@@ -970,8 +969,14 @@ class SemanticGaussianDiffusion(nn.Module):
                     - 'variance': the model variance output.
                     - 'log_variance': the log of 'variance'.
          """
-        x_recon = self.predict_start_from_noise(
-            x, t=t, noise=self.denoise_fn.forward_with_cond_scale(x, t, cond=cond, cond_scale=cond_scale))
+        if self.add_seg_to_noise:
+            x_recon = self.predict_start_from_noise(
+                x, t=t, noise=self.denoise_fn.forward_with_cond_scale(torch.cat([x, cond], 1), t, cond=cond, cond_scale=cond_scale))
+            pass
+        else:
+            x_recon = self.predict_start_from_noise(
+                x, t=t, noise=self.denoise_fn.forward_with_cond_scale(x, t, cond=cond, cond_scale=cond_scale))
+
         # elf.denoise_fn == Unet3D   x_recon == x_{0}
 
         if clip_denoised:
@@ -1141,9 +1146,14 @@ class SemanticGaussianDiffusion(nn.Module):
             cond = bert_embed(
                 tokenize(cond), return_cls_repr=self.text_use_bert_cls)
             cond = cond.to(device)
-        
+
         """
-        noise_predicted = self.denoise_fn(x_noisy, t, cond=cond, **kwargs)  # predicted noise
+        if self.add_seg_to_noise:
+            noise_predicted = self.denoise_fn(torch.cat([x_noisy, cond], 1), t, cond=cond, **kwargs)
+            pass
+        else:
+            noise_predicted = self.denoise_fn(x_noisy, t, cond=cond, **kwargs)  # predicted noise
+
 
         if self.loss_type == 'l1':
             loss = F.l1_loss(noise, noise_predicted)
@@ -1154,7 +1164,7 @@ class SemanticGaussianDiffusion(nn.Module):
 
         return loss
 
-    def forward(self, x, seg=None, *args, cond, **kwargs):
+    def forward(self, x, *args, cond, **kwargs):
 
         assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
@@ -1476,7 +1486,6 @@ class Semantic_Trainer(object):
                     if self.vqgan_spade_ckpt:
                         loss = self.model(
                             input_image,
-                            seg,
                             cond=seg,
                             prob_focus_present=prob_focus_present,
                             focus_present_mask=focus_present_mask
