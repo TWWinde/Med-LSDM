@@ -1148,9 +1148,10 @@ class SemanticGaussianDiffusion(nn.Module):
             cond = cond.to(device)
 
         """
-        print(x_noisy.shape)
-        print(cond.shape)
+        #torch.Size([1, 8, 8, 64, 64])
+        #torch.Size([1, 37, 32, 256, 256])
         if self.add_seg_to_noise:
+            cond = self.segconv3d(cond)
             noise_predicted = self.denoise_fn(torch.cat([x_noisy, cond], 1), t, cond=cond, **kwargs)
 
         else:
