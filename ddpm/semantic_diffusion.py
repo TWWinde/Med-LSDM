@@ -569,7 +569,7 @@ class Unet3D_SPADE(nn.Module):
         else:
             self.spade_input_nc = self.label_nc
 
-        self.add_seg_to_noise = True
+        self.add_seg_to_noise = False
 
         # temporal attention and its relative positional encoding
 
