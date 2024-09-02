@@ -1154,11 +1154,12 @@ class SemanticGaussianDiffusion(nn.Module):
         """
         #torch.Size([1, 8, 8, 64, 64])
         #torch.Size([1, 37, 32, 256, 256])
-        print(cond.shape)
+        #print(cond.shape)
         if self.add_seg_to_noise:
-            cond = self.denoise_fn.segconv_downsample(cond)
-            print(x_noisy.shape)
-            print(cond.shape)
+            #cond = self.denoise_fn.segconv_downsample(cond)  # torch.Size([1, 64, 11, 64, 64])
+            #print(x_noisy.shape)
+            #print(cond.shape)
+            cond = F.interpolate(cond, size=(8, 64, 64), mode='trilinear', align_corners=False)
             noise_predicted = self.denoise_fn(torch.cat([x_noisy, cond], 1), t, cond=cond, **kwargs)
 
         else:
