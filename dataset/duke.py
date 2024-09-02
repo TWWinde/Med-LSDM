@@ -50,10 +50,11 @@ class DUKEDataset(Dataset):
         if self.sem_map:
             label_names, mr_names_ = [], []
             for mr_path in mr_names:
-                label_path = mr_path.replace('mr', 'label')
-                if os.path.exists(mr_path) and os.path.exists(label_path):
-                    mr_names_.append(mr_path)
-                    label_names.append(label_path)
+                if mr_path.split('/')[-2] == 'labeled_MR':
+                    label_path = mr_path.replace('labeled_MR', 'SEG')
+                    if os.path.exists(mr_path) and os.path.exists(label_path):
+                        mr_names_.append(mr_path)
+                        label_names.append(label_path)
 
             return mr_names_, label_names
         else:
