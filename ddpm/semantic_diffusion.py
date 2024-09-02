@@ -704,6 +704,10 @@ class Unet3D_SPADE(nn.Module):
         null_logits = self.forward(*args, null_cond_prob=1., cond=all_zero, **kwargs)
         return logits + (logits - null_logits) * cond_scale
 
+    def segconv_downsample(self, seg_input):
+
+        return self.segconv3d(seg_input)
+
     def forward(
             self,
             x,
@@ -1151,7 +1155,7 @@ class SemanticGaussianDiffusion(nn.Module):
         #torch.Size([1, 8, 8, 64, 64])
         #torch.Size([1, 37, 32, 256, 256])
         if self.add_seg_to_noise:
-            cond = self.segconv3d(cond)
+            cond = self.denoise_fn.segconv_downsample(cond)
             noise_predicted = self.denoise_fn(torch.cat([x_noisy, cond], 1), t, cond=cond, **kwargs)
 
         else:
