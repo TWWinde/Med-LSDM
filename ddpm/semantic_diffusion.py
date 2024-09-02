@@ -592,8 +592,8 @@ class Unet3D_SPADE(nn.Module):
         init_padding = init_kernel_size // 2
 
         if self.add_seg_to_noise:
-            self.init_conv = nn.Conv3d(self.channels+self.spade_input_nc, init_dim, (1, init_kernel_size,init_kernel_size),
-                                       padding=(0, init_padding, init_padding))
+            self.init_conv = nn.Conv3d(self.channels+self.label_nc, init_dim, (1, init_kernel_size,init_kernel_size),
+                                       padding=(0, init_padding, init_padding))   ####### self.spade_input_nc
         else:
             self.init_conv = nn.Conv3d(self.channels, init_dim, (1, init_kernel_size,
                                                                  init_kernel_size),
