@@ -48,34 +48,6 @@ class Flatten(torch.nn.Module):
         return inp.view(inp.size(0), -1)
 
 def generate_samples(args):
-    G = Generator(mode='eval', latent_dim=args.latent_dim, num_class=0)
-    ckpt_path = "./checkpoint/"+args.basename+str(args.fold)+"/G_iter"+str(args.ckpt_step)+".pth"
-    ckpt = torch.load(ckpt_path)['model']
-    ckpt = trim_state_dict_name(ckpt)
-    G.load_state_dict(ckpt)
-
-    E = Encoder()
-    ckpt_path = "./checkpoint/"+args.basename+str(args.fold)+"/E_iter"+str(args.ckpt_step)+".pth"
-    ckpt = torch.load(ckpt_path)['model']
-    ckpt = trim_state_dict_name(ckpt)
-    E.load_state_dict(ckpt)
-
-    Sub_E = Sub_Encoder(args.latent_dim=args.latent_dim)
-    ckpt_path = "./checkpoint/"+args.basename+str(args.fold)+"/Sub_E_iter"+str(args.ckpt_step)+".pth"
-    ckpt = torch.load(ckpt_path)['model']
-    ckpt = trim_state_dict_name(ckpt)
-    Sub_E.load_state_dict(ckpt)
-    print("Weights step", args.ckpt_step, "loaded.")
-    del ckpt
-
-    G = nn.DataParallel(G).cuda()
-    E = nn.DataParallel(E).cuda()
-    Sub_E = nn.DataParallel(Sub_E).cuda()
-
-    G.eval()
-    E.eval()
-    Sub_E.eval()
-
 
     model = get_feature_extractor()
     pred_arr = np.empty((args.num_samples, args.dims))
@@ -99,6 +71,7 @@ def generate_samples(args):
     print(' done')
     return pred_arr
 
+
 def get_activations_from_dataloader(model, data_loader, args):
 
     pred_arr = np.empty((args.num_samples, args.dims))
@@ -115,6 +88,7 @@ def get_activations_from_dataloader(model, data_loader, args):
             pred_arr[i*args.batch_size:(i+1)*args.batch_size] = pred.cpu().numpy()
     print(' done')
     return pred_arr
+
 
 def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     """Numpy implementation of the Frechet Distance.
@@ -172,10 +146,12 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     return (diff.dot(diff) + np.trace(sigma1) +
             np.trace(sigma2) - 2 * tr_covmean)
 
+
 def post_process(act):
     mu = np.mean(act, axis=0)
     sigma = np.cov(act, rowvar=False)
     return mu, sigma
+
 
 def get_feature_extractor():
     model = resnet50(shortcut_type='B')
@@ -189,6 +165,7 @@ def get_feature_extractor():
     model.eval()
     print("Feature extractor weights loaded")
     return model
+
 
 def calculate_fid_real(args):
     """Calculates the FID of two paths"""
@@ -216,6 +193,7 @@ def calculate_fid_real(args):
     #np.save("./results/fid/s_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", s)
     #np.save("./results/fid/m_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", m)
     #np.save("./results/fid/s_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", s)
+
 
 def calculate_fid_fake(args):
     #assert os.path.exists("./results/fid/m_real_"+args.real_suffix+str(args.fold)+".npy")

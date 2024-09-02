@@ -67,7 +67,6 @@ class DUKEDataset(Dataset):
 
         img = tio.ScalarImage(self.mr_paths[idx])
         shape = img.shape
-        print(shape)
         start_x = random.randint(0, shape[1] - 256)
         start_y = random.randint(0, shape[2] - 256)
         start_z = random.randint(0, shape[3] - 32)
@@ -79,7 +78,7 @@ class DUKEDataset(Dataset):
         img = self.Norm(img)
         if self.sem_map:
             label = tio.ScalarImage(self.label_paths[idx])
-            label = self.Crop(label)
+            label = crop(label)
 
             return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
         else:
