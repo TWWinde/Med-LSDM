@@ -973,7 +973,10 @@ class SemanticGaussianDiffusion(nn.Module):
                     - 'variance': the model variance output.
                     - 'log_variance': the log of 'variance'.
          """
+
         if self.add_seg_to_noise:
+
+            cond = F.interpolate(cond, size=(8, 64, 64), mode='trilinear', align_corners=False)
             x_recon = self.predict_start_from_noise(
                 x, t=t, noise=self.denoise_fn.forward_with_cond_scale(torch.cat([x, cond], 1), t, cond=cond, cond_scale=cond_scale))
             pass
