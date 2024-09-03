@@ -155,8 +155,7 @@ def post_process(act):
 
 def get_feature_extractor():
     model = resnet50(shortcut_type='B')
-    model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)),
-                                   Flatten()) # (N, 512)
+    model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)),Flatten()) # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
     ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
     ckpt = trim_state_dict_name(ckpt["state_dict"])
