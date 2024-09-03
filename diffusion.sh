@@ -112,15 +112,15 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
 
 # diffusion with segconv 64 condition duke
-python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_randomcrop' dataset.label_nc=3 \
-model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/DUKE/results_randomcrop/lightning_logs/version_141449/checkpoints/latest_checkpoint.ckpt' \
-model.vqvae_ckpt=0 model.spade_input_channel=64 \
-model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
-model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
-
-# diffusion autopet with segconv 64 condition add seg to noise
-#python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output__addsegtonoise_segconv_64' dataset.label_nc=37 \
-#model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results//checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
-#model.vqvae_ckpt=0 model.spade_input_channel=64 model.add_seg_to_noise=1 \
+#python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_randomcrop' dataset.label_nc=3 \
+#model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/DUKE/results_randomcrop/lightning_logs/version_141449/checkpoints/latest_checkpoint.ckpt' \
+#model.vqvae_ckpt=0 model.spade_input_channel=64 \
 #model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
+
+# diffusion autopet with segconv 64 condition add seg to noise
+python train/train_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output__addsegtonoise_segconv_64' dataset.label_nc=37 \
+model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results//checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
+model.vqvae_ckpt=0 model.spade_input_channel=64 model.add_seg_to_noise=1 \
+model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
