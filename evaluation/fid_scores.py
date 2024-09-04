@@ -177,7 +177,6 @@ def calculate_fid_fake(args):
     print('FID: ', fid_value)
 
 
-
 class ImageFolderDataset(Dataset):
     def __init__(self, folder_path, real=True):
 
@@ -187,17 +186,16 @@ class ImageFolderDataset(Dataset):
         self.image_files = [f for f in os.listdir(folder_path) if
                                  os.path.isfile(os.path.join(folder_path, f)) and self.head in f]
 
-
     def __len__(self):
 
-       return len(self.image_files)
+        return len(self.image_files)
 
     def __getitem__(self, idx):
 
         img_name = self.image_files[idx]
         img_path = os.path.join(self.folder_path, img_name)
         image = Image.open(img_path)
-
+        image = np.array(image)
 
         return image
 
