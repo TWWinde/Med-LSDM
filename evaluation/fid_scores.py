@@ -194,8 +194,22 @@ class ImageFolderDataset(Dataset):
 
         img_name = self.image_files[idx]
         img_path = os.path.join(self.folder_path, img_name)
-        image = Image.open(img_path)
-        image = np.expand_dims(np.array(image), axis=0)
+        with Image.open(img_path) as img:
+            frames = []
+            try:
+                while True:
+                    # 将当前帧转换为 RGB 格式（必要时）
+                    # 将帧转换为 NumPy 数组
+                    frame_array = np.array(img)
+                    frames.append(frame_array)
+                    # 移动到下一帧
+                    img.seek(img.tell() + 1)
+            except EOFError:
+                # 所有帧处理完毕
+                pass
+
+            gif_array = np.stack(frames, axis=0)
+        image = np.expand_dims(np.array(gif_array), axis=0)
         print(image.shape)
 
         return image
