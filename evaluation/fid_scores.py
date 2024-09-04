@@ -208,7 +208,8 @@ class ImageFolderDataset(Dataset):
             except EOFError:
                 # 所有帧处理完毕
                 pass
-
+            for i, frame in enumerate(frames):
+                print(f"Frame {i} shape: {frame.shape}")
             gif_array = np.stack(frames, axis=0)
         image = np.expand_dims(np.array(gif_array), axis=0)
         print(image.shape)
