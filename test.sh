@@ -36,11 +36,11 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
 
 # diffusion with segconv 64 condition
-#python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_64out' dataset.label_nc=37 \
-#model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
-#model.vqvae_ckpt=0 model.spade_input_channel=64 \
-#model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
-#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
+python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_64out' dataset.label_nc=37 \
+model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
+model.vqvae_ckpt=0 model.spade_input_channel=64 \
+model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1
 
 # diffusion with segconv 128 condition
 #python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_128out' dataset.label_nc=37 \
@@ -67,11 +67,11 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=0 model.load_milestone=0
 
 # diffusion with segconv condition mr
-python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py model=ddpm dataset=synthrad2023 model.results_folder_postfix='output_with_segconv_64out' dataset.label_nc=31 \
-model.vqgan_ckpt='/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/SynthRAD2023/results/lightning_logs/version_133718/checkpoints/latest_checkpoint.ckpt' \
-model.vqvae_ckpt=0 model.spade_input_channel=64 \
-model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
-model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
+#python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py model=ddpm dataset=synthrad2023 model.results_folder_postfix='output_with_segconv_64out' dataset.label_nc=31 \
+#model.vqgan_ckpt='/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/SynthRAD2023/results/lightning_logs/version_133718/checkpoints/latest_checkpoint.ckpt' \
+#model.vqvae_ckpt=0 model.spade_input_channel=64 \
+#model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
 
 #######################################################
 
@@ -124,8 +124,8 @@ model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 mode
 #model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
 # vq_vae synthrad mr
-PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=synthrad2023 \
-model.resume_from_checkpoint="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_vae/SynthRAD2023/results/lightning_logs/version_139999/checkpoints/latest_checkpoint.ckpt" \
-model=vq_vae model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
-model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
-model.batch_size=2 model.n_codes=16384
+#PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=synthrad2023 \
+#model.resume_from_checkpoint="/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_vae/SynthRAD2023/results/lightning_logs/version_139999/checkpoints/latest_checkpoint.ckpt" \
+#model=vq_vae model.gpus=1 model.default_root_dir_postfix='results' model.precision=16 model.embedding_dim=8 \
+#model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+#model.batch_size=2 model.n_codes=16384

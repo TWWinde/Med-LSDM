@@ -142,6 +142,15 @@ class Metrics:
                 video_tensor_to_gif(sample_gif, sample_path)
                 video_tensor_to_gif(image_gif, image_path)
                 video_tensor_to_gif(label_gif, label_path)
+                sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
+                image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
+                label_np_path = os.path.join(path_video, 'label', f'{i}_label.npy')
+                os.makedirs(sample_np_path, exist_ok=True)
+                os.makedirs(image_np_path, exist_ok=True)
+                os.makedirs(label_np_path, exist_ok=True)
+                np.save(sample_np_path, generated, allow_pickle=True, fix_imports=True)
+                np.save(image_np_path, image, allow_pickle=True, fix_imports=True)
+                np.save(label_np_path, label_save, allow_pickle=True, fix_imports=True)
 
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input1, input2)
