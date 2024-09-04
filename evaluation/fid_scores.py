@@ -196,6 +196,7 @@ class ImageFolderDataset(Dataset):
         img_path = os.path.join(self.folder_path, img_name)
         image = Image.open(img_path)
         image = np.expand_dims(np.array(image), axis=0)
+        print(image.shape)
 
         return image
 
