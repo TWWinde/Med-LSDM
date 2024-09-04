@@ -1,5 +1,4 @@
 
-
 # ---------------------------------------------------------------------------------------------#
 # This code is an adapted version of https://github.com/batmanlab/HA-GAN/tree/master/evaluation
 # ---------------------------------------------------------------------------------------------#
@@ -9,32 +8,28 @@ import os
 import time
 from argparse import ArgumentParser
 from collections import OrderedDict
-
 import numpy as np
 from scipy import linalg
-
 import torch
 import torch.nn as nn
-
-
 from evaluation.resnet3D import resnet50
+import os
+from PIL import Image
+from torch.utils.data import Dataset
 
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 torch.backends.cudnn.benchmark = True
 
 parser = ArgumentParser()
-parser.add_argument('--path', type=str, default='')
+parser.add_argument('--path', type=str, default='/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results')
 parser.add_argument('--real_suffix', type=str, default='eval_600_size_256_resnet50_fold')
-parser.add_argument('--img_size', type=int, default=256)
 parser.add_argument('--batch_size', type=int, default=2)
-parser.add_argument('--num_workers', type=int, default=8)
-parser.add_argument('--num_samples', type=int, default=2048)
 parser.add_argument('--dims', type=int, default=2048)
-parser.add_argument('--ckpt_step', type=int, default=80000)
 parser.add_argument('--latent_dim', type=int, default=1024)
 parser.add_argument('--basename', type=str, default="256_1024_Alpha_SN_v4plus_4_l1_GN_threshold_600_fold")
 parser.add_argument('--fold', type=int)
+
 
 def trim_state_dict_name(ckpt):
     new_state_dict = OrderedDict()
@@ -43,16 +38,18 @@ def trim_state_dict_name(ckpt):
         new_state_dict[name] = v
     return new_state_dict
 
+
 class Flatten(torch.nn.Module):
     def forward(self, inp):
         return inp.view(inp.size(0), -1)
+
 
 def generate_samples(args):
 
     model = get_feature_extractor()
     pred_arr = np.empty((args.num_samples, args.dims))
 
-    for i in range(args.num_samples//args.batch_size):
+    for i in range(args.num_sample s/ /args.batch_size):
         if i % 10 == 0:
             print('\rPropagating batch %d' % i, end='', flush=True)
         with torch.no_grad():
@@ -63,10 +60,10 @@ def generate_samples(args):
             x_rand = x_rand.detach()
             pred = model(x_rand)
 
-        if (i+1)*args.batch_size > pred_arr.shape[0]:
-            pred_arr[i*args.batch_size:] = pred.cpu().numpy()
+        if ( i +1 ) *args.batch_size > pred_arr.shape[0]:
+            pred_arr[ i *args.batch_size:] = pred.cpu().numpy()
         else:
-            pred_arr[i*args.batch_size:(i+1)*args.batch_size] = pred.cpu().numpy()
+            pred_arr[ i *args.batch_size:( i +1 ) *args.batch_size] = pred.cpu().numpy()
 
     print(' done')
     return pred_arr
@@ -82,10 +79,10 @@ def get_activations_from_dataloader(model, data_loader, args):
         with torch.no_grad():
             pred = model(batch)
 
-        if i*args.batch_size > pred_arr.shape[0]:
-            pred_arr[i*args.batch_size:] = pred.cpu().numpy()
+        if i* args.batch_size > pred_arr.shape[0]:
+            pred_arr[i * args.batch_size:] = pred.cpu().numpy()
         else:
-            pred_arr[i*args.batch_size:(i+1)*args.batch_size] = pred.cpu().numpy()
+            pred_arr[i * args.batch_size:(i + 1) * args.batch_size] = pred.cpu().numpy()
     print(' done')
     return pred_arr
 
@@ -155,60 +152,90 @@ def post_process(act):
 
 def get_feature_extractor():
     model = resnet50(shortcut_type='B')
-    model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)),Flatten()) # (N, 512)
+    model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)), Flatten())  # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
     ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
     ckpt = trim_state_dict_name(ckpt["state_dict"])
-    model.load_state_dict(ckpt) # No conv_seg module in ckpt
+    model.load_state_dict(ckpt)  # No conv_seg module in ckpt
     model = nn.DataParallel(model).cuda()
     model.eval()
     print("Feature extractor weights loaded")
     return model
 
 
-def calculate_fid_real(args):
+def calculate_fid_real(args, data_loader):
     """Calculates the FID of two paths"""
-    assert os.path.exists("./results/fid/m_real_"+args.real_suffix+str(args.fold)+".npy")
+    assert os.path.exists(args.path)
 
     model = get_feature_extractor()
-    #dataset = COPD_dataset(img_size=args.img_size, stage="train", fold=args.fold, threshold=600)
-    dataset = Brain_dataset(img_size=args.img_size, stage="train", fold=args.fold)
-    args.num_samples = len(dataset)
-    print("Number of samples:", args.num_samples)
-    data_loader = torch.utils.data.DataLoader(dataset,batch_size=args.batch_size,drop_last=False,
-                                               shuffle=False,num_workers=args.num_workers)
+
+    #args.num_samples = len(dataset)
+    #print("Number of samples:", args.num_samples)
+
     act = get_activations_from_dataloader(model, data_loader, args)
-    np.save("/data/private/autoPET/medicaldiffusion_results/results/fid/pred_arr_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", act)
-    #np.save("./results/fid/pred_arr_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", act)
-    #calculate_mmd(args, act)
+    np.save("/data/private/autoPET/medicaldiffusion_results/results/fid/pred_arr_real_train_size_" + str(
+        args.img_size) + "_resnet50_GSP_fold" + str(args.fold) + ".npy", act)
+    # np.save("./results/fid/pred_arr_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", act)
+    # calculate_mmd(args, act)
     m, s = post_process(act)
 
-    m1 = np.load("./results/fid/m_real_"+args.real_suffix+str(args.fold)+".npy")
-    s1 = np.load("./results/fid/s_real_"+args.real_suffix+str(args.fold)+".npy")
+    m1 = np.load("./results/fid/m_real_" + args.real_suffix + str(args.fold) + ".npy")
+    s1 = np.load("./results/fid/s_real_" + args.real_suffix + str(args.fold) + ".npy")
 
     fid_value = calculate_frechet_distance(m1, s1, m, s)
     print('FID: ', fid_value)
-    #np.save("./results/fid/m_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", m)
-    #np.save("./results/fid/s_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", s)
-    #np.save("./results/fid/m_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", m)
-    #np.save("./results/fid/s_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", s)
+    # np.save("./results/fid/m_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", m)
+    # np.save("./results/fid/s_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", s)
+    # np.save("./results/fid/m_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", m)
+    # np.save("./results/fid/s_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", s)
 
 
 def calculate_fid_fake(args):
-    #assert os.path.exists("./results/fid/m_real_"+args.real_suffix+str(args.fold)+".npy")
+    # assert os.path.exists("./results/fid/m_real_"+args.real_suffix+str(args.fold)+".npy")
     act = generate_samples(args)
     m2, s2 = post_process(act)
 
-    m1 = np.load("./results/fid/m_real_"+args.real_suffix+str(args.fold)+".npy")
-    s1 = np.load("./results/fid/s_real_"+args.real_suffix+str(args.fold)+".npy")
+    m1 = np.load("./results/fid/m_real_" + args.real_suffix + str(args.fold) + ".npy")
+    s1 = np.load("./results/fid/s_real_" + args.real_suffix + str(args.fold) + ".npy")
 
     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
     print('FID: ', fid_value)
 
 
+
+class ImageFolderDataset(Dataset):
+    def __init__(self, folder_path, real=True):
+
+        self.folder_path = folder_path
+        self.real = real
+        self.head = 'image' if real else 'sample'
+        self.image_files = [f for f in os.listdir(folder_path) if
+                                 os.path.isfile(os.path.join(folder_path, f)) and self.head in f]
+
+
+    def __len__(self):
+
+       return len(self.image_files)
+
+    def __getitem__(self, idx):
+
+        img_name = self.image_files[idx]
+        img_path = os.path.join(self.folder_path, img_name)
+        image = Image.open(img_path)
+
+
+        return image
+
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
     start_time = time.time()
-    calculate_fid_real(args)
+    path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv/video_results"
+    dataset_real = ImageFolderDataset(folder_path=path, real=True)
+    data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=32, shuffle=False, num_workers=4)
+    dataset_fake = ImageFolderDataset(folder_path=path, real=True)
+    data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=32, shuffle=False, num_workers=4)
+    calculate_fid_real(args, data_loader_real)
     calculate_fid_fake(args)
-    print("Done. Using", (time.time()-start_time)//60, "minutes.")
+    print("Done. Using", (time.time() - start_time) // 60, "minutes.")

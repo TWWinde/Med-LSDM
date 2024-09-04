@@ -1,4 +1,7 @@
 import sys
+
+import numpy as np
+
 sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
 from ddpm import Unet3D, GaussianDiffusion, Unet3D_SPADE, SemanticGaussianDiffusion
 from vq_gan_3d.model import VQVAE
@@ -108,14 +111,14 @@ def inference(cfg: DictConfig):
 
         return model
 
-    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/checkpoints/", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
+    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/test_results/", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
     os.makedirs(results_folder, exist_ok=True)
     _, val_dataset, _ = get_dataset(cfg)
-    checkpoint_folder = os.path.join("/misc/no_backups/d1502/medicaldiffusion/checkpoints", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
+    checkpoint_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/results/checkpoints", cfg.model.name, cfg.dataset.name, cfg.model.results_folder_postfix)
     diffusion_model = load_checkpoint(diffusion, checkpoint_folder)
     val_dl = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=4)
 
-    if cfg.model.vqvae_seg_-ckpt != 0:
+    if cfg.model.vqvae_seg_ckpt != 0:
         vqvae = VQVAE.load_from_checkpoint(cfg.model.vqvae_ckpt).cuda()
         vqvae.eval()
         print('vqvae is implemented')
@@ -148,6 +151,13 @@ def inference(cfg: DictConfig):
                 sample_path = os.path.join(path_video, f'{i}_sample.gif')
                 image_path = os.path.join(path_video, f'{i}_image.gif')
                 label_path = os.path.join(path_video, f'{i}_label.gif')
+                sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
+                image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
+                os.makedirs(sample_np_path, exist_ok=True)
+                os.makedirs(image_np_path, exist_ok=True)
+                np.save(sample_np_path, sample_gif, allow_pickle=True, fix_imports=True)
+                np.save(image_np_path, image_gif, allow_pickle=True, fix_imports=True)
+
                 video_tensor_to_gif(sample_gif, sample_path)
                 video_tensor_to_gif(image_gif, image_path)
                 video_tensor_to_gif(label_gif, label_path)
