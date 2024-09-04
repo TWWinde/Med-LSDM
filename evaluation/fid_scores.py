@@ -44,31 +44,6 @@ class Flatten(torch.nn.Module):
         return inp.view(inp.size(0), -1)
 
 
-def generate_samples(args):
-
-    model = get_feature_extractor()
-    pred_arr = np.empty((args.num_samples, args.dims))
-
-    for i in range(args.num_sample s/ /args.batch_size):
-        if i % 10 == 0:
-            print('\rPropagating batch %d' % i, end='', flush=True)
-        with torch.no_grad():
-
-            noise = torch.randn((args.batch_size, args.latent_size)).cuda()
-            x_rand = G(noise) # dumb index 0, not used
-            # range: [-1,1]
-            x_rand = x_rand.detach()
-            pred = model(x_rand)
-
-        if ( i +1 ) *args.batch_size > pred_arr.shape[0]:
-            pred_arr[ i *args.batch_size:] = pred.cpu().numpy()
-        else:
-            pred_arr[ i *args.batch_size:( i +1 ) *args.batch_size] = pred.cpu().numpy()
-
-    print(' done')
-    return pred_arr
-
-
 def get_activations_from_dataloader(model, data_loader, args):
 
     pred_arr = np.empty((args.num_samples, args.dims))
@@ -225,7 +200,6 @@ class ImageFolderDataset(Dataset):
 
 
         return image
-
 
 
 if __name__ == '__main__':
