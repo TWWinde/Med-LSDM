@@ -201,8 +201,8 @@ class ImageFolderDataset(Dataset):
                     # 将当前帧转换为 RGB 格式（必要时）
                     # 将帧转换为 NumPy 数组
                     frame_array = np.array(img)
-                    frames.append(frame_array)
                     print("Frame shape:", frame_array.shape)
+                    frames.append(frame_array)
                     # 移动到下一帧
                     img.seek(img.tell() + 1)
             except EOFError:
