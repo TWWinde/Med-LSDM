@@ -202,6 +202,7 @@ class ImageFolderDataset(Dataset):
                     # 将帧转换为 NumPy 数组
                     frame_array = np.array(img)
                     frames.append(frame_array)
+                    print("Frame shape:", frame_array.shape)
                     # 移动到下一帧
                     img.seek(img.tell() + 1)
             except EOFError:
