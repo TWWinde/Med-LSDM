@@ -2,9 +2,8 @@
 # ---------------------------------------------------------------------------------------------#
 # This code is an adapted version of https://github.com/batmanlab/HA-GAN/tree/master/evaluation
 # ---------------------------------------------------------------------------------------------#
-
-
-import os
+import sys
+sys.path.append('/misc/no_backups/d1502/medicaldiffusion')
 import time
 from argparse import ArgumentParser
 from collections import OrderedDict
