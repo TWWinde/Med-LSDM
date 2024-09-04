@@ -125,6 +125,9 @@ class Metrics:
                 generated = model.sample(cond=seg, get_middle_process=False)
                 input1 = (generated + 1) / 2
                 input2 = (image + 1) / 2
+                generated_np = input1.cpu().numpy()
+                image_np = input2.cpu().numpy()
+                label_np = label_save.cpu().numpy()
 
                 all_videos_list = F.pad(generated, (2, 2, 2, 2))
                 all_label_list = F.pad(label_save, (2, 2, 2, 2))
@@ -148,9 +151,9 @@ class Metrics:
                 os.makedirs(os.path.join(path_video, 'fake'), exist_ok=True)
                 os.makedirs(os.path.join(path_video, 'real'), exist_ok=True)
                 os.makedirs(os.path.join(path_video, 'label'), exist_ok=True)
-                np.save(sample_np_path, generated, allow_pickle=True, fix_imports=True)
-                np.save(image_np_path, image, allow_pickle=True, fix_imports=True)
-                np.save(label_np_path, label_save, allow_pickle=True, fix_imports=True)
+                np.save(sample_np_path, generated_np, allow_pickle=True, fix_imports=True)
+                np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
+                np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
 
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input1, input2)
