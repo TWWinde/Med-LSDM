@@ -195,7 +195,7 @@ class ImageFolderDataset(Dataset):
         img_name = self.image_files[idx]
         img_path = os.path.join(self.folder_path, img_name)
         image = Image.open(img_path)
-        image = np.array(image)
+        image = np.array(image).unsqueeze(0)
 
         return image
 
