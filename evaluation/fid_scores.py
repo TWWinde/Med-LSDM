@@ -28,6 +28,7 @@ parser.add_argument('--dims', type=int, default=2048)
 parser.add_argument('--latent_dim', type=int, default=1024)
 parser.add_argument('--basename', type=str, default="256_1024_Alpha_SN_v4plus_4_l1_GN_threshold_600_fold")
 parser.add_argument('--fold', type=int)
+parser.add_argument('--num_samples', type=int, default=16)
 
 
 def trim_state_dict_name(ckpt):
