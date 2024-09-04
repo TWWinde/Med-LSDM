@@ -200,6 +200,7 @@ class ImageFolderDataset(Dataset):
                 while True:
                     # 将当前帧转换为 RGB 格式（必要时）
                     # 将帧转换为 NumPy 数组
+                    img = img.convert("L")
                     frame_array = np.array(img)
                     print("Frame shape:", frame_array.shape)
                     frames.append(frame_array)
