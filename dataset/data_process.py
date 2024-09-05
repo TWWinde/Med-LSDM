@@ -689,7 +689,7 @@ def get_mr_t1_niffti(input_root):
             print(seg_path)
             seg = nib.load(seg_path)
             seg = seg.get_fdata()
-            length = seg.shape[3]   # check dimition
+            length = seg.shape[2]   # check dimition
             print(length)
         else:
             print("no correspond label")
