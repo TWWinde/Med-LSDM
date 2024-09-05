@@ -239,7 +239,6 @@ def save_cropped_synthrad2023(ct_in_files, image_out_files, crop_size, crop_2_bl
             print(n, ct_path)
 
 
-
 def process_images_synthrad2023(source_folder, train_folder, test_folder, crop_size=(256, 256)):
     ct_train_folder = os.path.join(train_folder, 'ct')
     ct_test_folder = os.path.join(test_folder, 'ct')
@@ -672,6 +671,42 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
         if not found:
             print("not find labeled mr for", item)
     print('finished all')
+
+
+def get_mr_t1_niffti(input_root):
+    input_path = os.path.join(input_root, 'Duke-Breast-Cancer-MRI')
+    path_list = os.listdir(input_path)
+    output_path = os.path.join(input_root, 'T1_MR')
+    label_path = os.path.join(input_root, 'SEG')
+    for item in sorted(path_list): # different patients
+        i = 0
+        length = None
+        patient_mr_path = os.path.join(input_path, item)
+        patient_path_list = os.listdir(patient_mr_path)
+        try:
+            seg_path = os.path.join(label_path, item + ".nii.gz")
+            seg = nib.load(seg_path)
+            seg = seg.get_fdata()
+            length = seg.shape[3]   # check dimition
+            print(length)
+        except:
+            print("no correspond label")
+
+        for x in patient_path_list:  # the unuseful middle path
+            for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
+                found = False
+                if "t1" in mr_dir:   ###check
+                    mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
+                    num = len(os.listdir(mr_path_ab))
+                    if num < 32:  # filter the slice label file.
+                        continue
+                    if length and num == length:
+                        print(mr_dir)
+                    output_name = mr_dir + ".nii.gz"
+                    output_path = os.path.join(mr_path_ab, output_name)
+                    mr_size = dicom_serie2nifti(mr_path_ab, output_path)
+
+        print("finished", item)
 
 
 def rescale_crop_duke(root_path, both_label_image=False):
