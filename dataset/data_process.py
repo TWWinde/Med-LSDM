@@ -677,6 +677,7 @@ def get_mr_t1_niffti(input_root):
     input_path = os.path.join(input_root, 'Duke-Breast-Cancer-MRI')
     path_list = os.listdir(input_path)
     output_path = os.path.join(input_root, 'T1_MR')
+    os.makedirs(output_path, exist_ok=True)
     label_path = os.path.join(input_root, 'SEG')
     for item in sorted(path_list): # different patients
         i = 0
@@ -703,7 +704,7 @@ def get_mr_t1_niffti(input_root):
                     if length and num == length:
                         print(mr_dir)
                     output_name = mr_dir + ".nii.gz"
-                    output_path = os.path.join(mr_path_ab, output_name)
+                    output_path = os.path.join(output_path, output_name)
                     mr_size = dicom_serie2nifti(mr_path_ab, output_path)
 
         print("finished", item)
