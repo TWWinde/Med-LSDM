@@ -684,14 +684,14 @@ def get_mr_t1_niffti(input_root):
         length = None
         patient_mr_path = os.path.join(input_path, item)
         patient_path_list = os.listdir(patient_mr_path)
-        try:
-            seg_path = os.path.join(label_path, item + ".nii.gz")
+        seg_path = os.path.join(label_path, item + ".nii.gz")
+        if os.path.exists(seg_path):
             print(seg_path)
             seg = nib.load(seg_path)
             seg = seg.get_fdata()
             length = seg.shape[3]   # check dimition
             print(length)
-        except:
+        else:
             print("no correspond label")
 
         for x in patient_path_list:  # the unuseful middle path
