@@ -689,6 +689,7 @@ def get_mr_t1_niffti(input_root):
             seg = nib.load(seg_path)
             seg = seg.get_fdata()
             length = seg.shape[2]   # check dimition
+            print("this label has slices", length)
         else:
             print("no correspond label")
         for x in patient_path_list:  # the unuseful middle path
@@ -698,6 +699,7 @@ def get_mr_t1_niffti(input_root):
                     print(mr_dir)
                     mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                     num = len(os.listdir(mr_path_ab))
+                    print("this mr has slices", num)
                     if num < 32:  # filter the slice label file.
                         continue
                     if length and num == length:
