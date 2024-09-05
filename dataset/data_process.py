@@ -711,6 +711,20 @@ def get_mr_t1_niffti(input_root):
         print("finished", item)
 
 
+def rescale_crop_duke_t1(root_path):
+    image_input = os.path.join(root_path, "T1_MR")
+    output = os.path.join(root_path, "T1_MR_rescale_crop")
+    os.makedirs(output, exist_ok=True)
+    input_path_list = os.listdir(image_input)
+    for item in input_path_list:
+        name = item.split('/')[-1]
+        mr = sitk.ReadImage(item)
+        mr = rescale(mr)
+        sitk.WriteImage(mr, os.path.join(output, f'scaled_{name}'))
+        crop_save(name, os.path.join(output, f'scaled_{name}'), output)
+        print("finished", name)
+
+
 def rescale_crop_duke(root_path, both_label_image=False):
 
     label_input = os.path.join(root_path, 'SEG')
@@ -874,6 +888,7 @@ if __name__ == '__main__':
         if combine_label_and_dicom2niffti:
             #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
             get_mr_t1_niffti(duke_output_root)
+            rescale_crop_duke_t1(duke_output_root)
         #if rescale_crop2blocks:
             #rescale_crop_duke(duke_output_root)
             #rescale_crop_duke(duke_output_root, both_label_image=True)
