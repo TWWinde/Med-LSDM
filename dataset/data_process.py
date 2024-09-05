@@ -705,7 +705,7 @@ def get_mr_t1_niffti(input_root):
                         continue
                     if length and num == length:
                         print(mr_dir)
-                    output_name = mr_dir + ".nii.gz"
+                    output_name = item + ".nii.gz"
                     output_path = os.path.join(output_path, output_name)
                     mr_size = dicom_serie2nifti(mr_path_ab, output_path)
 
