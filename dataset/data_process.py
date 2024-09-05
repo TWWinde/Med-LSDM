@@ -686,6 +686,7 @@ def get_mr_t1_niffti(input_root):
         patient_path_list = os.listdir(patient_mr_path)
         try:
             seg_path = os.path.join(label_path, item + ".nii.gz")
+            print(seg_path)
             seg = nib.load(seg_path)
             seg = seg.get_fdata()
             length = seg.shape[3]   # check dimition
@@ -697,6 +698,7 @@ def get_mr_t1_niffti(input_root):
             for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                 found = False
                 if "t1" in mr_dir:   ###check
+                    print(mr_dir)
                     mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                     num = len(os.listdir(mr_path_ab))
                     if num < 32:  # filter the slice label file.
