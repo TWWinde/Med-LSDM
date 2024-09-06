@@ -1,5 +1,5 @@
 name: DUKE
-root_dir: /misc/data/private/autoPET/duke/T1_MR_rescale_crop
-val_dir: /misc/data/private/autoPET/duke/T1_MR_rescale_crop
+root_dir: /misc/data/private/autoPET/duke/T1_MR
+val_dir: /misc/data/private/autoPET/duke/T1_MR
 image_channels: 1
 label_nc: 3
