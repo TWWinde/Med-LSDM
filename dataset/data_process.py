@@ -716,9 +716,10 @@ def rescale_crop_duke_t1(root_path):
     output = os.path.join(root_path, "T1_MR_rescale_crop")
     os.makedirs(output, exist_ok=True)
     input_path_list = os.listdir(image_input)
-    for item in input_path_list:
+    for item in sorted(input_path_list):
         name = item.split('/')[-1]
-        mr = sitk.ReadImage(item)
+        path = os.path.join(image_input, item)
+        mr = sitk.ReadImage(path)
         mr = rescale(mr)
         sitk.WriteImage(mr, os.path.join(output, f'scaled_{name}'))
         crop_save(name, os.path.join(output, f'scaled_{name}'), output)
