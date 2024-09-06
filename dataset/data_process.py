@@ -887,7 +887,7 @@ if __name__ == '__main__':
     if duke:
         if combine_label_and_dicom2niffti:
             #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
-            get_mr_t1_niffti(duke_output_root)
+            #get_mr_t1_niffti(duke_output_root)
             rescale_crop_duke_t1(duke_output_root)
         #if rescale_crop2blocks:
             #rescale_crop_duke(duke_output_root)
