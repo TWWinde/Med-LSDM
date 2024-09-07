@@ -8,7 +8,7 @@ default_root_dir: /data/private/autoPET/medicaldiffusion_results/results/checkpo
 default_root_dir_postfix: ''
 resume_from_checkpoint:
 max_steps: -1
-max_epochs: 1000
+max_epochs: 3000
 precision: 16
 gradient_clip_val: 1.0
 
