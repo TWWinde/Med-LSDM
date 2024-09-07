@@ -183,7 +183,7 @@ class ImageFolderDataset(Dataset):
 
         self.folder_path = folder_path
         self.real = real
-        self.head = 'real' if real else 'fake'
+        self.head = 'real' if self.real else 'fake'
         self.image_files = [f for f in os.listdir(os.path.join(self.folder_path, self.head)) if
                             os.path.isfile(os.path.join(self.folder_path, self.head)) and f.endswith(".npy")]
 
@@ -203,8 +203,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     start_time = time.time()
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
+
     dataset_real = ImageFolderDataset(folder_path=path, real=True)
     data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=32, shuffle=False, num_workers=4)
+
     dataset_fake = ImageFolderDataset(folder_path=path, real=False)
     data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=32, shuffle=False, num_workers=4)
     calculate_fid(args, data_loader_real, data_loader_fake)
