@@ -148,14 +148,14 @@ def calculate_fid_real(args, data_loader):
     #print("Number of samples:", args.num_samples)
 
     act = get_activations_from_dataloader(model, data_loader, args)
-    np.save("/data/private/autoPET/medicaldiffusion_results/results/fid/pred_arr_real_train_size_" + str(
-        args.img_size) + "_resnet50_GSP_fold" + str(args.fold) + ".npy", act)
+    #np.save("/data/private/autoPET/medicaldiffusion_results/results/fid/pred_arr_real_train_size_" + str(
+        #args.img_size) + "_resnet50_GSP_fold" + str(args.fold) + ".npy", act)
     # np.save("./results/fid/pred_arr_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", act)
     # calculate_mmd(args, act)
     m, s = post_process(act)
-
-    m1 = np.load("./results/fid/m_real_" + args.real_suffix + str(args.fold) + ".npy")
-    s1 = np.load("./results/fid/s_real_" + args.real_suffix + str(args.fold) + ".npy")
+    m1, s1 = post_process(act)
+    #m1 = np.load("./results/fid/m_real_" + args.real_suffix + str(args.fold) + ".npy")
+    #s1 = np.load("./results/fid/s_real_" + args.real_suffix + str(args.fold) + ".npy")
 
     fid_value = calculate_frechet_distance(m1, s1, m, s)
     print('FID: ', fid_value)
@@ -182,8 +182,8 @@ class ImageFolderDataset(Dataset):
 
         self.folder_path = folder_path
         self.real = real
-        self.head = 'image' if real else 'sample'
-        self.image_files = [ f for f in os.listdir(os.path.join(self.folder_path, self.head)) if
+        self.head = 'real' if real else 'fake'
+        self.image_files = [f for f in os.listdir(os.path.join(self.folder_path, self.head)) if
                             os.path.isfile(os.path.join(self.folder_path, self.head)) and f.endswith(".npy")]
 
     def __len__(self):
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
     dataset_real = ImageFolderDataset(folder_path=path, real=True)
     data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=32, shuffle=False, num_workers=4)
-    dataset_fake = ImageFolderDataset(folder_path=path, real=True)
+    dataset_fake = ImageFolderDataset(folder_path=path, real=False)
     data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=32, shuffle=False, num_workers=4)
     calculate_fid_real(args, data_loader_real)
     calculate_fid_fake(args)
