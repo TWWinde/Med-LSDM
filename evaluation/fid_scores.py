@@ -183,49 +183,25 @@ class ImageFolderDataset(Dataset):
         self.folder_path = folder_path
         self.real = real
         self.head = 'image' if real else 'sample'
-        self.image_files = [f for f in os.listdir(folder_path) if
-                                 os.path.isfile(os.path.join(folder_path, f)) and self.head in f]
+        self.image_files = [ f for f in os.listdir(os.path.join(self.folder_path, self.head)) if
+                            os.path.isfile(os.path.join(self.folder_path, self.head)) and f.endswith(".npy")]
 
     def __len__(self):
 
         return len(self.image_files)
 
     def __getitem__(self, idx):
+        img_path = self.image_files[idx]
+        total_path = os.path.join(self.folder_path, self.head, img_path)
+        img = np.load(total_path)
 
-        img_name = self.image_files[idx]
-        img_path = os.path.join(self.folder_path, img_name)
-        with Image.open(img_path) as img:
-            frames = []
-            try:
-                while True:
-                    # 将当前帧转换为 RGB 格式（必要时）
-                    # 将帧转换为 NumPy 数组
-                    img = img.convert("L")
-                    frame_array = np.array(img)
-                    print("Frame shape:", frame_array.shape)
-                    frames.append(frame_array)
-                    # 移动到下一帧
-                    img.seek(img.tell() + 1)
-            except EOFError:
-                # 所有帧处理完毕
-                pass
-            if len(frames) > 0:
-                frame_shape = frames[0].shape
-                for frame in frames:
-                    if frame.shape != frame_shape:
-                        raise ValueError(f"Frame shape mismatch: expected {frame_shape}, got {frame.shape}")
-
-            gif_array = np.stack(frames, axis=0)
-        image = np.expand_dims(np.array(gif_array), axis=0)
-        print(image.shape)
-
-        return image
+        return img
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
     start_time = time.time()
-    path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv/video_results"
+    path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
     dataset_real = ImageFolderDataset(folder_path=path, real=True)
     data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=32, shuffle=False, num_workers=4)
     dataset_fake = ImageFolderDataset(folder_path=path, real=True)
