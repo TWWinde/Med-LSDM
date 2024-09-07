@@ -157,8 +157,8 @@ def inference(cfg: DictConfig):
                 np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
                 np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
 
-
                 if i == 1000:
+                    print("finished")
                     break
 
 
