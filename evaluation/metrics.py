@@ -167,7 +167,7 @@ class Metrics:
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
 
-                if i ==100:
+                if i ==1000:
                     break
 
                 # FID

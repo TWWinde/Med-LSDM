@@ -134,33 +134,32 @@ def inference(cfg: DictConfig):
         diffusion_model.eval()
         with torch.no_grad():
             for i, data_i in enumerate(val_dl):
-                label_save = data_i['label']
-                image, label = preprocess_input(data_i)
-                generated = diffusion_model.sample(cond=label)
+                label_save = data_i["label"]
+                image, seg = preprocess_input(data_i)
 
-                all_videos_list = F.pad(generated, (2, 2, 2, 2))
-                all_label_list = F.pad(label_save, (2, 2, 2, 2))
-                all_image_list = F.pad(image, (2, 2, 2, 2))
+                generated = diffusion_model.sample(cond=seg, get_middle_process=False)
+                input1 = (generated + 1) / 2
+                input2 = (image + 1) / 2
+                generated_np = input1.cpu().numpy()
+                image_np = input2.cpu().numpy()
+                label_np = label_save.cpu().numpy()
 
-                sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
                 path_video = os.path.join(results_folder, 'video_results')
                 os.makedirs(path_video, exist_ok=True)
 
-                sample_path = os.path.join(path_video, f'{i}_sample.gif')
-                image_path = os.path.join(path_video, f'{i}_image.gif')
-                label_path = os.path.join(path_video, f'{i}_label.gif')
                 sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
                 image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
-                os.makedirs(sample_np_path, exist_ok=True)
-                os.makedirs(image_np_path, exist_ok=True)
-                np.save(sample_np_path, sample_gif, allow_pickle=True, fix_imports=True)
-                np.save(image_np_path, image_gif, allow_pickle=True, fix_imports=True)
+                label_np_path = os.path.join(path_video, 'label', f'{i}_label.npy')
+                os.makedirs(os.path.join(path_video, 'fake'), exist_ok=True)
+                os.makedirs(os.path.join(path_video, 'real'), exist_ok=True)
+                os.makedirs(os.path.join(path_video, 'label'), exist_ok=True)
+                np.save(sample_np_path, generated_np, allow_pickle=True, fix_imports=True)
+                np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
+                np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
 
-                video_tensor_to_gif(sample_gif, sample_path)
-                video_tensor_to_gif(image_gif, image_path)
-                video_tensor_to_gif(label_gif, label_path)
+
+                if i == 1000:
+                    break
 
 
 def video_tensor_to_gif(tensor, path, duration=120, loop=0, optimize=True):
