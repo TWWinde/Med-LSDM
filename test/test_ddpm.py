@@ -125,12 +125,12 @@ def inference(cfg: DictConfig):
     else:
         vqvae = None
 
-    compute_matrics = True
-    generate_gif = False
+    compute_matrics = False
+    generate_npy = True
     if compute_matrics:
         metrics_computer = Metrics(results_folder, val_dl)
         metrics_computer.metrics_test(diffusion_model, encoder=vqvae)
-    if generate_gif:
+    if generate_npy:
         diffusion_model.eval()
         with torch.no_grad():
             for i, data_i in enumerate(val_dl):
