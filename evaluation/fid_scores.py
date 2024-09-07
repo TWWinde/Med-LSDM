@@ -138,7 +138,7 @@ def get_feature_extractor():
     return model
 
 
-def calculate_fid_real(args, data_loader):
+def calculate_fid(args, data_loader1, data_loader2):
     """Calculates the FID of two paths"""
     assert os.path.exists(args.path)
 
@@ -147,17 +147,18 @@ def calculate_fid_real(args, data_loader):
     #args.num_samples = len(dataset)
     #print("Number of samples:", args.num_samples)
 
-    act = get_activations_from_dataloader(model, data_loader, args)
+    act1 = get_activations_from_dataloader(model, data_loader1, args)
+    act2 = get_activations_from_dataloader(model, data_loader2, args)
     #np.save("/data/private/autoPET/medicaldiffusion_results/results/fid/pred_arr_real_train_size_" + str(
         #args.img_size) + "_resnet50_GSP_fold" + str(args.fold) + ".npy", act)
     # np.save("./results/fid/pred_arr_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", act)
     # calculate_mmd(args, act)
-    m, s = post_process(act)
-    m1, s1 = post_process(act)
+    m1, s1 = post_process(act1)
+    m2, s2 = post_process(act2)
     #m1 = np.load("./results/fid/m_real_" + args.real_suffix + str(args.fold) + ".npy")
     #s1 = np.load("./results/fid/s_real_" + args.real_suffix + str(args.fold) + ".npy")
 
-    fid_value = calculate_frechet_distance(m1, s1, m, s)
+    fid_value = calculate_frechet_distance(m1, s1, m2, s2)
     print('FID: ', fid_value)
     # np.save("./results/fid/m_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", m)
     # np.save("./results/fid/s_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", s)
@@ -206,6 +207,6 @@ if __name__ == '__main__':
     data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=32, shuffle=False, num_workers=4)
     dataset_fake = ImageFolderDataset(folder_path=path, real=False)
     data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=32, shuffle=False, num_workers=4)
-    calculate_fid_real(args, data_loader_real)
-    calculate_fid_fake(args)
+    calculate_fid(args, data_loader_real, data_loader_fake)
+
     print("Done. Using", (time.time() - start_time) // 60, "minutes.")
