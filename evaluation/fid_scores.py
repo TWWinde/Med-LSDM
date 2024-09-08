@@ -129,7 +129,7 @@ def get_feature_extractor():
     model = resnet50(shortcut_type='B')
     model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)), Flatten())  # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
-    ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/trails/models/resnet_50_epoch_110_batch_0.pth.tar")
+    ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/models/resnet_50_epoch_110_batch_0.pth.tar")
     ckpt = trim_state_dict_name(ckpt["state_dict"])
     model.load_state_dict(ckpt)  # No conv_seg module in ckpt
     model = nn.DataParallel(model).cuda()
