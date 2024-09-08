@@ -23,7 +23,7 @@ torch.backends.cudnn.benchmark = True
 parser = ArgumentParser()
 parser.add_argument('--path', type=str, default='/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results')
 parser.add_argument('--real_suffix', type=str, default='eval_600_size_256_resnet50_fold')
-parser.add_argument('--batch_size', type=int, default=2)
+parser.add_argument('--batch_size', type=int, default=10)
 parser.add_argument('--dims', type=int, default=2048)
 parser.add_argument('--latent_dim', type=int, default=1024)
 parser.add_argument('--basename', type=str, default="256_1024_Alpha_SN_v4plus_4_l1_GN_threshold_600_fold")
@@ -202,8 +202,8 @@ class ImageFolderDataset(Dataset):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, self.head, img_path)
         img = (np.load(total_path)-0.5)*2
-        img = np.squeeze(img, axis=1)
-        print(img.shape)
+        img = np.squeeze(img, axis=0)
+        #print(img.shape)
 
         return img
 
@@ -215,13 +215,12 @@ if __name__ == '__main__':
 
     dataset_real = ImageFolderDataset(folder_path=path, real=True)
     print(len(dataset_real))
-    data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=2, shuffle=False, num_workers=4)
+    data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
     dataset_fake = ImageFolderDataset(folder_path=path, real=False)
-    data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=2, shuffle=False, num_workers=4)
+    data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=10, shuffle=False, num_workers=4)
     #calculate_fid(args, data_loader_real, data_loader_fake)
     m1, s1 = calculate_fid(args, data_loader_real)
     m2, s2 = calculate_fid(args, data_loader_fake)
     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
     print('FID: ', fid_value)
-
     print("Done. Using", (time.time() - start_time) // 60, "minutes.")
