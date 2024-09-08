@@ -212,9 +212,9 @@ if __name__ == '__main__':
 
     dataset_real = ImageFolderDataset(folder_path=path, real=True)
     print(len(dataset_real))
-    data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=32, shuffle=False, num_workers=4)
+    data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=2, shuffle=False, num_workers=4)
     dataset_fake = ImageFolderDataset(folder_path=path, real=False)
-    data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=32, shuffle=False, num_workers=4)
+    data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=2, shuffle=False, num_workers=4)
     #calculate_fid(args, data_loader_real, data_loader_fake)
     m1, s1 = calculate_fid(args, data_loader_real)
     m2, s2 = calculate_fid(args, data_loader_fake)
