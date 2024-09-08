@@ -130,41 +130,45 @@ def get_feature_extractor():
     model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)),
                                    Flatten())  # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
-    #ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
-    #ckpt = trim_state_dict_name(ckpt["state_dict"])
-    #model.load_state_dict(ckpt)  # No conv_seg module in ckpt
-    #model = nn.DataParallel(model).cuda()
+    ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
+    ckpt = trim_state_dict_name(ckpt["state_dict"])
+    model.load_state_dict(ckpt)  # No conv_seg module in ckpt
+    model = nn.DataParallel(model).cuda()
     model.eval()
     print("Feature extractor weights loaded")
     return model
 
 
-def calculate_fid(args, data_loader1, data_loader2):
+def calculate_fid_real(args, data_loader1, data_loader2):
     """Calculates the FID of two paths"""
+
+    model = get_feature_extractor()
+
+    act1 = get_activations_from_dataloader(model, data_loader1, args)
+    act2 = get_activations_from_dataloader(model, data_loader2, args)
+
+    m1, s1 = post_process(act1)
+    m2, s2 = post_process(act2)
+
+
+    fid_value = calculate_frechet_distance(m1, s1, m2, s2)
+    print('FID: ', fid_value)
+
+
+def calculate_fid(args, data_loader):
     assert os.path.exists(args.path)
 
     model = get_feature_extractor()
 
-    #args.num_samples = len(dataset)
-    #print("Number of samples:", args.num_samples)
+    act = get_activations_from_dataloader(model, data_loader, args)
 
-    act1 = get_activations_from_dataloader(model, data_loader1, args)
-    act2 = get_activations_from_dataloader(model, data_loader2, args)
-    #np.save("/data/private/autoPET/medicaldiffusion_results/results/fid/pred_arr_real_train_size_" + str(
-        #args.img_size) + "_resnet50_GSP_fold" + str(args.fold) + ".npy", act)
-    # np.save("./results/fid/pred_arr_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", act)
-    # calculate_mmd(args, act)
-    m1, s1 = post_process(act1)
-    m2, s2 = post_process(act2)
-    #m1 = np.load("./results/fid/m_real_" + args.real_suffix + str(args.fold) + ".npy")
-    #s1 = np.load("./results/fid/s_real_" + args.real_suffix + str(args.fold) + ".npy")
 
-    fid_value = calculate_frechet_distance(m1, s1, m2, s2)
-    print('FID: ', fid_value)
-    # np.save("./results/fid/m_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", m)
-    # np.save("./results/fid/s_real_train_600_size_"+str(args.img_size)+"_resnet50_fold"+str(args.fold)+".npy", s)
-    # np.save("./results/fid/m_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", m)
-    # np.save("./results/fid/s_real_train_size_"+str(args.img_size)+"_resnet50_GSP_fold"+str(args.fold)+".npy", s)
+    m, s = post_process(act)
+
+    return m,s
+
+
+
 
 
 def calculate_fid_fake(args):
@@ -185,8 +189,7 @@ class ImageFolderDataset(Dataset):
         self.folder_path = folder_path
         self.real = real
         self.head = 'real' if self.real else 'fake'
-        self.image_files = [f for f in os.listdir(os.path.join(self.folder_path, self.head)) if
-                            os.path.isfile(os.path.join(self.folder_path, self.head)) and f.endswith(".npy")]
+        self.image_files = [f for f in os.listdir(os.path.join(self.folder_path, self.head)) if f.endswith(".npy")]
 
     def __len__(self):
 
@@ -210,6 +213,10 @@ if __name__ == '__main__':
 
     dataset_fake = ImageFolderDataset(folder_path=path, real=False)
     data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=32, shuffle=False, num_workers=4)
-    calculate_fid(args, data_loader_real, data_loader_fake)
+    #calculate_fid(args, data_loader_real, data_loader_fake)
+    m1, s1 = calculate_fid(args, data_loader_real)
+    m2, s2 = calculate_fid(args, data_loader_fake)
+    fid_value = calculate_frechet_distance(m1, s1, m2, s2)
+    print('FID: ', fid_value)
 
     print("Done. Using", (time.time() - start_time) // 60, "minutes.")
