@@ -127,9 +127,10 @@ def post_process(act):
 
 def get_feature_extractor():
     model = resnet50(shortcut_type='B')
-    model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)), Flatten())  # (N, 512)
+    model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)),
+                                   Flatten())  # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
-    ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/models/resnet_50_epoch_110_batch_0.pth.tar")
+    ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
     ckpt = trim_state_dict_name(ckpt["state_dict"])
     model.load_state_dict(ckpt)  # No conv_seg module in ckpt
     model = nn.DataParallel(model).cuda()
@@ -183,7 +184,7 @@ class ImageFolderDataset(Dataset):
 
         self.folder_path = folder_path
         self.real = real
-        self.head = 'real' if self.real else 'fake'
+        self.head = 'label' if self.real else 'fake'
         self.image_files = [f for f in os.listdir(os.path.join(self.folder_path, self.head)) if
                             os.path.isfile(os.path.join(self.folder_path, self.head)) and f.endswith(".npy")]
 
