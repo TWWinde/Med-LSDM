@@ -130,10 +130,10 @@ def get_feature_extractor():
     model.conv_seg = nn.Sequential(nn.AdaptiveAvgPool3d((1, 1, 1)),
                                    Flatten())  # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
-    ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
+    #ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
     #ckpt = trim_state_dict_name(ckpt["state_dict"])
-    model.load_state_dict(ckpt)  # No conv_seg module in ckpt
-    model = nn.DataParallel(model).cuda()
+    #model.load_state_dict(ckpt)  # No conv_seg module in ckpt
+    #model = nn.DataParallel(model).cuda()
     model.eval()
     print("Feature extractor weights loaded")
     return model
