@@ -28,7 +28,7 @@ parser.add_argument('--dims', type=int, default=2048)
 parser.add_argument('--latent_dim', type=int, default=1024)
 parser.add_argument('--basename', type=str, default="256_1024_Alpha_SN_v4plus_4_l1_GN_threshold_600_fold")
 parser.add_argument('--fold', type=int)
-parser.add_argument('--num_samples', type=int, default=16)
+parser.add_argument('--num_samples', type=int, default=1000)
 
 
 def trim_state_dict_name(ckpt):
@@ -54,10 +54,10 @@ def get_activations_from_dataloader(model, data_loader, args):
         with torch.no_grad():
             pred = model(batch)
 
-        if i* args.batch_size > pred_arr.shape[0]:
+        if i * args.batch_size > pred_arr.shape[0]:
             pred_arr[i * args.batch_size:] = pred.cpu().numpy()
         else:
-            pred_arr[i * args.batch_size:(i + 1) * args.batch_size] = pred.cpu().numpy()
+            pred_arr[i * args.batch_size:(i + 1) * args.batch_size] = pred.cpu().numpy() #####
     print(' done')
     return pred_arr
 
@@ -162,12 +162,9 @@ def calculate_fid(args, data_loader):
 
     act = get_activations_from_dataloader(model, data_loader, args)
 
-
     m, s = post_process(act)
 
-    return m,s
-
-
+    return m, s
 
 
 
