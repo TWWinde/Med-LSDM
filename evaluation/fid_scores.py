@@ -124,7 +124,6 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     return (diff.dot(diff) + np.trace(sigma1) +
             np.trace(sigma2) - 2 * tr_covmean)
 
-
 def post_process(act):
     mu = np.mean(act, axis=0)
     sigma = np.cov(act, rowvar=False)
