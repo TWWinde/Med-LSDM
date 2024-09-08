@@ -45,19 +45,25 @@ class Flatten(torch.nn.Module):
 
 
 def get_activations_from_dataloader(model, data_loader, args):
-
     pred_arr = np.empty((args.num_samples, args.dims))
+
     for i, batch in enumerate(data_loader):
         if i % 10 == 0:
             print('\rPropagating batch %d' % i, end='', flush=True)
+
         batch = batch.float().cuda()
+
         with torch.no_grad():
             pred = model(batch)
 
-        if i * args.batch_size > pred_arr.shape[0]:
-            pred_arr[i * args.batch_size:] = pred.cpu().numpy()
-        else:
-            pred_arr[i * args.batch_size:(i + 1) * args.batch_size] = pred.cpu().numpy() #####
+        start_idx = i * args.batch_size
+        end_idx = start_idx + pred.shape[0]
+
+        if end_idx > pred_arr.shape[0]:
+            end_idx = pred_arr.shape[0]
+
+        pred_arr[start_idx:end_idx] = pred.cpu().numpy()[:end_idx - start_idx]
+
     print(' done')
     return pred_arr
 
