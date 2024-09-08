@@ -202,7 +202,7 @@ class ImageFolderDataset(Dataset):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, self.head, img_path)
         img = np.load(total_path)
-        img = np.squeeze(img, axis=0)
+        img = np.squeeze(img, axis=0)*255
         #print(img.shape)
 
         return img
