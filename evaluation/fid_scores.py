@@ -198,7 +198,8 @@ class ImageFolderDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, self.head, img_path)
-        img = (np.load(total_path)-0.5)*50
+        img = (np.load(total_path)-0.5)*2
+        print(img.shape)
 
         return img
 
@@ -209,8 +210,8 @@ if __name__ == '__main__':
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
 
     dataset_real = ImageFolderDataset(folder_path=path, real=True)
+    print(len(dataset_real))
     data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=32, shuffle=False, num_workers=4)
-
     dataset_fake = ImageFolderDataset(folder_path=path, real=False)
     data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=32, shuffle=False, num_workers=4)
     #calculate_fid(args, data_loader_real, data_loader_fake)
