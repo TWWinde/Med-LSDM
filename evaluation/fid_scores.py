@@ -131,7 +131,7 @@ def get_feature_extractor():
                                    Flatten())  # (N, 512)
     # ckpt from https://drive.google.com/file/d/1399AsrYpQDi1vq6ciKRQkfknLsQQyigM/view?usp=sharing
     ckpt = torch.load("/data/private/autoPET/medicaldiffusion_results/pretrain/resnet_50.pth")
-    ckpt = trim_state_dict_name(ckpt["state_dict"])
+    #ckpt = trim_state_dict_name(ckpt["state_dict"])
     model.load_state_dict(ckpt)  # No conv_seg module in ckpt
     model = nn.DataParallel(model).cuda()
     model.eval()
@@ -184,7 +184,7 @@ class ImageFolderDataset(Dataset):
 
         self.folder_path = folder_path
         self.real = real
-        self.head = 'label' if self.real else 'fake'
+        self.head = 'real' if self.real else 'fake'
         self.image_files = [f for f in os.listdir(os.path.join(self.folder_path, self.head)) if
                             os.path.isfile(os.path.join(self.folder_path, self.head)) and f.endswith(".npy")]
 
