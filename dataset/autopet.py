@@ -139,7 +139,7 @@ class AutoPETDataset(Dataset):
                     if subfolder.endswith('nii.gz')]
         if self.sem_map:
             label_names, ct_names_ = [], []
-            for ct_path in ct_names:
+            for ct_path in sorted(ct_names):
                 label_path = ct_path.replace('ct', 'label')
                 if os.path.exists(ct_path) and os.path.exists(label_path):
                     ct_names_.append(ct_path)

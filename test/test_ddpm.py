@@ -138,10 +138,10 @@ def inference(cfg: DictConfig):
                 image, seg = preprocess_input(data_i)
 
                 generated = diffusion_model.sample(cond=seg, get_middle_process=False)
-                input1 = (generated + 1) / 2
-                input2 = (image + 1) / 2
-                generated_np = input1.cpu().numpy()
-                image_np = input2.cpu().numpy()
+                #input1 = (generated + 1) / 2
+                #input2 = (image + 1) / 2
+                generated_np = generated.cpu().numpy()
+                image_np = image.cpu().numpy()
                 label_np = label_save.cpu().numpy()
 
                 path_video = os.path.join(results_folder, 'video_results')
