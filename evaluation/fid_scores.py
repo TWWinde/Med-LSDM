@@ -194,8 +194,8 @@ class ImageFolderDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, self.head, img_path)
-        img = np.load(total_path)
-        print(img)
+        img = np.load(total_path)*255.0
+
 
         return img
 
