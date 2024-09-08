@@ -195,6 +195,7 @@ class ImageFolderDataset(Dataset):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, self.head, img_path)
         img = np.load(total_path)
+        print(img)
 
         return img
 
