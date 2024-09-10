@@ -23,6 +23,6 @@ pip uninstall nvidia_cublas_cu11
 
 # Run your python code
 
-#python /no_backups/d1502/medicaldiffusion/dataset/data_process.py
+python /no_backups/d1502/medicaldiffusion/dataset/data_process.py
 #python /no_backups/d1502/medicaldiffusion/dataset/data_process_2D.py
-python /misc/no_backups/d1502/medicaldiffusion/evaluation/fid_scores.py
+#python /misc/no_backups/d1502/medicaldiffusion/evaluation/fid_scores.py
