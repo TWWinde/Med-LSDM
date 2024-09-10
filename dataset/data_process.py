@@ -676,7 +676,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
 def get_mr_t1_niffti(input_root):
     input_path = os.path.join(input_root, 'Duke-Breast-Cancer-MRI')
     path_list = os.listdir(input_path)
-    output_path = os.path.join(input_root, 'T1_MR')
+    output_path = os.path.join(input_root, 'T1_MR_real')
     os.makedirs(output_path, exist_ok=True)
     label_path = os.path.join(input_root, 'SEG')
     for item in sorted(path_list): # different patients
@@ -695,7 +695,7 @@ def get_mr_t1_niffti(input_root):
         for x in patient_path_list:  # the unuseful middle path
             for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                 found = False
-                if "t1" in mr_dir:   ###check
+                if "Ph1ax" and "Ph2ax" and "Ph3ax" and "Ph4ax" and "t1" and "Segmentation" and "pass" not in mr_dir:   ###check
                     print(mr_dir)
                     mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                     num = len(os.listdir(mr_path_ab))
@@ -888,8 +888,8 @@ if __name__ == '__main__':
     if duke:
         if combine_label_and_dicom2niffti:
             #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
-            #get_mr_t1_niffti(duke_output_root)
-            rescale_crop_duke_t1(duke_output_root)
+            get_mr_t1_niffti(duke_output_root)
+            #rescale_crop_duke_t1(duke_output_root)
         #if rescale_crop2blocks:
             #rescale_crop_duke(duke_output_root)
             #rescale_crop_duke(duke_output_root, both_label_image=True)
