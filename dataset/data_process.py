@@ -695,7 +695,8 @@ def get_mr_t1_niffti(input_root):
         for x in patient_path_list:  # the unuseful middle path
             for mr_dir in os.listdir(os.path.join(patient_mr_path, x)):  # different image of same patient
                 found = False
-                if "Ph1ax" and "Ph2ax" and "Ph3ax" and "Ph4ax" and "t1" and "Segmentation" and "pass" not in mr_dir:   ###check
+                if "Ph1ax" not in mr_dir and "Ph2ax" not in mr_dir and "Ph3ax" not in mr_dir and "Ph4ax" not in mr_dir \
+                        and "t1" not in mr_dir and "Segmentation" not in mr_dir and "pass" not in mr_dir:   ###check
                     print(mr_dir)
                     mr_path_ab = os.path.join(patient_mr_path, x, mr_dir)
                     num = len(os.listdir(mr_path_ab))
