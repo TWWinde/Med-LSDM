@@ -204,23 +204,83 @@ class ImageFolderDataset(Dataset):
         img = np.squeeze(img, axis=0)
         img = (img-0.5)*2
         #print(img.shape)
+        #(1, 32, 256, 256)
+        return img
 
+
+class ImageFolderDataset_baseline_real(Dataset):
+    def __init__(self, folder_path):
+
+        self.folder_path = folder_path
+        self.image_files = [f for f in os.listdir(self.folder_path) if f.endswith(".npy")]
+
+    def __len__(self):
+
+        return len(self.image_files)
+
+    def __getitem__(self, idx):
+        img_path = self.image_files[idx]
+        total_path = os.path.join(self.folder_path, img_path)
+        img = np.load(total_path).transpose((2, 3, 0, 1))
+        #print(img.shape)
+        #(1, 32, 256, 256)
+        return img
+
+
+class ImageFolderDataset_baseline_fake(Dataset):
+    def __init__(self, folder_path):
+
+        self.folder_path = folder_path
+        self.image_files = [f for f in os.listdir(self.folder_path) if f.endswith(".npy")]
+
+    def __len__(self):
+
+        return len(self.image_files)
+
+    def __getitem__(self, idx):
+        img_path = self.image_files[idx]
+        total_path = os.path.join(self.folder_path, img_path)
+        img = np.load(total_path).transpose((-1, 0, 1))
+        img = np.expand_dims(img, axis=0)
+        #print(img.shape)
+        #(1, 32, 256, 256)
         return img
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    start_time = time.time()
-    path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
+    evaluate_our = False
+    if evaluate_our:
+        args = parser.parse_args()
+        start_time = time.time()
+        path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
 
-    dataset_real = ImageFolderDataset(folder_path=path, real=True)
-    print(len(dataset_real))
-    data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
-    dataset_fake = ImageFolderDataset(folder_path=path, real=False)
-    data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=10, shuffle=False, num_workers=4)
-    #calculate_fid(args, data_loader_real, data_loader_fake)
-    m1, s1 = calculate_fid(args, data_loader_real)
-    m2, s2 = calculate_fid(args, data_loader_fake)
-    fid_value = calculate_frechet_distance(m1, s1, m2, s2)
-    print('FID: ', fid_value)
-    print("Done. Using", (time.time() - start_time) // 60, "minutes.")
+        dataset_real = ImageFolderDataset(folder_path=path, real=True)
+        print(len(dataset_real))
+        data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
+        dataset_fake = ImageFolderDataset(folder_path=path, real=False)
+        data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=10, shuffle=False, num_workers=4)
+        # calculate_fid(args, data_loader_real, data_loader_fake)
+        m1, s1 = calculate_fid(args, data_loader_real)
+        m2, s2 = calculate_fid(args, data_loader_fake)
+        fid_value = calculate_frechet_distance(m1, s1, m2, s2)
+        print('FID: ', fid_value)
+        print("Done. Using", (time.time() - start_time) // 60, "minutes.")
+    else:
+        args = parser.parse_args()
+        start_time = time.time()
+        path2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/samples_many_32000"
+        path1 = "/data/private/autoPET/autopet_2d/image/npy"
+
+        dataset_real = ImageFolderDataset_baseline_real(folder_path=path1)
+        print(len(dataset_real))
+        data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
+        dataset_fake = ImageFolderDataset_baseline_fake(folder_path=path2)
+        data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=10, shuffle=False, num_workers=4)
+        # calculate_fid(args, data_loader_real, data_loader_fake)
+        m1, s1 = calculate_fid(args, data_loader_real)
+        m2, s2 = calculate_fid(args, data_loader_fake)
+        fid_value = calculate_frechet_distance(m1, s1, m2, s2)
+        print('FID: ', fid_value)
+        print("Done. Using", (time.time() - start_time) // 60, "minutes.")
+
+
