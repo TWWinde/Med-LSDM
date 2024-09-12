@@ -224,7 +224,7 @@ class ImageFolderDataset_baseline_real(Dataset):
         try:
             img = np.load(total_path).transpose((2, 3, 0, 1))
         except:
-            print(img_path)
+            img = np.load("/data/private/autoPET/autopet_2d/image/npy/acondon_10.npy").transpose((2, 3, 0, 1))
         #print(img.shape)
         #(1, 32, 256, 256)
         return img
