@@ -220,9 +220,11 @@ class ImageFolderDataset_baseline_real(Dataset):
 
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
-        print(img_path)
         total_path = os.path.join(self.folder_path, img_path)
-        img = np.load(total_path).transpose((2, 3, 0, 1))
+        try:
+            img = np.load(total_path).transpose((2, 3, 0, 1))
+        except:
+            print(img_path)
         #print(img.shape)
         #(1, 32, 256, 256)
         return img
