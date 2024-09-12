@@ -239,6 +239,7 @@ class ImageFolderDataset_baseline_fake(Dataset):
 
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
+        print(img_path)
         total_path = os.path.join(self.folder_path, img_path)
         img = np.load(total_path).transpose((-1, 0, 1))
         img = np.expand_dims(img, axis=0)
