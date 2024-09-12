@@ -6,10 +6,10 @@ from PIL import Image
 
 
 def get_2d_images(ct_path, ct_label_path, file="train"):
-    k = 0
+
     image_name ="tr" if file=="train" else "val"
     for i in range(len(ct_path)):
-
+        k = 0
         nifti_ct = nib.load(ct_path[i])
         ct_3d = nifti_ct.get_fdata()
         nifti_ct_label = nib.load(ct_label_path[i])
