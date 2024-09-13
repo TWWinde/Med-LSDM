@@ -249,7 +249,7 @@ class ImageFolderDataset_baseline_fake(Dataset):
 
 
 if __name__ == '__main__':
-    evaluate_our = True
+    evaluate_our = False
     if evaluate_our:
         args = parser.parse_args()
         start_time = time.time()
