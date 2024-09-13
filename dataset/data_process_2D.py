@@ -52,10 +52,10 @@ def list_images(path):
 
 
 def png_to_3D_npy(input1, input2, output1, output2):
-    i = 0
-    while i<1000:
+
+    for i in range(1000):
         name = f"condon_ts_{i}"
-        path_list =[os.path.join(input1, k) for k in os.listdir(input1) if k.startswith(name)]
+        path_list =[k for k in os.listdir(input1) if k.startswith(name)]
         length = len(path_list)-len(path_list) % 32
         images_real = []
         images_fake = []
@@ -63,34 +63,34 @@ def png_to_3D_npy(input1, input2, output1, output2):
             full_name_fake = f"condon_ts_{i}_{f}.png"
             full_name_real = f"ts_{i}_{f}.png"
             img_path_real = os.path.join(input1, full_name_real)
-            img_real = Image.open(img_path_real)
-            img_real = np.array(img_real)
-            img_real = img_real / 255.0
             img_path_fake = os.path.join(input2, full_name_fake)
-            img_fake = Image.open(img_path_fake)
-            img_fake = np.array(img_fake)
-            img_fake = img_fake / 255.0
-            if img_real.ndim == 2:
-                img_real = np.expand_dims(img_real, axis=0)
-            if img_fake.ndim == 2:
-                img_fake = np.expand_dims(img_fake, axis=0)
-            # 将处理后的图片添加到列表
-            images_real.append(img_real)
-            images_fake.append(img_fake)
-            if len(images_real) == 32 and len(images_fake) == 32:
-                # 拼接图片为一个四维数组 (batch_size, height, width, channels)
-                images_batch_real = np.stack(images_real, axis=0)
-                images_batch_fake = np.stack(images_fake, axis=0)
+            if os.path.exists(img_path_real) and os.path.exists(img_path_fake) :
+                img_real = Image.open(img_path_real)
+                img_real = np.array(img_real)
+                img_real = img_real / 255.0
+                img_fake = Image.open(img_path_fake)
+                img_fake = np.array(img_fake)
+                img_fake = img_fake / 255.0
+                if img_real.ndim == 2:
+                    img_real = np.expand_dims(img_real, axis=0)
+                if img_fake.ndim == 2:
+                    img_fake = np.expand_dims(img_fake, axis=0)
+                # 将处理后的图片添加到列表
+                images_real.append(img_real)
+                images_fake.append(img_fake)
+                if len(images_real) == 32 and len(images_fake) == 32:
+                    # 拼接图片为一个四维数组 (batch_size, height, width, channels)
+                    images_batch_real = np.stack(images_real, axis=0)
+                    images_batch_fake = np.stack(images_fake, axis=0)
 
-                npy_filename_real = f'{output1}/image_real_{i}.npy'
-                np.save(npy_filename_real, images_batch_real)
-                print(f'Saved {npy_filename_real}')
-                npy_filename_fake = f'{output2}/image_fake_{i}.npy'
-                np.save(npy_filename_fake, images_batch_fake)
-                print(f'Saved {npy_filename_fake}')
-                images_real = []
-                images_fake = []
-                i += 1
+                    npy_filename_real = os.path.join(output1, f'image_real_{i}.npy')
+                    np.save(npy_filename_real, images_batch_real)
+                    print(f'Saved {npy_filename_real}')
+                    npy_filename_fake = os.path.join(output2, f'image_fake_{i}.npy')
+                    np.save(npy_filename_fake, images_batch_fake)
+                    print(f'Saved {npy_filename_fake}')
+                    images_real = []
+                    images_fake = []
 
 
 if __name__ == '__main__':
