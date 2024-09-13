@@ -91,6 +91,7 @@ def png_to_3D_npy(input1, input2, output1, output2):
                     print(f'Saved {npy_filename_fake}')
                     images_real = []
                     images_fake = []
+        print("finished", name)
 
 
 if __name__ == '__main__':
