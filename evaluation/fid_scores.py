@@ -202,7 +202,7 @@ class ImageFolderDataset(Dataset):
         total_path = os.path.join(self.folder_path, self.head, img_path)
         img = np.load(total_path)
         img = np.squeeze(img, axis=0)
-        img = (img-0.5)*2
+        #img = (img-0.5)*2
         #print(img.shape)
         #(1, 32, 256, 256)
         return img
@@ -221,10 +221,8 @@ class ImageFolderDataset_baseline_real(Dataset):
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, img_path)
-        img = np.load(total_path).transpose((1, 0, 2, 3))  # .transpose((-1, 0, 1))
-        #img = np.expand_dims(img, axis=0)
-        #print(img.shape)
-        #(1, 32, 256, 256)
+        img = np.load(total_path).transpose((1, 0, 2, 3))
+
         return img
 
 
@@ -242,9 +240,6 @@ class ImageFolderDataset_baseline_fake(Dataset):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, img_path)
         img = np.load(total_path).transpose((1, 0, 2, 3))
-        #img = np.expand_dims(img, axis=0)
-        #print(img.shape)
-        #(1, 32, 256, 256)
         return img
 
 
