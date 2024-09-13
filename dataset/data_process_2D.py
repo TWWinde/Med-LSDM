@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     #get_2d_images(ct_image_test, ct_label_test, file="test")
     #get_2d_images(ct_image_train, ct_label_train, file="train")
-    input1 = "/data/private/autoPET/autopet_2d/image/npy"
+    input1 = "/data/private/autoPET/autopet_2d/image/test"
     input2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/samples_many_32000"
     output1 = "/data/private/autoPET/ddim-AutoPET-256-segguided/real_npy"
     output2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/fake_npy"
