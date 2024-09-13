@@ -64,6 +64,7 @@ def png_to_3D_npy(input1, input2, output1, output2):
             full_name_real = f"ts_{i}_{f}.png"
             img_path_real = os.path.join(input1, full_name_real)
             img_path_fake = os.path.join(input2, full_name_fake)
+
             if os.path.exists(img_path_real) and os.path.exists(img_path_fake):
                 img_real = Image.open(img_path_real)
                 img_real = np.array(img_real)
@@ -92,6 +93,8 @@ def png_to_3D_npy(input1, input2, output1, output2):
                     print(f'Saved {npy_filename_fake}')
                     images_real = []
                     images_fake = []
+            else:
+                print("fucked up")
         print("finished", name)
 
 
