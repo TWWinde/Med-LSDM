@@ -221,10 +221,8 @@ class ImageFolderDataset_baseline_real(Dataset):
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, img_path)
-        try:
-            img = np.load(total_path).transpose((2, 3, 0, 1))
-        except:
-            img = np.load("/data/private/autoPET/autopet_2d/image/npy/acondon_10.npy").transpose((2, 3, 0, 1))
+        img = np.load(total_path)  # .transpose((-1, 0, 1))
+        img = np.expand_dims(img, axis=0)
         #print(img.shape)
         #(1, 32, 256, 256)
         return img
@@ -243,7 +241,7 @@ class ImageFolderDataset_baseline_fake(Dataset):
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
         total_path = os.path.join(self.folder_path, img_path)
-        img = np.load(total_path).transpose((-1, 0, 1))
+        img = np.load(total_path) #.transpose((-1, 0, 1))
         img = np.expand_dims(img, axis=0)
         #print(img.shape)
         #(1, 32, 256, 256)
@@ -271,8 +269,8 @@ if __name__ == '__main__':
     else:
         args = parser.parse_args()
         start_time = time.time()
-        path2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/samples_many_32000"
-        path1 = "/data/private/autoPET/autopet_2d/image/npy"
+        path2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/fake_npy"
+        path1 = "/data/private/autoPET/ddim-AutoPET-256-segguided/real_npy"
 
         dataset_real = ImageFolderDataset_baseline_real(folder_path=path1)
         print(len(dataset_real))
