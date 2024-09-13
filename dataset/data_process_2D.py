@@ -55,7 +55,7 @@ def png_to_3D_npy(input1, input2, output1, output2):
 
     for i in range(1000):
         name = f"condon_ts_{i}"
-        path_list =[k for k in os.listdir(input1) if k.startswith(name)]
+        path_list =[k for k in os.listdir(input2) if k.startswith(name)]
         length = len(path_list)-len(path_list) % 32
         images_real = []
         images_fake = []
