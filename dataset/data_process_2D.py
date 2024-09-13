@@ -52,7 +52,7 @@ def list_images(path):
 
 
 def png_to_3D_npy(input1, input2, output1, output2):
-
+    n=0
     for i in range(1000):
         name = f"condon_ts_{i}"
         path_list =[k for k in os.listdir(input2) if k.startswith(name) and not k.endswith("npy")]
@@ -85,14 +85,15 @@ def png_to_3D_npy(input1, input2, output1, output2):
                     images_batch_real = np.stack(images_real, axis=0)
                     images_batch_fake = np.stack(images_fake, axis=0)
 
-                    npy_filename_real = os.path.join(output1, f'image_real_{i}.npy')
+                    npy_filename_real = os.path.join(output1, f'image_real_{n}.npy')
                     np.save(npy_filename_real, images_batch_real)
                     print(f'Saved {npy_filename_real}')
-                    npy_filename_fake = os.path.join(output2, f'image_fake_{i}.npy')
+                    npy_filename_fake = os.path.join(output2, f'image_fake_{n}.npy')
                     np.save(npy_filename_fake, images_batch_fake)
                     print(f'Saved {npy_filename_fake}')
                     images_real = []
                     images_fake = []
+                    n+=1
             else:
                 print("fucked up")
         print("finished", name)
