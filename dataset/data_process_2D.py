@@ -64,7 +64,7 @@ def png_to_3D_npy(input1, input2, output1, output2):
             full_name_real = f"ts_{i}_{f}.png"
             img_path_real = os.path.join(input1, full_name_real)
             img_path_fake = os.path.join(input2, full_name_fake)
-            if os.path.exists(img_path_real) and os.path.exists(img_path_fake) :
+            if os.path.exists(img_path_real) and os.path.exists(img_path_fake):
                 img_real = Image.open(img_path_real)
                 img_real = np.array(img_real)
                 img_real = img_real / 255.0
@@ -78,6 +78,7 @@ def png_to_3D_npy(input1, input2, output1, output2):
                 # 将处理后的图片添加到列表
                 images_real.append(img_real)
                 images_fake.append(img_fake)
+                print(img_path_real)
                 if len(images_real) == 32 and len(images_fake) == 32:
                     # 拼接图片为一个四维数组 (batch_size, height, width, channels)
                     images_batch_real = np.stack(images_real, axis=0)
