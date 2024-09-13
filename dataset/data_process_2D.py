@@ -96,6 +96,8 @@ def png_to_3D_npy(input1, input2, output1, output2):
                     n+=1
             else:
                 print("fucked up")
+            if n == 1000:
+                break
         print("finished", name)
 
 
