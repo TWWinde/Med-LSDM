@@ -719,7 +719,7 @@ def get_mr_t1_niffti_all(input_root):
     path_list = os.listdir(input_root)
     output_path = '/data/private/autoPET/duke/T1_MR_real_all'
     os.makedirs(output_path, exist_ok=True)
-    for x in path_list:  # the unuseful middle path
+    for x in sorted(path_list):  # the unuseful middle path
         mr_path_ab = os.path.join(input_root, x)
         output_name = x + ".nii.gz"
         out_path = os.path.join(output_path, output_name)
