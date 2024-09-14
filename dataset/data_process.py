@@ -880,7 +880,7 @@ if __name__ == '__main__':
     croped_total_mr = '/data/private/autoPET/Totalsegmentator_mri_croped/'
     duke_input_root = '/data/private/autoPET/duke/'
     duke_output_root = '/data/private/autoPET/duke/'
-    path = "/data/public/Duke/MRI_Breast/MR "
+    path = "/data/public/Duke/MRI_Breast/MR"
     autopet = False
     if autopet:
         preprocess_raw = False
