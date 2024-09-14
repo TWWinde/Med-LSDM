@@ -717,7 +717,7 @@ def get_mr_t1_niffti(input_root):
 
 def get_mr_t1_niffti_all(input_root):
     path_list = os.listdir(input_root)
-    output_path = os.path.join(input_root, 'T1_MR_real_all')
+    output_path = '/data/private/autoPET/duke/T1_MR_real_all'
     os.makedirs(output_path, exist_ok=True)
     for x in path_list:  # the unuseful middle path
         mr_path_ab = os.path.join(input_root, x)
