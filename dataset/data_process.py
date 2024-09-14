@@ -676,7 +676,7 @@ def stack_mr_combine_labels_duck_breast(input_root, output_root):
 def get_mr_t1_niffti(input_root):
     input_path = os.path.join(input_root, 'Duke-Breast-Cancer-MRI')
     path_list = os.listdir(input_path)
-    output_path = os.path.join(input_root, 'T1_MR_real')
+    output_path = os.path.join(input_root, 'T1_MR_real_all')
     os.makedirs(output_path, exist_ok=True)
     label_path = os.path.join(input_root, 'SEG')
     for item in sorted(path_list): # different patients
@@ -711,6 +711,35 @@ def get_mr_t1_niffti(input_root):
 
         print("finished", item)
 
+
+#/data/public/Duke/MRI_Breast/MR
+
+
+def get_mr_t1_niffti_all(input_root):
+    path_list = os.listdir(input_root)
+    output_path = os.path.join(input_root, 'T1_MR_real_all')
+    os.makedirs(output_path, exist_ok=True)
+    for x in path_list:  # the unuseful middle path
+        mr_path_ab = os.path.join(input_root, x)
+        output_name = x + ".nii.gz"
+        out_path = os.path.join(output_path, output_name)
+        mr_size = dicom_serie2nifti(mr_path_ab, out_path)
+        print("finished", x)
+
+
+def rescale_crop_duke_t1_all(root_path):
+    image_input = os.path.join(root_path, "T1_MR_real_all")
+    output = os.path.join(root_path, "T1_MR_real_all_rescale_crop")
+    os.makedirs(output, exist_ok=True)
+    input_path_list = os.listdir(image_input)
+    for item in sorted(input_path_list):
+        name = item.split('/')[-1]
+        path = os.path.join(image_input, item)
+        mr = sitk.ReadImage(path)
+        mr = rescale(mr)
+        sitk.WriteImage(mr, os.path.join(output, f'scaled_{name}'))
+        crop_save(name, os.path.join(output, f'scaled_{name}'), output)
+        print("finished", name)
 
 def rescale_crop_duke_t1(root_path):
     image_input = os.path.join(root_path, "T1_MR_real")
@@ -851,6 +880,7 @@ if __name__ == '__main__':
     croped_total_mr = '/data/private/autoPET/Totalsegmentator_mri_croped/'
     duke_input_root = '/data/private/autoPET/duke/'
     duke_output_root = '/data/private/autoPET/duke/'
+    path = "/data/public/Duke/MRI_Breast/MR "
     autopet = False
     if autopet:
         preprocess_raw = False
@@ -889,8 +919,8 @@ if __name__ == '__main__':
     if duke:
         if combine_label_and_dicom2niffti:
             #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)
-            get_mr_t1_niffti(duke_output_root)
-            rescale_crop_duke_t1(duke_output_root)
+            get_mr_t1_niffti_all(path)
+            rescale_crop_duke_t1_all(duke_output_root)
         #if rescale_crop2blocks:
             #rescale_crop_duke(duke_output_root)
             #rescale_crop_duke(duke_output_root, both_label_image=True)
