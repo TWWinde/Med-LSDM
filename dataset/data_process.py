@@ -740,6 +740,7 @@ def rescale_crop_duke_t1_all(root_path):
         sitk.WriteImage(mr, os.path.join(output, f'scaled_{name}'))
         crop_save(name, os.path.join(output, f'scaled_{name}'), output)
         print("finished", name)
+    print("finished all")
 
 def rescale_crop_duke_t1(root_path):
     image_input = os.path.join(root_path, "T1_MR_real")
