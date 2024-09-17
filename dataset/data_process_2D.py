@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 
-def get_2d_images(ct_path, ct_label_path, file="train"):
+def get_2d_images_autopet(ct_path, ct_label_path, file="train"):
 
     image_name ="tr" if file=="train" else "val"
     for i in range(len(ct_path)):
@@ -101,6 +101,65 @@ def png_to_3D_npy(input1, input2, output1, output2):
         print("finished", name)
 
 
+def get_2d_images_synthrad2023(mr_path, mr_label_path, file="train"):
+
+    m = 0
+    test_image_out_path = "/data/private/autoPET/synthrad2023_2d/image/test/"
+    test_label_out_path = "/data/private/autoPET/synthrad2023_2d/mask/all/test/"
+    train_image_out_path = "/data/private/autoPET/synthrad2023_2d/image/train/"
+    train_label_out_path = "/data/private/autoPET/synthrad2023_2d/label/train/"
+    os.makedirs(test_image_out_path, exist_ok=True)
+    os.makedirs(test_label_out_path, exist_ok=True)
+    os.makedirs(train_image_out_path, exist_ok=True)
+    os.makedirs(train_label_out_path, exist_ok=True)
+    for i in range(len(mr_path)):
+        k = 0
+        nifti_ct = nib.load(mr_path[i])
+        mr_3d = nifti_ct.get_fdata()
+        nifti_mr_label = nib.load(mr_label_path[i])
+        mr_label_3d = nifti_mr_label.get_fdata()
+        n = mr_3d.shape[2]-mr_3d.shape[2] % 32
+        if file == "train":
+            for z in range(mr_3d.shape[2]):
+                mr_slice = mr_3d[:, :, z]
+                mr_label_slice = mr_label_3d[:, :, z].astype(np.int32)
+                # print(ct_label_slice)
+                if mr_label_slice.max() != mr_label_slice.min() and mr_slice.max() != mr_slice.min():
+                    mr_image = (((mr_slice - mr_slice.min()) / (mr_slice.max() - mr_slice.min())) * 255).astype(np.uint8)
+
+                    mr_image = Image.fromarray(mr_image)
+                    mr_label = Image.fromarray(mr_label_slice)
+                    mr_image.save(train_image_out_path, f'tr_{m}.png')
+                    mr_label.save(train_label_out_path, f'tr_{m}.png')
+                    m += 1
+        else:
+            for z in range(n):
+                mr_slice = mr_3d[:, :, z]
+                mr_label_slice = mr_label_3d[:, :, z].astype(np.int32)
+                # print(ct_label_slice)
+                # if ct_label_slice.max() != ct_label_slice.min() and ct_slice.max() != ct_slice.min():
+                mr_image = (((mr_slice - mr_slice.min()) / (mr_slice.max() - mr_slice.min())) * 255).astype(np.uint8)
+                mr_image = Image.fromarray(mr_image)
+                mr_label = Image.fromarray(mr_label_slice)
+
+                mr_image.save(test_image_out_path, f'ts_{i}_{k}.png')
+                mr_label.save(test_label_out_path, f'ts_{i}_{k}.png')
+                k += 1
+
+    print("finished", mr_path[i])
+
+
+def list_images_synth2023(path):
+    image_path = []
+    label_path = []
+    # read files names
+    image_names = sorted(os.listdir(path))
+    for image_name in image_names:
+        image_path.append(os.path.join(path, "mr", image_name))
+        label_path.append(os.path.join(path, 'label',  image_name))
+
+    return image_path, label_path
+
 if __name__ == '__main__':
     os.makedirs('/misc/data/private/autoPET/autopet_2d/image/train/', exist_ok=True)
     os.makedirs('/misc/data/private/autoPET/autopet_2d/image/test/', exist_ok=True)
@@ -123,4 +182,10 @@ if __name__ == '__main__':
     output2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/fake_npy"
     os.makedirs(output1, exist_ok=True)
     os.makedirs(output2, exist_ok=True)
-    png_to_3D_npy(input1, input2, output1, output2)
+    #png_to_3D_npy(input1, input2, output1, output2)
+    test_path = "/data/private/autoPET/SynthRad2024/test"
+    test_image_path, test_label_path = list_images_synth2023(test_path)
+    train_path = "/data/private/autoPET/SynthRad2024/train"
+    train_image_path, train_label_path = list_images_synth2023(train_path)
+    get_2d_images_synthrad2023(train_image_path, train_label_path, file="train")
+    get_2d_images_synthrad2023(test_image_path, test_label_path, file="test")
