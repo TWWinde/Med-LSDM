@@ -396,7 +396,7 @@ if __name__ == '__main__':
     if evaluate_our:
         args = parser.parse_args()
         start_time = time.time()
-        path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
+        path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_vq_spade_segconv_64out/video_results"
 
         dataset_real = ImageFolderDataset(folder_path=path, real=True)
         print(len(dataset_real))
