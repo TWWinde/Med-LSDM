@@ -71,7 +71,7 @@ def run(cfg: DictConfig):
 
 
 def video_tensor_to_gif(tensor, path, duration=120, loop=0, optimize=True):
-    tensor = ((tensor - tensor.min()) / (tensor.max() - tensor.min())) * 1.0
+    tensor = ((tensor - tensor.min()) / (tensor.max() - tensor.min())) * 1.0   # !!! take a look at pixel value
     images = map(T.ToPILImage(), tensor.unbind(dim=1))
     first_img, *rest_imgs = images
     first_img.save(path, save_all=True, append_images=rest_imgs,
