@@ -125,7 +125,7 @@ def inference(cfg: DictConfig):
     else:
         vqvae = None
 
-    compute_matrics = False
+    compute_matrics = True
     generate_npy = True
     if compute_matrics:
         metrics_computer = Metrics(results_folder, val_dl)

@@ -166,6 +166,7 @@ def list_images_synth2023(path):
 
     return image_path, label_path
 
+
 if __name__ == '__main__':
     os.makedirs('/misc/data/private/autoPET/autopet_2d/image/train/', exist_ok=True)
     os.makedirs('/misc/data/private/autoPET/autopet_2d/image/test/', exist_ok=True)
