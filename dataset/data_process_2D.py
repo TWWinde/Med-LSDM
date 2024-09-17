@@ -107,11 +107,15 @@ def get_2d_images_synthrad2023(mr_path, mr_label_path, file="train"):
     test_image_out_path = "/data/private/autoPET/synthrad2023_2d/image/test/"
     test_label_out_path = "/data/private/autoPET/synthrad2023_2d/mask/all/test/"
     train_image_out_path = "/data/private/autoPET/synthrad2023_2d/image/train/"
-    train_label_out_path = "/data/private/autoPET/synthrad2023_2d/label/train/"
+    train_label_out_path = "/data/private/autoPET/synthrad2023_2d/mask/all/train/"
+    val_image_out_path = "/data/private/autoPET/synthrad2023_2d/image/val/"
+    val_label_out_path = "/data/private/autoPET/synthrad2023_2d/mask/all/val/"
     os.makedirs(test_image_out_path, exist_ok=True)
     os.makedirs(test_label_out_path, exist_ok=True)
     os.makedirs(train_image_out_path, exist_ok=True)
     os.makedirs(train_label_out_path, exist_ok=True)
+    os.makedirs(val_image_out_path, exist_ok=True)
+    os.makedirs(val_label_out_path, exist_ok=True)
     for i in range(len(mr_path)):
         k = 0
         nifti_ct = nib.load(mr_path[i])
@@ -144,9 +148,11 @@ def get_2d_images_synthrad2023(mr_path, mr_label_path, file="train"):
 
                 mr_image.save(os.path.join(test_image_out_path, f'ts_{i}_{k}.png'))
                 mr_label.save(os.path.join(test_label_out_path, f'ts_{i}_{k}.png'))
+                mr_image.save(os.path.join(val_image_out_path, f'val_{i}_{k}.png'))
+                mr_label.save(os.path.join(val_label_out_path, f'val_{i}_{k}.png'))
                 k += 1
 
-    print("finished", mr_path[i])
+        print("finished", mr_path[i])
 
 
 def list_images_synth2023(path):
