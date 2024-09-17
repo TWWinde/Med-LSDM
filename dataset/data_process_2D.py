@@ -153,7 +153,7 @@ def list_images_synth2023(path):
     image_path = []
     label_path = []
     # read files names
-    image_names = sorted(os.listdir(path))
+    image_names = sorted(os.listdir(os.path.join(path, "mr")))
     for image_name in image_names:
         image_path.append(os.path.join(path, "mr", image_name))
         label_path.append(os.path.join(path, 'label',  image_name))
