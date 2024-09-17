@@ -10,7 +10,7 @@
 #SBATCH --nodes=1
 #SBATCH --gpus=1
 #SBATCH --qos=batch
-#SBATCH --gpus=rtx_a5000:1
+# SBATCH --gpus=rtx_a5000:1
 # SBATCH --qos=shortbatch
 # SBATCH --partition=highperf
 
@@ -24,5 +24,5 @@ pip uninstall nvidia_cublas_cu11
 # Run your python code
 
 #python /no_backups/d1502/medicaldiffusion/dataset/data_process.py
-#python /no_backups/d1502/medicaldiffusion/dataset/data_process_2D.py
-python /misc/no_backups/d1502/medicaldiffusion/evaluation/fid_scores.py
+python /no_backups/d1502/medicaldiffusion/dataset/data_process_2D.py
+#python /misc/no_backups/d1502/medicaldiffusion/evaluation/fid_scores.py
