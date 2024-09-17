@@ -129,8 +129,8 @@ def get_2d_images_synthrad2023(mr_path, mr_label_path, file="train"):
 
                     mr_image = Image.fromarray(mr_image)
                     mr_label = Image.fromarray(mr_label_slice)
-                    mr_image.save(train_image_out_path, f'tr_{m}.png')
-                    mr_label.save(train_label_out_path, f'tr_{m}.png')
+                    mr_image.save(os.path.join(train_image_out_path, f'tr_{m}.png'))
+                    mr_label.save(os.path.join(train_label_out_path, f'tr_{m}.png'))
                     m += 1
         else:
             for z in range(n):
@@ -142,8 +142,8 @@ def get_2d_images_synthrad2023(mr_path, mr_label_path, file="train"):
                 mr_image = Image.fromarray(mr_image)
                 mr_label = Image.fromarray(mr_label_slice)
 
-                mr_image.save(test_image_out_path, f'ts_{i}_{k}.png')
-                mr_label.save(test_label_out_path, f'ts_{i}_{k}.png')
+                mr_image.save(os.path.join(test_image_out_path, f'ts_{i}_{k}.png'))
+                mr_label.save(os.path.join(test_label_out_path, f'ts_{i}_{k}.png'))
                 k += 1
 
     print("finished", mr_path[i])
