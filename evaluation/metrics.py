@@ -122,10 +122,9 @@ class Metrics:
                                 encoder.codebook.embeddings.min())) * 2.0 - 1.0
                         assert seg.size()[-1] == 64  # torch.Size([1, 8, 8, 64, 64])
 
-                generated = model.sample(cond=seg, get_middle_process=False)
-                print(generated)
-                input1 = (generated + 1) / 2
-                input2 = (image + 1) / 2
+                generated = model.sample(cond=seg, get_middle_process=False)  # (-1,1)
+                input1 = generated     #(generated + 1) / 2
+                input2 = image      #(image + 1) / 2
                 generated_np = input1.cpu().numpy()
                 image_np = input2.cpu().numpy()
                 label_np = label_save.cpu().numpy()
