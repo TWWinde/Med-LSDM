@@ -945,7 +945,7 @@ if __name__ == '__main__':
 
     duke = True
     combine_label_and_dicom2niffti = True
-    rescale_crop2blocks = False
+    rescale_crop2blocks = True
     if duke:
         #if combine_label_and_dicom2niffti:
             #stack_mr_combine_labels_duck_breast(duke_input_root, duke_output_root)

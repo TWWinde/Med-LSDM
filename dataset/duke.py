@@ -109,7 +109,7 @@ class DUKEDataset(Dataset):
         if self.sem_map:
             label_names, mr_names_ = [], []
             for mr_path in mr_names:
-                label_path = mr_path.replace('mr', 'label')
+                label_path = mr_path.replace('final_labeled_mr', 'final_label')
                 if os.path.exists(mr_path) and os.path.exists(label_path):
                     mr_names_.append(mr_path)
                     label_names.append(label_path)
