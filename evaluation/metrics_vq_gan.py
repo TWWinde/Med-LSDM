@@ -118,10 +118,18 @@ class metrics:
             for i, data_i in enumerate(self.val_dataloader):
                 image = data_i['image'].to('cuda:0')
                 x_recon, z, vq_output = model(image, evaluation=True)
+                recon_np = x_recon.cpu().numpy()
+                image_np = image.cpu().numpy()
+
+                recon_np_path = os.path.join(self.root_dir, 'recon', f'{i}_recon.npy')
+                image_np_path = os.path.join(self.root_dir, 'real', f'{i}_image.npy')
+                os.makedirs(os.path.join(self.root_dir, 'recon'), exist_ok=True)
+                os.makedirs(os.path.join(self.root_dir, 'real'), exist_ok=True)
+                np.save(recon_np_path, recon_np, allow_pickle=True, fix_imports=True)
+                np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
 
                 input = (image + 1) / 2
                 recon = (x_recon + 1) / 2
-
 
                 input_list = F.pad(input, (2, 2, 2, 2))
                 recon_list = F.pad(recon, (2, 2, 2, 2))
@@ -215,8 +223,6 @@ class metrics:
                 # FID
                 # fid_value = self.calculate_fid(input1, input2)
                 # fid.append(fid_value.item())
-
-        model.train()
 
         avg_pips = sum(pips) / len(pips)
         avg_ssim = sum(ssim) / len(ssim)
