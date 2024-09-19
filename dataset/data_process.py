@@ -799,8 +799,6 @@ def rescale_crop_duke(root_path, both_label_image=False):
     print('all finished')
 
 
-
-
 def final_rescale_crop_duke(root_path):
 
     label_input = os.path.join(root_path, 'SEG')
@@ -824,7 +822,7 @@ def final_rescale_crop_duke(root_path):
         sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{label_name}'))
         sitk.WriteImage(label, os.path.join(label_output, f'scaled_{label_name}'))
         crop_save(label_name, os.path.join(labeled_mr_output, f'scaled_{label_name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{label_name}'), label_out_files=label_output, crop_size=(256, 256), length=32, labelandimage=True)
-        print("finished", label_name)
+        print("finished", labeled_mr_output)
 
     print('all finished')
 
@@ -910,7 +908,7 @@ if __name__ == '__main__':
     Total_out = '/data/private/autoPET/Totalsegmentator_mri_cutted/'
     croped_total_mr = '/data/private/autoPET/Totalsegmentator_mri_croped/'
     duke_input_root = '/data/private/autoPET/duke/'
-    duke_output_root = '/data/private/autoPET/duke/'
+    duke_output_root = '/data/private/autoPET/duke'
     path = "/data/public/Duke/MRI_Breast/MR"
     autopet = False
     if autopet:

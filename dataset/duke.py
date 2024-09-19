@@ -25,7 +25,7 @@ TRAIN_TRANSFORMS = tio.Compose([
 ])
 
 
-class DUKEDataset(Dataset):
+class DUKEDataset1(Dataset):
 
     def __init__(self, root_dir: str, sem_map=False):
         super().__init__()
@@ -49,11 +49,11 @@ class DUKEDataset(Dataset):
         mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(os.path.join(self.root_dir))
                     if subfolder.endswith('nii.gz')] #mr_names_1 + mr_names_2
         if self.sem_map:
-            mr_names =  [os.path.join(self.root_dir, 'labeled_MR', subfolder) for subfolder in os.listdir(os.path.join(self.root_dir, 'labeled_MR'))
+            mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(os.path.join(self.root_dir, 'labeled_MR'))
                     if subfolder.endswith('nii.gz')]
             label_names, mr_names_ = [], []
             for mr_path in mr_names:
-                label_path = mr_path.replace('labeled_MR', 'SEG')
+
                 if os.path.exists(mr_path) and os.path.exists(label_path):
                     mr_names_.append(mr_path)
                     label_names.append(label_path)
@@ -88,7 +88,7 @@ class DUKEDataset(Dataset):
             return {'image': img.data.permute(0, -1, 1, 2)}
 
 
-class DUKEDataset1(Dataset):
+class DUKEDataset(Dataset):
 
     def __init__(self, root_dir: str, sem_map=False):
         super().__init__()
