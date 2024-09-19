@@ -103,7 +103,7 @@ class DUKEDataset(Dataset):
 
     def get_data_files(self):
 
-        mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(os.path.join(self.root_dir))
+        mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(self.root_dir)
                     if subfolder.endswith('nii.gz')]
 
         if self.sem_map:
