@@ -757,7 +757,7 @@ def rescale_crop_duke_t1(root_path):
         print("finished", name)
 
 
-def rescale_crop_duke(root_path, both_label_image=False):
+def rescale_crop_duke(root_path, both_label_image=True):
 
     label_input = os.path.join(root_path, 'SEG')
     labeled_mr_input = os.path.join(root_path, 'labeled_MR')
