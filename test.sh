@@ -148,12 +148,21 @@ python -c "import torch; print(torch.__version__)"
 #dataset.root_dir='/misc/data/private/autoPET/duke/T1_MR_real_all_rescale_crop' dataset.val_dir='/misc/data/private/autoPET/duke/T1_MR_real_all_rescale_crop'
 
 # mr_wo_artifacts
-PL_TORCH_DISTRIBUTED_BACKEND=gloo python /misc/no_backups/d1502/medicaldiffusion/test/test_vqgan.py dataset=synthrad2023 \
-model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/SynthRAD2023/mr_final/lightning_logs/version_144347/checkpoints/latest_checkpoint.ckpt" \
-model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='mr_final' model.precision=16 model.embedding_dim=8 \
+#PL_TORCH_DISTRIBUTED_BACKEND=gloo python /misc/no_backups/d1502/medicaldiffusion/test/test_vqgan.py dataset=synthrad2023 \
+#model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/SynthRAD2023/mr_final/lightning_logs/version_144347/checkpoints/latest_checkpoint.ckpt" \
+#model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='mr_final' model.precision=16 model.embedding_dim=8 \
+#model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+#model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
+#model.gan_feat_weight=4 model.batch_size=4 model.n_codes=16384
+
+# duke_t1_all_tanh
+PL_TORCH_DISTRIBUTED_BACKEND=gloo python /misc/no_backups/d1502/medicaldiffusion/test/test_vqgan.py dataset=duke \
+model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results_t1_all_tanh' model.precision=32 model.embedding_dim=8 \
+model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/DUKE/results_t1_all_tanh/lightning_logs/version_144222/checkpoints/latest_checkpoint.ckpt" \
 model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
 model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
-model.gan_feat_weight=4 model.batch_size=4 model.n_codes=16384
+model.gan_feat_weight=4 model.batch_size=1 model.n_codes=16384  \
+dataset.root_dir='/misc/data/private/autoPET/duke/T1_MR_real_all_rescale_crop' dataset.val_dir='/misc/data/private/autoPET/duke/T1_MR_real_all_rescale_crop'
 
 
 
