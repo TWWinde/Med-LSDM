@@ -850,13 +850,13 @@ def crop_save(name, image_path, image_out_files,  label_path=None, label_out_fil
             if is_all_zero(cropped_image, cropped_label):
                print("Array is all zeros. Skipping rescaling.")
                continue
-            label_output_path = os.path.join(label_out_files, name.replace('nii.gz', '') + f'_{n}.' + 'nii.gz')
+            label_output_path = os.path.join(label_out_files, name.replace('.nii.gz', '') + f'_{n}.' + 'nii.gz')
             cropped_label = nib.Nifti1Image(cropped_label, affine=label_niffti_data.affine)
             nib.save(cropped_label, label_output_path)
         else:
             cropped_image = crop_block_single(image_data, *crop_size, number, length)
 
-        image_output_path = os.path.join(image_out_files,  name.replace('nii.gz', '') + f'_{n}.' + 'nii.gz')
+        image_output_path = os.path.join(image_out_files,  name.replace('.nii.gz', '') + f'_{n}.' + 'nii.gz')
         cropped_image = nib.Nifti1Image(cropped_image, affine=niffti_data.affine)
         nib.save(cropped_image, image_output_path)
         n += 1
