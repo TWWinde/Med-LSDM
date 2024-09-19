@@ -149,7 +149,7 @@ python -c "import torch; print(torch.__version__)"
 
 # mr_wo_artifacts
 PL_TORCH_DISTRIBUTED_BACKEND=gloo python /misc/no_backups/d1502/medicaldiffusion/test/test_vqgan.py dataset=synthrad2023 \
-model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/SynthRAD2023/mr_final/lightning_logs/version_144347/checkpoints/latest_checkpoint.ckpt"
+model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/SynthRAD2023/mr_final/lightning_logs/version_144347/checkpoints/latest_checkpoint.ckpt" \
 model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='mr_final' model.precision=16 model.embedding_dim=8 \
 model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
 model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
