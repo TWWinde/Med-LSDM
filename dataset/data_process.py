@@ -780,6 +780,9 @@ def rescale_crop_duke(root_path, both_label_image=False):
             image_path = label_path.replace('SEG', 'labeled_MR')
             label = sitk.ReadImage(label_path)
             image = sitk.ReadImage(image_path)
+            label_size = label.GetSize()
+            image_size = image.GetSize()
+            assert label_size == image_size, f"Error: Image size {image_size} and Label size {label_size} do not match."
             image = rescale(image)
             label = rescale(label, label=True)
             sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{name}'))
