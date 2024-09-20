@@ -142,8 +142,8 @@ def compute_metrics_3d_our_model(root_path):
                 rmse_value = torch.sqrt(mse)
                 psnr.append(psnr_value.mean().item())
                 rmse.append(rmse_value.mean().item())
-                input3_rgb = input3.expand(-1, 3, -1, -1)
-                input4_rgb = input4.expand(-1, 3, -1, -1)
+                input3_rgb = (input3.expand(-1, 3, -1, -1)+1.0)/2.0 * 255.0
+                input4_rgb = (input4.expand(-1, 3, -1, -1)+1.0)/2.0 * 255.0
                 pool_real = model_inc(input3_rgb.float())[0][:, :, 0, 0]
                 pool1 += [pool_real]
                 pool_fake = model_inc(input4_rgb.float())[0][:, :, 0, 0]
