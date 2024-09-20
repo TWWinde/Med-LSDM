@@ -121,9 +121,9 @@ class metrics:
                 recon_np = x_recon.cpu().numpy()
                 image_np = image.cpu().numpy()
 
-                recon_np_path = os.path.join(self.root_dir, 'recon', f'{i}_recon.npy')
+                recon_np_path = os.path.join(self.root_dir, 'fake', f'{i}_recon.npy')
                 image_np_path = os.path.join(self.root_dir, 'real', f'{i}_image.npy')
-                os.makedirs(os.path.join(self.root_dir, 'recon'), exist_ok=True)
+                os.makedirs(os.path.join(self.root_dir, 'fake'), exist_ok=True)
                 os.makedirs(os.path.join(self.root_dir, 'real'), exist_ok=True)
                 np.save(recon_np_path, recon_np, allow_pickle=True, fix_imports=True)
                 np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
