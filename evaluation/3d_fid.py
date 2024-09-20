@@ -391,10 +391,10 @@ class ImageFolderDataset_baseline_fake(Dataset):
 
 if __name__ == '__main__':
     evaluate_our = True
-    if evaluate_our:
+    path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE"
+    if "medicaldiffusion_results/test_results" in path:
         args = parser.parse_args()
         start_time = time.time()
-        path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE"
 
         compute_metrics_3d_our_model(path)  # get metrics slice-wise
         dataset_real = ImageFolderDataset(folder_path=path, real=True)
@@ -411,6 +411,7 @@ if __name__ == '__main__':
     else:
         args = parser.parse_args()
         start_time = time.time()
+
         path2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/fake_npy"
         path1 = "/data/private/autoPET/ddim-AutoPET-256-segguided/real_npy"
 

@@ -2,7 +2,7 @@
 
 #Slurm parameters
 #SBATCH --job-name=data_process
-#SBATCH --output=PROCESS%j.%N.out
+#SBATCH --output=metrics%j.%N.out
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=2-23:00:00
