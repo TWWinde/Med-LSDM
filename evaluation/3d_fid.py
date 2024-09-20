@@ -499,7 +499,7 @@ if __name__ == '__main__':
         args = parser.parse_args()
         start_time = time.time()
 
-        #compute_metrics_3d_our_model(path)  # get metrics slice-wise
+        compute_metrics_3d_our_model(path)  # get metrics slice-wise
         dataset_real = ImageFolderDataset(folder_path=path, real=True)
         print(len(dataset_real))
         data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
