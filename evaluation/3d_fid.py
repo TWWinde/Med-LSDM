@@ -546,6 +546,9 @@ if __name__ == '__main__':
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE"
     path = 0
     if "medicaldiffusion_results/test_results" in path:
+        """
+        evaluate 3d images our model
+        """
         args = parser.parse_args()
         start_time = time.time()
 
@@ -563,7 +566,7 @@ if __name__ == '__main__':
         print("Done. Using", (time.time() - start_time) // 60, "minutes.")
     else:
         """
-        evaluate 2d images
+        evaluate 2d images from png to npy baseline model
         """
         save_root_path="/data/private/autoPET/ddim-Synthrad2023-256-segguided"
         real_png_path = "/data/private/autoPET/synthrad2023_2d/image/test"
