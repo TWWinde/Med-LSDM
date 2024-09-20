@@ -99,7 +99,7 @@ def compute_metrics_3d_our_model(root_path):
     avg_psnr = np.array(avg_psnr)
     avg_rmse = np.array(avg_rmse)
 
-    print(avg_pips, avg_ssim, avg_psnr, avg_rmse, fid)
+    print("pips", avg_pips, "ssim", avg_ssim, "psnr", avg_psnr, "rmse", avg_rmse, "fid", fid)
 
 
 def numpy_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
@@ -389,6 +389,43 @@ class ImageFolderDataset_baseline_fake(Dataset):
         return img
 
 
+def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batches'):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    images = []
+    batch_count = 0
+
+    for i in range(32000):
+        image_filename = f"ts_{i}.png"
+        image_path = os.path.join(image_dir, image_filename)
+
+        img = Image.open(image_path)
+
+        img_array = np.array(img)
+
+        img_array = img_array / 255.0
+
+        if img_array.ndim == 2:
+            img_array = np.expand_dims(img_array, axis=-1)
+
+        # 将处理后的图片添加到列表
+        images.append(img_array)
+
+        # 如果达到 batch_size（例如 32 张），保存为一个 npy 文件
+        if len(images) == batch_size:
+            # 拼接图片为一个四维数组 (batch_size, height, width, channels)
+            images_batch = np.stack(images, axis=-1)
+
+            # 保存为 .npy 文件
+            npy_filename = f'{save_dir}/acondon_{batch_count}.npy'
+            np.save(npy_filename, images_batch)
+            print(f'Saved {npy_filename}')
+
+            images = []
+            batch_count += 1
+
+
 if __name__ == '__main__':
     evaluate_our = True
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE"
@@ -409,6 +446,7 @@ if __name__ == '__main__':
         print('FID: ', fid_value)
         print("Done. Using", (time.time() - start_time) // 60, "minutes.")
     else:
+        load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batches')
         args = parser.parse_args()
         start_time = time.time()
 
