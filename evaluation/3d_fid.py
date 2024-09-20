@@ -32,6 +32,56 @@ parser.add_argument('--fold', type=int)
 parser.add_argument('--num_samples', type=int, default=1000)
 
 
+def png_to_3d_npy(real_input, fake_input, real_output, fake_output, data_amount=100):
+    n=0
+    for i in range(1000):
+        name = f"condon_ts_{i}"
+        path_list =[k for k in os.listdir(fake_input) if k.startswith(name) and not k.endswith("npy")]
+        length = len(path_list)-len(path_list) % 32
+        images_real = []
+        images_fake = []
+        for f in range(length):
+            full_name_fake = f"condon_ts_{i}_{f}.png"
+            full_name_real = f"ts_{i}_{f}.png"
+            img_path_real = os.path.join(real_input, full_name_real)
+            img_path_fake = os.path.join(fake_input, full_name_fake)
+
+            if os.path.exists(img_path_real) and os.path.exists(img_path_fake):
+                img_real = Image.open(img_path_real)
+                img_real = np.array(img_real)
+                img_real = img_real / 255.0
+                img_fake = Image.open(img_path_fake)
+                img_fake = np.array(img_fake)
+                img_fake = img_fake / 255.0
+                if img_real.ndim == 2:
+                    img_real = np.expand_dims(img_real, axis=0)
+                if img_fake.ndim == 2:
+                    img_fake = np.expand_dims(img_fake, axis=0)
+
+                images_real.append(img_real)
+                images_fake.append(img_fake)
+                print(img_path_real)
+                if len(images_real) == 32 and len(images_fake) == 32:
+                    # (batch_size, height, width, channels)
+                    images_batch_real = np.stack(images_real, axis=0)
+                    images_batch_fake = np.stack(images_fake, axis=0)
+
+                    npy_filename_real = os.path.join(real_output, f'image_real_{n}.npy')
+                    np.save(npy_filename_real, images_batch_real)
+                    print(f'Saved {npy_filename_real}')
+                    npy_filename_fake = os.path.join(fake_output, f'image_fake_{n}.npy')
+                    np.save(npy_filename_fake, images_batch_fake)
+                    print(f'Saved {npy_filename_fake}')
+                    images_real = []
+                    images_fake = []
+                    n+=1
+            else:
+                print("scheiße!")
+            if n == data_amount:
+                break
+        print("finished", name)
+
+
 def compute_metrics_2d(path_real_root, path_fake_root):
     pool1, pool2 = [], []
     pips, ssim, psnr, rmse = [], [], [], []
@@ -92,9 +142,9 @@ def compute_metrics_2d(path_real_root, path_fake_root):
     avg_ssim = np.array(avg_ssim)
     avg_psnr = np.array(avg_psnr)
     avg_rmse = np.array(avg_rmse)
-    fid_value = fid_score.calculate_fid_given_paths([path_real_root, path_fake_root], batch_size=50, device='cuda', dims=2048)
-    print(f"FID: {fid_value}")
-    print(avg_pips, avg_ssim, avg_psnr, avg_rmse, fid)
+    #fid_value = fid_score.calculate_fid_given_paths([path_real_root, path_fake_root], batch_size=50, device='cuda', dims=2048)
+    #print(f"FID: {fid_value}")
+    print("pips", avg_pips, "ssim", avg_ssim, "psnr", avg_psnr, "rmse", avg_rmse, "fid", fid)
 
 
 def compute_metrics_3d_our_model(root_path):
@@ -493,8 +543,8 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 
 
 if __name__ == '__main__':
-    evaluate_our = True
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE"
+    path = 0
     if "medicaldiffusion_results/test_results" in path:
         args = parser.parse_args()
         start_time = time.time()
@@ -512,13 +562,20 @@ if __name__ == '__main__':
         print('FID: ', fid_value)
         print("Done. Using", (time.time() - start_time) // 60, "minutes.")
     else:
-        load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batches')
+        """
+        evaluate 2d images
+        """
+        save_root_path="/data/private/autoPET/ddim-Synthrad2023-256-segguided"
+        real_png_path = "/data/private/autoPET/synthrad2023_2d/image/test"
+        fake_png_path = "/data/private/autoPET/ddim-Synthrad2023-256-segguided/samples_many_3200"
         args = parser.parse_args()
         start_time = time.time()
 
-        path2 = "/data/private/autoPET/ddim-AutoPET-256-segguided/fake_npy"
-        path1 = "/data/private/autoPET/ddim-AutoPET-256-segguided/real_npy"
-
+        path2 = os.path.join(save_root_path, "fake_npy")
+        path1 = os.path.join(save_root_path, "real_npy")
+        os.makedirs(path1, exist_ok=True)
+        os.makedirs(path1, exist_ok=False)
+        png_to_3d_npy(real_png_path, fake_png_path, path1, path2, data_amount=100)
         dataset_real = ImageFolderDataset_baseline_real(folder_path=path1)
         print(len(dataset_real))
         data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
