@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 #Slurm parameters
-#SBATCH --job-name=data_process
+#SBATCH --job-name=metrics
 #SBATCH --output=metrics%j.%N.out
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
