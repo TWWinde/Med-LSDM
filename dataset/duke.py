@@ -127,11 +127,10 @@ class DUKEDataset(Dataset):
         img = tio.ScalarImage(self.mr_paths[idx])
         img = self.Crop(img)
         img = self.Norm(img)
-        print(f"Sample shape: {img.data.permute(0, -1, 2, 1).shape}, dtype: {img.data.permute(0, -1, 2, 1).dtype}")
         if self.sem_map:
             label = tio.ScalarImage(self.label_paths[idx])
             label = self.Crop(label)
 
-            return {'image': img.data.permute(0, -1, 2, 1), 'label': label.data.permute(0, -1, 1, 2)}
+            return {'image': img.data.permute(0, -1, 2, 1).float(), 'label': label.data.permute(0, -1, 1, 2)}
         else:
             return {'image': img.data.permute(0, -1, 1, 2)}
