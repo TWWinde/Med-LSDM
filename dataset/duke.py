@@ -49,11 +49,10 @@ class DUKEDataset(Dataset):
         mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(os.path.join(self.root_dir))
                     if subfolder.endswith('nii.gz')] #mr_names_1 + mr_names_2
         if self.sem_map:
-            mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(os.path.join(self.root_dir, 'labeled_MR'))
-                    if subfolder.endswith('nii.gz')]
+
             label_names, mr_names_ = [], []
             for mr_path in mr_names:
-
+                label_path = mr_path.replace("T1_MR_real", "SEG")
                 if os.path.exists(mr_path) and os.path.exists(label_path):
                     mr_names_.append(mr_path)
                     label_names.append(label_path)
@@ -83,7 +82,7 @@ class DUKEDataset(Dataset):
             label = label.data.permute(0, 2, 1, 3)
             label = crop(label)
 
-            return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
+            return {'image': img.data.permute(0, -1, 2, 1), 'label': label.data.permute(0, -1, 1, 2)}
         else:
             return {'image': img.data.permute(0, -1, 1, 2)}
 

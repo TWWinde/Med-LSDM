@@ -133,9 +133,18 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=2 model.gpus=0 model.segconv=1 model.load_milestone=0
 
 # diffusion with segconv 64 condition duke
-python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_duke_final_32' dataset.label_nc=3 \
-model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/DUKE/results_t1_all_tanh/lightning_logs/version_144222/checkpoints/latest_checkpoint.ckpt' \
-model.vqvae_ckpt=0 model.spade_input_channel=32 \
+#python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_duke_final_32' dataset.label_nc=3 \
+#model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/DUKE/results_t1_all_tanh/lightning_logs/version_144222/checkpoints/latest_checkpoint.ckpt' \
+#model.vqvae_ckpt=0 model.spade_input_channel=32 \
+#model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=2 model.gpus=0 model.segconv=1 model.load_milestone=0 \
+#dataset.root_dir='/data/private/autoPET/duke/final_labeled_mr' dataset.val_dir='/data/private/autoPET/duke/final_labeled_mr'
+
+
+# diffusion with segconv 64 condition duke T1_MR_real
+python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_duke_real_randomcrop_8' dataset.label_nc=3 \
+model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/DUKE/results_randomcrop_t1_real_tanh/lightning_logs/version_144594/checkpoints/latest_checkpoint.ckpt' \
+model.vqvae_ckpt=0 model.spade_input_channel=8 \
 model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
 model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=2 model.gpus=0 model.segconv=1 model.load_milestone=0 \
-dataset.root_dir='/data/private/autoPET/duke/final_labeled_mr' dataset.val_dir='/data/private/autoPET/duke/final_labeled_mr'
+dataset.root_dir='/misc/data/private/autoPET/duke/T1_MR_real' dataset.val_dir='/misc/data/private/autoPET/duke/T1_MR_real'
