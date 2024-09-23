@@ -21,7 +21,7 @@ objective: pred_x0
 save_and_sample_every: 600
 denoising_fn: Unet3D
 diffusion: SemanticGaussianDiffusion
-train_lr: 1e-4
+train_lr: 3e-5
 timesteps: 500 # number of steps 300
 sampling_timesteps: 250 # number of sampling timesteps (using ddim for faster inference [see citation for ddim paper])
 loss_type: l1 # L1 or L2

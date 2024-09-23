@@ -109,6 +109,10 @@ class Metrics:
         pips, ssim, psnr, rmse, fid = [], [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
+        save_npy=False
+        save_slice_image = True
+        save_gif = False
+
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 label_save = data_i["label"]
@@ -128,32 +132,65 @@ class Metrics:
                 generated_np = input1.cpu().numpy()
                 image_np = input2.cpu().numpy()
                 label_np = label_save.cpu().numpy()
+                if save_npy:
+                    os.makedirs(os.path.join(path_video, 'fake'), exist_ok=True)
+                    os.makedirs(os.path.join(path_video, 'real'), exist_ok=True)
+                    os.makedirs(os.path.join(path_video, 'label'), exist_ok=True)
+                    np.save(sample_np_path, generated_np, allow_pickle=True, fix_imports=True)
+                    np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
+                    np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
 
-                all_videos_list = F.pad(generated, (2, 2, 2, 2))
-                all_label_list = F.pad(label_save, (2, 2, 2, 2))
-                all_image_list = F.pad(image, (2, 2, 2, 2))
+                if save_slice_image:
+                    slice_index = 15  # Specify which slice you want to save
 
-                sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                path_video = os.path.join(self.root_dir, 'video_results')
-                os.makedirs(path_video, exist_ok=True)
+                    # Path to save images
+                    path_images = os.path.join(self.root_dir, 'slices')
+                    os.makedirs(path_images, exist_ok=True)
 
-                sample_path = os.path.join(path_video, f'{i}_sample.gif')
-                image_path = os.path.join(path_video, f'{i}_image.gif')
-                label_path = os.path.join(path_video, f'{i}_label.gif')
-                video_tensor_to_gif(sample_gif, sample_path)
-                video_tensor_to_gif(image_gif, image_path)
-                video_tensor_to_gif(label_gif, label_path)
-                sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
-                image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
-                label_np_path = os.path.join(path_video, 'label', f'{i}_label.npy')
-                os.makedirs(os.path.join(path_video, 'fake'), exist_ok=True)
-                os.makedirs(os.path.join(path_video, 'real'), exist_ok=True)
-                os.makedirs(os.path.join(path_video, 'label'), exist_ok=True)
-                np.save(sample_np_path, generated_np, allow_pickle=True, fix_imports=True)
-                np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
-                np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
+                    # For generated_np
+                    plt.imshow(generated_np[0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{i}_generated_slice_{slice_index}.png'),
+                                bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+
+                    # For image_np
+                    plt.imshow(image_np[0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{i}_image_slice_{slice_index}.png'), bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+
+                    # For label_np (assuming RGB)
+                    plt.imshow(label_np[slice_index].transpose(1, 2, 0))  # Color image, transpose (H, W, C)
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{i}_label_slice_{slice_index}.png'), bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+
+                if save_gif:
+                    all_videos_list = F.pad(generated, (2, 2, 2, 2))
+                    all_label_list = F.pad(label_save, (2, 2, 2, 2))
+                    all_image_list = F.pad(image, (2, 2, 2, 2))
+
+                    sample_gif = rearrange(all_videos_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+
+                    path_video = os.path.join(self.root_dir, 'video_results')
+                    os.makedirs(path_video, exist_ok=True)
+
+                    sample_path = os.path.join(path_video, f'{i}_sample.gif')
+                    image_path = os.path.join(path_video, f'{i}_image.gif')
+                    label_path = os.path.join(path_video, f'{i}_label.gif')
+                    video_tensor_to_gif(sample_gif, sample_path)
+                    video_tensor_to_gif(image_gif, image_path)
+                    video_tensor_to_gif(label_gif, label_path)
+                    sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
+                    image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
+                    label_np_path = os.path.join(path_video, 'label', f'{i}_label.npy')
+
 
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input1, input2)
