@@ -140,7 +140,7 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=2 model.gpus=0 model.segconv=1 model.load_milestone=0 \
 #dataset.root_dir='/data/private/autoPET/duke/final_labeled_mr' dataset.val_dir='/data/private/autoPET/duke/final_labeled_mr'
 
-# diffusion with segconv 64 condition duke
+# diffusion with segconv 8 condition duke
 python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_duke_final_8' dataset.label_nc=3 \
 model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/DUKE/results_t1_all_tanh/lightning_logs/version_144222/checkpoints/latest_checkpoint.ckpt' \
 model.vqvae_ckpt=0 model.spade_input_channel=8 \
