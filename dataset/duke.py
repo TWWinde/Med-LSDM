@@ -25,7 +25,7 @@ TRAIN_TRANSFORMS = tio.Compose([
 ])
 
 
-class DUKEDataset1(Dataset):
+class DUKEDataset(Dataset):
 
     def __init__(self, root_dir: str, sem_map=False):
         super().__init__()
@@ -82,12 +82,12 @@ class DUKEDataset1(Dataset):
             label = label.data.permute(0, 2, 1, 3)
             label = crop(label)
 
-            return {'image': img.data.permute(0, -1, 2, 1), 'label': label.data.permute(0, -1, 1, 2)}
+            return {'image': img.data.permute(0, -1, 1, 2), 'label': label.data.permute(0, -1, 1, 2)}
         else:
             return {'image': img.data.permute(0, -1, 1, 2)}
 
 
-class DUKEDataset(Dataset):
+class DUKEDataset1(Dataset):
 
     def __init__(self, root_dir: str, sem_map=False):
         super().__init__()
