@@ -568,10 +568,11 @@ if __name__ == '__main__':
         """
         evaluate 2d images from png to npy baseline model
         """
-        save_root_path="/data/private/autoPET/ddim-Synthrad2023-256-segguided"
+        save_root_path ="/data/private/autoPET/ddim-Synthrad2023-256-segguided"
         real_png_path = "/data/private/autoPET/synthrad2023_2d/image/test"
         fake_png_path = "/data/private/autoPET/ddim-Synthrad2023-256-segguided/samples_many_3200"
         args = parser.parse_args()
+        print(save_root_path)
         start_time = time.time()
 
         path2 = os.path.join(save_root_path, "fake_npy")
