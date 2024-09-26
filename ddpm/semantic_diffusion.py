@@ -733,7 +733,7 @@ class Unet3D_SPADE(nn.Module):
         t = self.time_mlp(time) if exists(self.time_mlp) else None
 
         # add 3d conv for input segmap
-        print(cond.shape)
+        # print(cond.shape) torch.Size([1, 37, 32, 256, 256])
         if self.segconv:
             seg = self.segconv3d(cond)
         else:
@@ -1498,6 +1498,8 @@ class Semantic_Trainer(object):
                 data_ = next(self.dl)
                 input_image, label = data_['image'].cuda(), data_['label'].cuda()
                 seg = self.preprocess_input(label)
+                print(seg.shape)
+                print(self.num_classes)
 
                 if isinstance(self.vqvae, VQVAE):
                     with torch.no_grad():
