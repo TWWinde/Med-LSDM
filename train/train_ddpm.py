@@ -18,7 +18,7 @@ def run(cfg: DictConfig):
     with open_dict(cfg):
         cfg.model.results_folder = os.path.join(
             cfg.model.results_folder, cfg.dataset.name, cfg.model.results_folder_postfix)
-    print(cfg.model.denoising_fn, "and", cfg.model.diffusion, 'are implemented')
+    print("Task name:", cfg.model.results_folder_postfix, cfg.model.denoising_fn, "and", cfg.model.diffusion, 'are implemented')
     if cfg.model.denoising_fn == 'Unet3D':
         model = Unet3D(
             dim=cfg.model.diffusion_img_size,
