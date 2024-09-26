@@ -60,7 +60,7 @@ def png_to_3d_npy(real_input, fake_input, real_output, fake_output, data_amount=
 
                 images_real.append(img_real)
                 images_fake.append(img_fake)
-                print(img_path_real)
+                #print(img_path_real)
                 if len(images_real) == 32 and len(images_fake) == 32:
                     # (batch_size, height, width, channels)
                     images_batch_real = np.stack(images_real, axis=0)
@@ -574,7 +574,7 @@ if __name__ == '__main__':
         args = parser.parse_args()
         print(save_root_path)
         start_time = time.time()
-
+        compute_metrics_2d(real_png_path, fake_png_path)
         path2 = os.path.join(save_root_path, "fake_npy")
         path1 = os.path.join(save_root_path, "real_npy")
         os.makedirs(path1, exist_ok=True)
