@@ -1498,8 +1498,6 @@ class Semantic_Trainer(object):
                 data_ = next(self.dl)
                 input_image, label = data_['image'].cuda(), data_['label'].cuda()
                 seg = self.preprocess_input(label)
-                print(seg.shape)
-                print(self.num_classes)
 
                 if isinstance(self.vqvae, VQVAE):
                     with torch.no_grad():
