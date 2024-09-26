@@ -132,7 +132,13 @@ class Metrics:
                 generated_np = input1.cpu().numpy()
                 image_np = input2.cpu().numpy()
                 label_np = label_save.cpu().numpy()
+                path_video = os.path.join(self.root_dir, 'video_results')
+                os.makedirs(path_video, exist_ok=True)
+
                 if save_npy:
+                    sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
+                    image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
+                    label_np_path = os.path.join(path_video, 'label', f'{i}_label.npy')
                     os.makedirs(os.path.join(path_video, 'fake'), exist_ok=True)
                     os.makedirs(os.path.join(path_video, 'real'), exist_ok=True)
                     os.makedirs(os.path.join(path_video, 'label'), exist_ok=True)
@@ -143,7 +149,7 @@ class Metrics:
                         save_npy = False
 
                 if save_slice_image:
-                    slice_index = 15  # Specify which slice you want to save
+                    slice_index = 16  # Specify which slice you want to save
 
                     # Path to save images
                     path_images = os.path.join(self.root_dir, 'slices')
@@ -171,7 +177,6 @@ class Metrics:
                                 pad_inches=0)
                     plt.close()
 
-
                 if save_gif:
                     all_videos_list = F.pad(generated, (2, 2, 2, 2))
                     all_label_list = F.pad(label_save, (2, 2, 2, 2))
@@ -181,18 +186,13 @@ class Metrics:
                     label_gif = rearrange(all_label_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
                     image_gif = rearrange(all_image_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
 
-                    path_video = os.path.join(self.root_dir, 'video_results')
-                    os.makedirs(path_video, exist_ok=True)
-
                     sample_path = os.path.join(path_video, f'{i}_sample.gif')
                     image_path = os.path.join(path_video, f'{i}_image.gif')
                     label_path = os.path.join(path_video, f'{i}_label.gif')
                     video_tensor_to_gif(sample_gif, sample_path)
                     video_tensor_to_gif(image_gif, image_path)
                     video_tensor_to_gif(label_gif, label_path)
-                    sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
-                    image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
-                    label_np_path = os.path.join(path_video, 'label', f'{i}_label.npy')
+
                     if i > 50:
                         save_gif = False
 
@@ -211,12 +211,6 @@ class Metrics:
                 if i ==500:
                     break
 
-                # FID
-                #fid_value = self.calculate_fid(input1, input2)
-                #fid.append(fid_value.item())
-
-        model.train()
-
         avg_pips = sum(pips) / len(pips)
         avg_ssim = sum(ssim) / len(ssim)
         avg_psnr = sum(psnr) / len(psnr)
@@ -224,6 +218,7 @@ class Metrics:
         #avg_fid = sum(fid) / total_samples
 
         return avg_pips, avg_ssim, avg_psnr, avg_rmse #, #avg_fid
+
 
     def pips_3d(self, img1, img2):
         assert img1.shape == img2.shape
