@@ -109,9 +109,9 @@ class Metrics:
         pips, ssim, psnr, rmse, fid = [], [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
-        save_npy=False
+        save_npy=True
         save_slice_image = True
-        save_gif = False
+        save_gif = True
 
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
@@ -139,6 +139,8 @@ class Metrics:
                     np.save(sample_np_path, generated_np, allow_pickle=True, fix_imports=True)
                     np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
                     np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
+                    if i > 50:
+                        save_npy = False
 
                 if save_slice_image:
                     slice_index = 15  # Specify which slice you want to save
@@ -169,6 +171,7 @@ class Metrics:
                                 pad_inches=0)
                     plt.close()
 
+
                 if save_gif:
                     all_videos_list = F.pad(generated, (2, 2, 2, 2))
                     all_label_list = F.pad(label_save, (2, 2, 2, 2))
@@ -190,7 +193,8 @@ class Metrics:
                     sample_np_path = os.path.join(path_video, 'fake', f'{i}_sample.npy')
                     image_np_path = os.path.join(path_video, 'real', f'{i}_image.npy')
                     label_np_path = os.path.join(path_video, 'label', f'{i}_label.npy')
-
+                    if i > 50:
+                        save_gif = False
 
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input1, input2)
@@ -204,7 +208,7 @@ class Metrics:
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
 
-                if i ==1000:
+                if i ==500:
                     break
 
                 # FID

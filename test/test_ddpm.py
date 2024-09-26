@@ -126,7 +126,7 @@ def inference(cfg: DictConfig):
         vqvae = None
 
     compute_matrics = True
-    generate_npy = True
+    generate_npy = False
     if compute_matrics:
         metrics_computer = Metrics(results_folder, val_dl)
         metrics_computer.metrics_test(diffusion_model, encoder=vqvae)

@@ -181,6 +181,9 @@ class metrics:
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
+        save_npy = False
+        save_slice_image = True
+        save_gif = False
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 image, seg = self.preprocess_input(data_i)
@@ -189,18 +192,23 @@ class metrics:
                 input = (image + 1) / 2
                 recon = (x_recon + 1) / 2
 
-                input_list = F.pad(input, (2, 2, 2, 2))
-                recon_list = F.pad(recon, (2, 2, 2, 2))
 
-                input_gif = rearrange(input_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                recon_gif = rearrange(recon_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                path_video = os.path.join(self.root_dir, 'video_results')
-                os.makedirs(path_video, exist_ok=True)
 
-                image_path = os.path.join(path_video, f'{i}_input.gif')
-                label_path = os.path.join(path_video, f'{i}_recon.gif')
-                video_tensor_to_gif(input_gif, image_path)
-                video_tensor_to_gif(recon_gif, label_path)
+                if save_gif:
+                    input_list = F.pad(input, (2, 2, 2, 2))
+                    recon_list = F.pad(recon, (2, 2, 2, 2))
+
+                    input_gif = rearrange(input_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    recon_gif = rearrange(recon_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    path_video = os.path.join(self.root_dir, 'video_results')
+                    os.makedirs(path_video, exist_ok=True)
+
+                    image_path = os.path.join(path_video, f'{i}_input.gif')
+                    label_path = os.path.join(path_video, f'{i}_recon.gif')
+                    video_tensor_to_gif(input_gif, image_path)
+                    video_tensor_to_gif(recon_gif, label_path)
+
+
 
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input, recon)
