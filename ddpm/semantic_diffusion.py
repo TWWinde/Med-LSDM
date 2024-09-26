@@ -733,6 +733,7 @@ class Unet3D_SPADE(nn.Module):
         t = self.time_mlp(time) if exists(self.time_mlp) else None
 
         # add 3d conv for input segmap
+        print(cond.shape)
         if self.segconv:
             seg = self.segconv3d(cond)
         else:
