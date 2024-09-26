@@ -578,7 +578,7 @@ if __name__ == '__main__':
         path2 = os.path.join(save_root_path, "fake_npy")
         path1 = os.path.join(save_root_path, "real_npy")
         os.makedirs(path1, exist_ok=True)
-        os.makedirs(path1, exist_ok=False)
+        os.makedirs(path1, exist_ok=True)
         png_to_3d_npy(real_png_path, fake_png_path, path1, path2, data_amount=100)
         dataset_real = ImageFolderDataset_baseline_real(folder_path=path1)
         print(len(dataset_real))
