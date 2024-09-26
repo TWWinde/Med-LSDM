@@ -543,8 +543,8 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 
 
 if __name__ == '__main__':
-    path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
-    #path = 0
+    #path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
+    path = 0
     if "medicaldiffusion_results/test_results" in path:
         """
         evaluate 3d images our model
