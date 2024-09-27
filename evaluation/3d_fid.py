@@ -545,7 +545,7 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 if __name__ == '__main__':
     #path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results"
-    path0 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET"
+    path2 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET"
     path1 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE"
     path0 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
     path_list = [path0, path1, path2]
