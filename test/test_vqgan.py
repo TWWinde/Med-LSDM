@@ -41,7 +41,7 @@ def run(cfg: DictConfig):
     model.eval()
     model.freeze()
     model.cuda()
-    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/test_results/", cfg.model.name, cfg.dataset.name)
+    results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/test_results/", cfg.model.name, cfg.dataset.name, cfg.model.default_root_dir_postfix)
     os.makedirs(results_folder, exist_ok=True)
     with torch.no_grad():
         metrics_computer = metrics(results_folder, val_dataloader, num_classes=cfg.dataset.label_nc)
