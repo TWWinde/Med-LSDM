@@ -25,7 +25,8 @@ def inference(cfg: DictConfig):
     with open_dict(cfg):
         cfg.model.results_folder = os.path.join(
             cfg.model.results_folder, cfg.dataset.name, cfg.model.results_folder_postfix)
-    print(cfg.model.denoising_fn, "and", cfg.model.diffusion, 'are implemented')
+    print("Task name:", cfg.model.results_folder_postfix, cfg.model.denoising_fn, "and", cfg.model.diffusion,
+          'are implemented')
     if cfg.model.denoising_fn == 'Unet3D':
         unet_model = Unet3D(
             dim=cfg.model.diffusion_img_size,
@@ -101,7 +102,6 @@ def inference(cfg: DictConfig):
         all_milestones = [int((p.split('.')[0]).split("-")[-1]) for p in all_paths if p.endswith('.pt')]
         assert len(all_milestones) > 0, 'need to have at least one milestone to load from latest checkpoint (milestone == -1)'
         milestone = max(all_milestones)
-        print("laoding checkpoint from", os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
         data = torch.load(os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
         print('load checkpoint: ', os.path.join(results_folder, 'checkpoints', f"sample-{milestone}.pt"))
 

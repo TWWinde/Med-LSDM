@@ -20,7 +20,7 @@ import io
 @hydra.main(config_path='/misc/no_backups/d1502/medicaldiffusion/config', config_name='base_cfg', version_base=None)
 def run(cfg: DictConfig):
     pl.seed_everything(cfg.model.seed)
-
+    print("Task name:", cfg.model.default_root_dir_postfix, 'is tested')
     train_dataset, val_dataset, sampler = get_dataset(cfg)
     val_dataloader = DataLoader(val_dataset, batch_size=1,
                                 shuffle=False, num_workers=cfg.model.num_workers)
