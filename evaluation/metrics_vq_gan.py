@@ -114,6 +114,9 @@ class metrics:
         pips, ssim, psnr, rmse, fid, l1 = [], [], [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
+        save_npy = True
+        save_slice_image = True
+        save_gif = True
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
                 image = data_i['image'].to('cuda:0')
@@ -122,28 +125,47 @@ class metrics:
                 image_np = image.cpu().numpy()
                 path_video = os.path.join(self.root_dir, 'video_results')
                 os.makedirs(path_video, exist_ok=True)
+                input = image
+                recon = x_recon
+                if save_npy:
+                    recon_np_path = os.path.join(self.root_dir, 'fake', f'{i}_recon.npy')
+                    image_np_path = os.path.join(self.root_dir, 'real', f'{i}_image.npy')
+                    os.makedirs(os.path.join(self.root_dir, 'fake'), exist_ok=True)
+                    os.makedirs(os.path.join(self.root_dir, 'real'), exist_ok=True)
+                    np.save(recon_np_path, recon_np, allow_pickle=True, fix_imports=True)
+                    np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
+                    if i > 50:
+                        save_npy = False
 
-                recon_np_path = os.path.join(self.root_dir, 'fake', f'{i}_recon.npy')
-                image_np_path = os.path.join(self.root_dir, 'real', f'{i}_image.npy')
-                os.makedirs(os.path.join(self.root_dir, 'fake'), exist_ok=True)
-                os.makedirs(os.path.join(self.root_dir, 'real'), exist_ok=True)
-                np.save(recon_np_path, recon_np, allow_pickle=True, fix_imports=True)
-                np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
+                if save_slice_image:
+                    slice_index = 16  # Specify which slice you want to save
 
-                input = (image + 1) / 2
-                recon = (x_recon + 1) / 2
+                    # Path to save images
+                    path_images = os.path.join(self.root_dir, 'slices')
+                    os.makedirs(path_images, exist_ok=True)
 
-                input_list = F.pad(input, (2, 2, 2, 2))
-                recon_list = F.pad(recon, (2, 2, 2, 2))
+                    # For generated_np
+                    plt.imshow(recon_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{i}_generated_slice_{slice_index}.png'),
+                                bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
 
-                input_gif = rearrange(input_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                recon_gif = rearrange(recon_list, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    # For image_np
+                    plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{i}_image_slice_{slice_index}.png'), bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+                if save_gif:
+                    input_gif = rearrange(input, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    recon_gif = rearrange(recon, '(i j) c f h w -> c f (i h) (j w)', i=1)
+                    image_path = os.path.join(path_video, f'{i}_input.gif')
+                    label_path = os.path.join(path_video, f'{i}_recon.gif')
+                    video_tensor_to_gif(input_gif, image_path)
+                    video_tensor_to_gif(recon_gif, label_path)
 
-
-                image_path = os.path.join(path_video, f'{i}_input.gif')
-                label_path = os.path.join(path_video, f'{i}_recon.gif')
-                video_tensor_to_gif(input_gif, image_path)
-                video_tensor_to_gif(recon_gif, label_path)
 
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input, recon)
@@ -162,12 +184,6 @@ class metrics:
 
                 if i == 200:
                     break
-
-                # FID
-                #fid_value = self.calculate_fid(input1, input2)
-                #fid.append(fid_value.item())
-
-        model.train()
 
         avg_pips = sum(pips) / len(pips)
         avg_ssim = sum(ssim) / len(ssim)
@@ -190,8 +206,11 @@ class metrics:
                 image, seg = self.preprocess_input(data_i)
                 x_recon, z, vq_output = model(image, seg, evaluation=True)
 
-                input = (image + 1) / 2
-                recon = (x_recon + 1) / 2
+                input = image
+                recon = x_recon
+                recon_np = recon.cpu().numpy()
+                input_np = input.cpu().numpy()
+
 
                 if save_gif:
                     input_list = F.pad(input, (2, 2, 2, 2))
