@@ -165,6 +165,8 @@ class metrics:
                     label_path = os.path.join(path_video, f'{i}_recon.gif')
                     video_tensor_to_gif(input_gif, image_path)
                     video_tensor_to_gif(recon_gif, label_path)
+                    if i > 50:
+                        save_gif = False
 
 
                 # SSIM
