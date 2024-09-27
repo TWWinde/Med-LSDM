@@ -132,6 +132,7 @@ class Metrics:
                 generated_np = input1.cpu().numpy()
                 image_np = input2.cpu().numpy()
                 label_np = label_save.cpu().numpy()
+                print(generated_np.shape, image_np.shape, label_np.shape)
                 path_video = os.path.join(self.root_dir, 'video_results')
                 os.makedirs(path_video, exist_ok=True)
 
