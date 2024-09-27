@@ -185,6 +185,7 @@ class metrics:
                 l1.append(l1_value)
 
                 if i == 200:
+                    print("test finished")
                     break
 
         avg_pips = sum(pips) / len(pips)

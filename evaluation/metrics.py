@@ -208,7 +208,8 @@ class Metrics:
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
 
-                if i ==500:
+                if i == 200:
+                    print("test finished")
                     break
 
         avg_pips = sum(pips) / len(pips)
