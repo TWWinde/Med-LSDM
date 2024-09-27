@@ -132,7 +132,7 @@ class Metrics:
                 generated_np = input1.cpu().numpy()
                 image_np = input2.cpu().numpy()
                 label_np = label_save.cpu().numpy()
-                print(generated_np.shape, image_np.shape, label_np.shape)
+                # print(generated_np.shape, image_np.shape, label_np.shape) (1, 1, 32, 256, 256) (1, 1, 32, 256, 256) (1, 1, 32, 256, 256)
                 path_video = os.path.join(self.root_dir, 'video_results')
                 os.makedirs(path_video, exist_ok=True)
 
@@ -157,7 +157,7 @@ class Metrics:
                     os.makedirs(path_images, exist_ok=True)
 
                     # For generated_np
-                    plt.imshow(generated_np[0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.imshow(generated_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
                     plt.axis('off')
                     plt.savefig(os.path.join(path_images, f'{i}_generated_slice_{slice_index}.png'),
                                 bbox_inches='tight',
@@ -165,14 +165,14 @@ class Metrics:
                     plt.close()
 
                     # For image_np
-                    plt.imshow(image_np[0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
                     plt.axis('off')
                     plt.savefig(os.path.join(path_images, f'{i}_image_slice_{slice_index}.png'), bbox_inches='tight',
                                 pad_inches=0)
                     plt.close()
 
                     # For label_np (assuming RGB)
-                    plt.imshow(label_np[slice_index].transpose(1, 2, 0))  # Color image, transpose (H, W, C)
+                    plt.imshow(label_np[0, 0, slice_index, :, :])  # Color image, transpose (H, W, C)
                     plt.axis('off')
                     plt.savefig(os.path.join(path_images, f'{i}_label_slice_{slice_index}.png'), bbox_inches='tight',
                                 pad_inches=0)
