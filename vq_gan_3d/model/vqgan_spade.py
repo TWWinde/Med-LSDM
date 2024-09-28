@@ -466,7 +466,7 @@ class Decoder(nn.Module):
             h = block_spade.res1(h, seg)
             h = block_spade.res2(h, seg)
         h = self.conv_last_spade(h)
-        h = torch.tanh(h)
+        #h = torch.tanh(h)
         return h
 
 
