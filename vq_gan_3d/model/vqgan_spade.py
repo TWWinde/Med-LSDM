@@ -95,6 +95,7 @@ class VQGAN_SPADE(pl.LightningModule):
         os.makedirs(self.path, exist_ok=True)
         #self.metrics_computer = metrics(self.path, self.val_dataloader, self.num_classes)
 
+    """
     def preprocess_input(self, data):
 
         label = data['label'].long()
@@ -106,6 +107,21 @@ class VQGAN_SPADE(pl.LightningModule):
         input_semantics = input_label.scatter_(1, label, 1.0)
 
         return img, input_semantics
+
+    """
+
+    def preprocess_input(self, data):
+
+        data = data.long()
+
+        # create one-hot label map
+        label_map = data
+        bs, _, t, h, w = label_map.size()
+        nc = self.num_classes
+        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
+        input_semantics = input_label.scatter_(1, label_map, 1.0)
+
+        return input_semantics
 
     def encode(self, x, include_embeddings=False, quantize=True):
         h = self.pre_vq_conv(self.encoder(x))
@@ -269,7 +285,9 @@ class VQGAN_SPADE(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx):
 
-        x, seg = self.preprocess_input(batch)
+        #x, seg = self.preprocess_input(batch)
+        x, label = batch['image'].cuda(), batch['label'].cuda()
+        seg = self.preprocess_input(label)
 
         if optimizer_idx == 0:
             recon_loss, _, vq_output, aeloss, perceptual_loss, crossentropy_loss, gan_feat_loss = self.forward(
@@ -284,7 +302,9 @@ class VQGAN_SPADE(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
 
-        x, seg = self.preprocess_input(batch)
+        #x, seg = self.preprocess_input(batch)
+        x, label = batch['image'].cuda(), batch['label'].cuda()
+        seg = self.preprocess_input(label)
 
         recon_loss, crossentropy_loss, _, vq_output, perceptual_loss = self.forward(x, seg)
         self.log('val/recon_loss', recon_loss, prog_bar=True)
@@ -309,10 +329,12 @@ class VQGAN_SPADE(pl.LightningModule):
     def log_images(self, batch, **kwargs):
         log = dict()
         #x = batch['image']
-        x, seg = self.preprocess_input(batch)
-        x = x.to(self.device)
-        seg = seg.to(self.device)
-        frames, frames_rec, _, _ = self(x, seg, log_image=True)
+        #x, seg = self.preprocess_input(batch)
+        #x = x.to(self.device)
+        #seg = seg.to(self.device)
+        x, label = batch['image'].cuda(), batch['label'].cuda()
+        seg = self.preprocess_input(label)
+        frames, frames_rec, _, _ = self.forward(x, seg, log_image=True)
         log["inputs"] = frames
         log["reconstructions"] = frames_rec
         #log['mean_org'] = batch['mean_org']
@@ -322,9 +344,11 @@ class VQGAN_SPADE(pl.LightningModule):
     def log_videos(self, batch, **kwargs):
         log = dict()
         #x = batch['image']
-        x, seg = self.preprocess_input(batch)
-        x = x.to(self.device)
-        _, _, x, x_rec = self(x, seg, log_image=True)
+        #x, seg = self.preprocess_input(batch)
+        #x = x.to(self.device)
+        x, label = batch['image'].cuda(), batch['label'].cuda()
+        seg = self.preprocess_input(label)
+        _, _, x, x_rec = self.forward(x, seg, log_image=True)
         log["inputs"] = x
         log["reconstructions"] = x_rec
         #log['mean_org'] = batch['mean_org']
