@@ -146,7 +146,8 @@ class Metrics:
                     np.save(sample_np_path, generated_np, allow_pickle=True, fix_imports=True)
                     np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
                     np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
-
+                    if i > 50:
+                        save_npy = False
 
                 if save_slice_image:
                     slice_index = 16  # Specify which slice you want to save
