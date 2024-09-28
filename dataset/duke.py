@@ -128,8 +128,8 @@ class DUKEDataset(Dataset):
         img = self.Norm(img)
         if self.sem_map:
             label = tio.ScalarImage(self.label_paths[idx])
+            print(self.label_paths[idx])
             label = self.Crop(label)
-            #assert img.data.permute(0, -1, 2, 1).shape == [1, 32, 256, 256], f"{img.data.permute(0, -1, 2, 1).type}"
             return {'image': img.data.permute(0, -1, 2, 1).float(), 'label': label.data.permute(0, -1, 1, 2).float()}
         else:
             return {'image': img.data.permute(0, -1, 1, 2)}
