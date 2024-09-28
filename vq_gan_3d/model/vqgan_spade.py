@@ -404,7 +404,7 @@ class Encoder(nn.Module):
 
 
 class SPADEGroupNorm3D(nn.Module):
-    def __init__(self, dim_out, label_nc=37, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
+    def __init__(self, dim_out, label_nc=3, eps=1e-5, groups=8, dim_hidden=128):   # !!! dim_hidden ????
         super().__init__()
 
         self.norm = nn.GroupNorm(groups, dim_out, affine=False)
@@ -431,7 +431,7 @@ class SPADEGroupNorm3D(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, n_hiddens, upsample, image_channel, norm_type='group', num_groups=32, label_nc=37):
+    def __init__(self, n_hiddens, upsample, image_channel, norm_type='group', num_groups=32, label_nc=3):
         super().__init__()
 
         n_times_upsample = np.array([int(math.log2(d)) for d in upsample])
