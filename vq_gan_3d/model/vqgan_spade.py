@@ -113,13 +113,13 @@ class VQGAN_SPADE(pl.LightningModule):
     def preprocess_input(self, data):
 
         data = data.long()
-
+        print(data.max(),data.min(), "#################################")
         # create one-hot label map
         label_map = data
         #print(label_map.size(), self.num_classes) torch.Size([1, 1, 32, 256, 256]) 3
         bs, _, t, h, w = label_map.size()
         nc = self.num_classes
-        print(label_map)
+        #print(label_map)
         assert label_map.max() < self.num_classes, f"Label map contains indices {label_map.max()} greater than number of classes {self.num_classes}"
         input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
         input_semantics = input_label.scatter_(1, label_map, 1.0)
@@ -289,7 +289,7 @@ class VQGAN_SPADE(pl.LightningModule):
     def training_step(self, batch, batch_idx, optimizer_idx):
 
         #x, seg = self.preprocess_input(batch)
-        x, label = batch['image'].cuda(), batch['label'].cuda()
+        x, label = batch['image'], batch['label']
         seg = self.preprocess_input(label)
 
         if optimizer_idx == 0:
@@ -306,7 +306,7 @@ class VQGAN_SPADE(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
 
         #x, seg = self.preprocess_input(batch)
-        x, label = batch['image'].cuda(), batch['label'].cuda()
+        x, label = batch['image'], batch['label']
         seg = self.preprocess_input(label)
 
         recon_loss, crossentropy_loss, _, vq_output, perceptual_loss = self.forward(x, seg)
