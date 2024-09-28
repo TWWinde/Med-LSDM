@@ -116,6 +116,7 @@ class VQGAN_SPADE(pl.LightningModule):
 
         # create one-hot label map
         label_map = data
+        print(label_map.size(), self.num_classes)
         bs, _, t, h, w = label_map.size()
         nc = self.num_classes
         input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().cuda()
