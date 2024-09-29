@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 #Slurm parameters
-#SBATCH --job-name=Sample_diff
+#SBATCH --job-name=test_vqgan
 #SBATCH --output=test_vqgan%j.%N.out
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
