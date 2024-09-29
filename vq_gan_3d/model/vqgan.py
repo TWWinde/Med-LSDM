@@ -415,7 +415,7 @@ class Decoder(nn.Module):
             h = block.res1(h)
             h = block.res2(h)
         h = self.conv_last(h)
-        #h = torch.tanh(h)     ######## add tanh
+        h = torch.tanh(h)     ######## add tanh
         return h
 
 
