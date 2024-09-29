@@ -228,14 +228,38 @@ class metrics:
                     label_path = os.path.join(path_video, f'{i}_recon.gif')
                     video_tensor_to_gif(input_gif, image_path)
                     video_tensor_to_gif(recon_gif, label_path)
+                if save_slice_image:
+                    slice_index = 16  # Specify which slice you want to save
+
+                    # Path to save images
+                    path_images = os.path.join(self.root_dir, 'slices')
+                    os.makedirs(path_images, exist_ok=True)
+
+                    # For generated_np
+                    plt.imshow(recon_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{i}_generated_slice_{slice_index}.png'),
+                                bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+
+                    # For image_np
+                    plt.imshow(input_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{i}_image_slice_{slice_index}.png'), bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+
                 if save_npy:
-                    os.makedirs(os.path.join(path_video, 'fake'), exist_ok=True)
-                    os.makedirs(os.path.join(path_video, 'real'), exist_ok=True)
-                    np.save(sample_np_path, generated_np, allow_pickle=True, fix_imports=True)
-                    np.save(image_np_path, image_np, allow_pickle=True, fix_imports=True)
-                    np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
+                    recon_np_path = os.path.join(self.root_dir, 'fake', f'{i}_recon.npy')
+                    image_np_path = os.path.join(self.root_dir, 'real', f'{i}_image.npy')
+                    os.makedirs(os.path.join(self.root_dir, 'fake'), exist_ok=True)
+                    os.makedirs(os.path.join(self.root_dir, 'real'), exist_ok=True)
+                    np.save(recon_np_path, recon_np, allow_pickle=True, fix_imports=True)
+                    np.save(image_np_path, input_np, allow_pickle=True, fix_imports=True)
                     if i > 50:
                         save_npy = False
+
 
 
 
