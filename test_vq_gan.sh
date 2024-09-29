@@ -29,12 +29,12 @@ python -c "import torch; print(torch.__version__)"
 # Run your python code
 
 # vq_gan autopet
-PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
-model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt" \
-model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results_autopet' model.precision=16 model.embedding_dim=8 \
-model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
-model.discriminator_iter_start=10000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
-model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
+#PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
+#model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt" \
+#model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results_autopet' model.precision=16 model.embedding_dim=8 \
+#model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+#model.discriminator_iter_start=10000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
+#model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
 # vq_gan_spade autopet
 #PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=autopet \
@@ -45,12 +45,12 @@ model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 #model.gan_feat_weight=4 model.batch_size=1 model.n_codes=16384
 
 # vq_gan mr
-#PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=synthrad2023 \
-#model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/SynthRAD2023/results/lightning_logs/version_133718/checkpoints/latest_checkpoint.ckpt" \
-#model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results_vqgan_mr' model.precision=16 model.embedding_dim=8 \
-#model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
-#model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
-#model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
+PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=synthrad2023 \
+model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/SynthRAD2023/results/lightning_logs/version_133718/checkpoints/latest_checkpoint.ckpt" \
+model=vq_gan_3d model.gpus=1 model.default_root_dir_postfix='results_vqgan_mr' model.precision=16 model.embedding_dim=8 \
+model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
+model.discriminator_iter_start=1000 model.perceptual_weight=4 model.image_gan_weight=1 model.video_gan_weight=1 \
+model.gan_feat_weight=4 model.batch_size=2 model.n_codes=16384
 
 # vq_gan_spade mr
 #PL_TORCH_DISTRIBUTED_BACKEND=gloo python test/test_vqgan.py dataset=synthrad2023 \
