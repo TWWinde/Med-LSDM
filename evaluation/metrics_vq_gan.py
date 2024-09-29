@@ -261,8 +261,6 @@ class metrics:
                         save_npy = False
 
 
-
-
                 # SSIM
                 ssim_value, _ = self.ssim_3d(input, recon)
                 ssim.append(ssim_value.item())
