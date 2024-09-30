@@ -29,7 +29,7 @@ python -c "import torch; print(torch.__version__)"
 # Run your python code
 
 # diffusion with segconv 37 condition
-python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv_37' dataset.label_nc=37 \
+python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py  model=ddpm dataset=autopet model.results_folder_postfix='output_with_segconv' dataset.label_nc=37 \
 model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
 model.vqvae_ckpt=0 model.spade_input_channel=37 \
 model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
