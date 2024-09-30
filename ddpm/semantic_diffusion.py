@@ -1069,16 +1069,16 @@ class SemanticGaussianDiffusion(nn.Module):
                         unnormalize_img(img)
 
                     #img_save = F.pad(img_save, (2, 2, 2, 2))
-                    sample_gif = rearrange(img_save, '(i j) c f h w -> c f (i h) (j w)', i=1)
+
                     slice_index = 16
-                    sample_slice = sample_gif[0, :, slice_index, :, :].cpu().numpy()
+                    image_np = img_save.cpu().numpy()
+
                     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/",
                                                   self.cfg.model.name,
                                                   self.cfg.dataset.name, "diffusion_middle_process_slices")
                     os.makedirs(results_folder, exist_ok=True)
-
                     # Sample slice
-                    plt.imshow(sample_slice, cmap='gray')  # Choose the colormap as needed
+                    plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray') # Choose the colormap as needed
                     plt.axis('off')  # Optional: Turn off axes
                     plt.savefig(os.path.join(results_folder, f'{i}_sample_slice_{slice_index}.png'), bbox_inches='tight',
                                 pad_inches=0)
