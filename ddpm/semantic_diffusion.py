@@ -1046,7 +1046,7 @@ class SemanticGaussianDiffusion(nn.Module):
                 (b,), i, device=device, dtype=torch.long), cond=cond, cond_scale=cond_scale)
 
             if get_middle_process:
-                if i % 30 == 0:
+                if i % 25 == 0:
                     if isinstance(self.vqgan, VQGAN):
                         # denormalize TODO: Remove eventually
                         img_save = (((img + 1.0) / 2.0) * (self.vqgan.codebook.embeddings.max() -
@@ -1080,7 +1080,7 @@ class SemanticGaussianDiffusion(nn.Module):
                     # Sample slice
                     plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray') # Choose the colormap as needed
                     plt.axis('off')  # Optional: Turn off axes
-                    plt.savefig(os.path.join(results_folder, f'{i}_sample_slice_{slice_index}.png'), bbox_inches='tight',
+                    plt.savefig(os.path.join(results_folder, f'{random_number}_{500-i}_sample_slice_{slice_index}.png'), bbox_inches='tight',
                                 pad_inches=0)
                     plt.close()
 
