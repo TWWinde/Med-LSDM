@@ -548,7 +548,7 @@ if __name__ == '__main__':
     path1 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET/results_autopet"
     path2 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE/duke_tanh"
     path3 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE/vq_gan_duke_wo_tanh"
-    path4 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023/mr_final_tanh"
+    #path4 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023/mr_final_tanh"
     path5 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023/results_vqgan_mr"
     path6 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/AutoPET/vq_gan_spade_autopet"
     path7 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/DUKE/vq_gan_spade_tanh_duke"
@@ -558,7 +558,7 @@ if __name__ == '__main__':
     path11 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_3/video_results"
     path12 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results"
 
-    path_list = [path0, path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12]
+    path_list = [path5, path6, path7, path8, path9, path10, path11, path12]
     if "medicaldiffusion_results/test_results" in path:
         """
         evaluate 3d images our model
