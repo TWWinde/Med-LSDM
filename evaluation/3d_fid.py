@@ -543,21 +543,31 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 
 
 if __name__ == '__main__':
-    #path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
-    path = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results"
-    path2 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET"
-    path1 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE"
-    path0 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
-    path_list = [path0, path1, path2]
+    path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
+    path0 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET/autopet_tanh"
+    path1 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET/results_autopet"
+    path2 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE/duke_tanh"
+    path3 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/DUKE/vq_gan_duke_wo_tanh"
+    path4 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023/mr_final_tanh"
+    path5 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023/results_vqgan_mr"
+    path6 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/AutoPET/vq_gan_spade_autopet"
+    path7 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/DUKE/vq_gan_spade_tanh_duke"
+    path8 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/SynthRAD2023/results_vq_gan_spade_mr"
+    path9 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_128out/video_results"
+    path10 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_vq_spade_segconv_64out/video_results"
+    path11 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_3/video_results"
+    path12 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results"
+
+    path_list = [path0, path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12]
     if "medicaldiffusion_results/test_results" in path:
         """
         evaluate 3d images our model
         """
-        for i in range(1):
+        for path in path_list:
             args = parser.parse_args()
             start_time = time.time()
-            print(path_list[i])
-            compute_metrics_3d_our_model(path_list[i])  # get metrics slice-wise
+            print(path.split("/")[-1], "########################")
+            compute_metrics_3d_our_model(path)  # get metrics slice-wise
             dataset_real = ImageFolderDataset(folder_path=path, real=True)
             print(len(dataset_real))
             data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
