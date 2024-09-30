@@ -60,8 +60,8 @@ model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 mode
 
 # diffusion with vqvae condition autopet
 python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py model=ddpm dataset=autopet model.results_folder_postfix='output_with_vqvae' dataset.label_nc=37 \
-model.vqgan_ckpt='/no_backups/d1502/medicaldiffusion/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
-model.vqvae_ckpt='/misc/no_backups/d1502/medicaldiffusion/checkpoints/vq_vae/SemanticMap/results/lightning_logs/version_139795/checkpoints/latest_checkpoint.ckpt' \
+model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/AutoPET/results/lightning_logs/version_133784/checkpoints/latest_checkpoint.ckpt' \
+model.vqvae_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_vae/SemanticMap/results/lightning_logs/version_139795/checkpoints/latest_checkpoint.ckpt' \
 model.spade_input_channel=37 \
 model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
 model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=0 model.load_milestone=0
