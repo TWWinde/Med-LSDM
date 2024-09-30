@@ -1070,11 +1070,11 @@ class SemanticGaussianDiffusion(nn.Module):
 
                     #img_save = F.pad(img_save, (2, 2, 2, 2))
                     sample_gif = rearrange(img_save, '(i j) c f h w -> c f (i h) (j w)', i=1)
-                    slice_index = 15
+                    slice_index = 16
                     sample_slice = sample_gif[0, :, slice_index, :, :].cpu().numpy()
                     results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/",
                                                   self.cfg.model.name,
-                                                  self.cfg.dataset.name, "diffusion_middle_process")
+                                                  self.cfg.dataset.name, "diffusion_middle_process_slices")
                     os.makedirs(results_folder, exist_ok=True)
 
                     # Sample slice
@@ -1084,11 +1084,10 @@ class SemanticGaussianDiffusion(nn.Module):
                                 pad_inches=0)
                     plt.close()
 
+                    #os.makedirs(results_folder, exist_ok=True)
 
-                    os.makedirs(results_folder, exist_ok=True)
-
-                    sample_path = os.path.join(results_folder, f'{random_number}_{480 - i}_sample.gif')
-                    video_tensor_to_gif(sample_gif, sample_path)
+                    #sample_path = os.path.join(results_folder, f'{random_number}_{480 - i}_sample.gif')
+                    #video_tensor_to_gif(sample_gif, sample_path)
 
         print('#################### sample finished ####################')
 
