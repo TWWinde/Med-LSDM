@@ -568,17 +568,17 @@ if __name__ == '__main__':
             start_time = time.time()
             print(path.split("/")[-1], "########################")
             compute_metrics_3d_our_model(path)  # get metrics slice-wise
-            dataset_real = ImageFolderDataset(folder_path=path, real=True)
-            print(len(dataset_real))
-            data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
-            dataset_fake = ImageFolderDataset(folder_path=path, real=False)
-            data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=10, shuffle=False, num_workers=4)
+            #dataset_real = ImageFolderDataset(folder_path=path, real=True)
+            #print(len(dataset_real))
+            #data_loader_real = torch.utils.data.DataLoader(dataset_real, batch_size=10, shuffle=False, num_workers=4)
+            #dataset_fake = ImageFolderDataset(folder_path=path, real=False)
+            #data_loader_fake = torch.utils.data.DataLoader(dataset_fake, batch_size=10, shuffle=False, num_workers=4)
             # calculate_fid(args, data_loader_real, data_loader_fake)
-            m1, s1 = calculate_fid(args, data_loader_real)
-            m2, s2 = calculate_fid(args, data_loader_fake)
-            fid_value = calculate_frechet_distance(m1, s1, m2, s2)
-            print('FID: ', fid_value)
-            print("Done. Using", (time.time() - start_time) // 60, "minutes.")
+            #m1, s1 = calculate_fid(args, data_loader_real)
+            #m2, s2 = calculate_fid(args, data_loader_fake)
+            #fid_value = calculate_frechet_distance(m1, s1, m2, s2)
+            #print('FID: ', fid_value)
+            #print("Done. Using", (time.time() - start_time) // 60, "minutes.")
 
     else:
         """
