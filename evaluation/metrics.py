@@ -168,8 +168,7 @@ class Metrics:
                     nifti_label = np.squeeze(nifti_label, axis=0)
                     nifti_label = np.transpose(nifti_label, (1, 2, 0))
 
-                    sample_nifti = nib.Nifti1Image(nifti_generated,
-                                                   affine=np.eye(4))  # You can set the appropriate affine matrix
+                    sample_nifti = nib.Nifti1Image(nifti_generated, affine=np.eye(4))
                     image_nifti = nib.Nifti1Image(nifti_real, affine=np.eye(4))
                     label_nifti = nib.Nifti1Image(nifti_label, affine=np.eye(4))
 
