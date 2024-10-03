@@ -158,10 +158,20 @@ class Metrics:
                     os.makedirs(os.path.join(path_video, 'fake_nifti'), exist_ok=True)
                     os.makedirs(os.path.join(path_video, 'real_nifti'), exist_ok=True)
                     os.makedirs(os.path.join(path_video, 'label_nifti'), exist_ok=True)
-                    sample_nifti = nib.Nifti1Image(generated_np,
+                    nifti_generated = np.squeeze(generated_np, axis=0)
+                    nifti_generated = np.squeeze(nifti_generated, axis=0)
+                    nifti_generated = np.transpose(nifti_generated, (1, 2, 0))
+                    nifti_real = np.squeeze(image_np, axis=0)
+                    nifti_real = np.squeeze(nifti_real, axis=0)
+                    nifti_real = np.transpose(nifti_real, (1, 2, 0))
+                    nifti_label = np.squeeze(label_np, axis=0)
+                    nifti_label = np.squeeze(nifti_label, axis=0)
+                    nifti_label = np.transpose(nifti_label, (1, 2, 0))
+
+                    sample_nifti = nib.Nifti1Image(nifti_generated,
                                                    affine=np.eye(4))  # You can set the appropriate affine matrix
-                    image_nifti = nib.Nifti1Image(image_np, affine=np.eye(4))
-                    label_nifti = nib.Nifti1Image(label_np, affine=np.eye(4))
+                    image_nifti = nib.Nifti1Image(nifti_real, affine=np.eye(4))
+                    label_nifti = nib.Nifti1Image(nifti_label, affine=np.eye(4))
 
                     # Save the NIfTI images to disk
                     nib.save(sample_nifti, sample_nifti_path)
