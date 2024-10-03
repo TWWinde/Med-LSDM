@@ -9,6 +9,7 @@ from torchvision.models import inception_v3
 from scipy.linalg import sqrtm
 from einops import rearrange
 from torchvision import transforms as T
+import nibabel as nib
 # --------------------------------------------------------------------------#
 # This code is to calculate and save SSIM PIPS PSNR RMSE
 # --------------------------------------------------------------------------#
@@ -112,6 +113,7 @@ class Metrics:
         save_npy=False
         save_slice_image = False
         save_gif = False
+        save_nifti = True
 
         with torch.no_grad():
             for i, data_i in enumerate(self.val_dataloader):
@@ -148,6 +150,23 @@ class Metrics:
                     np.save(label_np_path, label_np, allow_pickle=True, fix_imports=True)
                     if i > 50:
                         save_npy = False
+
+                if save_nifti:
+                    sample_nifti_path = os.path.join(path_video, 'fake_nifti', f'{i}_sample.nii.gz')
+                    image_nifti_path = os.path.join(path_video, 'real_nifti', f'{i}_image.nii.gz')
+                    label_nifti_path = os.path.join(path_video, 'label_nifti', f'{i}_label.nii.gz')
+                    os.makedirs(os.path.join(path_video, 'fake_nifti'), exist_ok=True)
+                    os.makedirs(os.path.join(path_video, 'real_nifti'), exist_ok=True)
+                    os.makedirs(os.path.join(path_video, 'label_nifti'), exist_ok=True)
+                    sample_nifti = nib.Nifti1Image(generated_np,
+                                                   affine=np.eye(4))  # You can set the appropriate affine matrix
+                    image_nifti = nib.Nifti1Image(image_np, affine=np.eye(4))
+                    label_nifti = nib.Nifti1Image(label_np, affine=np.eye(4))
+
+                    # Save the NIfTI images to disk
+                    nib.save(sample_nifti, sample_nifti_path)
+                    nib.save(image_nifti, image_nifti_path)
+                    nib.save(label_nifti, label_nifti_path)
 
                 if save_slice_image:
                     slice_index = 16  # Specify which slice you want to save
@@ -209,7 +228,7 @@ class Metrics:
                 psnr.append(psnr_value.item())
                 rmse.append(rmse_value.item())
 
-                if i == 200:
+                if i == 400:
                     print("test finished")
                     break
 
