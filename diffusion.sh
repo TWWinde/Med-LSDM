@@ -165,9 +165,17 @@ python -c "import torch; print(torch.__version__)"
 #dataset.root_dir='/misc/data/private/autoPET/duke/T1_MR_real' dataset.val_dir='/misc/data/private/autoPET/duke/T1_MR_real'
 
 # diffusion with segconv 8 condition vq_gan_spade duke
-python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_duke_vq_spade_segconv_8out' dataset.label_nc=3 \
+#python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_duke_vq_spade_segconv_8out' dataset.label_nc=3 \
+#model.vqgan_ckpt=0 \
+#model.vqgan_spade_ckpt="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan_spade/DUKE/vq_gan_spade_tanh_duke/lightning_logs/version_145400/checkpoints/latest_checkpoint.ckpt" \
+#model.vqvae_ckpt=0 model.spade_input_channel=8 \
+#model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
+#model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
+
+# diffusion vq_gan_spade synthrad2023
+python train/train_ddpm.py model=ddpm dataset=duke model.results_folder_postfix='results_synthrad_spade_tanh_segconv_31out' dataset.label_nc=3 \
 model.vqgan_ckpt=0 \
-model.vqgan_spade_ckpt="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan_spade/DUKE/vq_gan_spade_tanh_duke/lightning_logs/version_145400/checkpoints/latest_checkpoint.ckpt" \
-model.vqvae_ckpt=0 model.spade_input_channel=8 \
+model.vqgan_spade_ckpt="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan_spade/SynthRAD2023/vq_gan_spade_mr_tanh/lightning_logs/version_146008/checkpoints/latest_checkpoint.ckpt" \
+model.vqvae_ckpt=0 model.spade_input_channel=31 \
 model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
 model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
