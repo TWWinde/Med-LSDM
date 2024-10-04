@@ -151,7 +151,7 @@ python -c "import torch; print(torch.__version__)"
 #model.gan_feat_weight=4 model.batch_size=4 model.n_codes=16384
 
 # vq_gan_spade synthrad2023
-PL_TORCH_DISTRIBUTED_BACKEND=gloo /misc/no_backups/d1502/medicaldiffusion/test/test_vqgan.py dataset=synthrad2023 \
+PL_TORCH_DISTRIBUTED_BACKEND=gloo python /misc/no_backups/d1502/medicaldiffusion/test/test_vqgan.py dataset=synthrad2023 \
 model.resume_from_checkpoint="/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan_spade/SynthRAD2023/vq_gan_spade_mr_tanh/lightning_logs/version_146008/checkpoints/latest_checkpoint.ckpt" \
 model=vq_gan_spade model.gpus=1 model.default_root_dir_postfix='vq_gan_spade_mr_tanh' model.precision=16 model.embedding_dim=8 \
 model.n_hiddens=16 model.downsample=[4,4,4] model.num_workers=4 model.gradient_clip_val=1.0 model.lr=3e-4 \
