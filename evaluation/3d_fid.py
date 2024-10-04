@@ -553,16 +553,16 @@ if __name__ == '__main__':
     #path6 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/AutoPET/vq_gan_spade_autopet"
     #path7 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/DUKE/vq_gan_spade_tanh_duke"
     #path8 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/SynthRAD2023/results_vq_gan_spade_mr"
-    path5 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_128out/video_results"
-    path6 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_vq_spade_segconv_64out/video_results"
-    path7 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_3/video_results"
-    path8 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
-    path9 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_128out/video_results"
-    path10 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_vq_spade_segconv_64out/video_results"
-    path11 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_3/video_results"
-    path12 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results"
+    path5 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_spade/SynthRAD2023/vq_gan_spade_mr_tanh"
+    #path6 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_vq_spade_segconv_64out/video_results"
+    #path7 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_3/video_results"
+    #path8 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_64out/video_results"
+    #path9 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_segconv_128out/video_results"
+    #path10 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/AutoPET/output_with_vq_spade_segconv_64out/video_results"
+    #path11 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_3/video_results"
+    #path12 = "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results"
 
-    path_list = [path5, path6, path7, path8, path9, path10, path11, path12]
+    path_list = [path5 ]#, path6, path7, path8, path9, path10, path11, path12]
     if "medicaldiffusion_results/test_results" in path:
         """
         evaluate 3d images our model
