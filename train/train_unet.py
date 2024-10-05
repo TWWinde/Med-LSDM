@@ -95,7 +95,8 @@ class UNetExperiment3D:
                 self.optimizer.zero_grad()
                 data = data_batch['image'].float().to(self.device)
                 target = data_batch['label'].long().to(self.device)
-
+                print(data.shape)
+                print(target.shape)
                 # 前向传播
                 pred = self.model(data)
 
