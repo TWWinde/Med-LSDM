@@ -42,6 +42,7 @@ def get_config():
         "n_epochs": 10,
         "learning_rate": 0.0002,
         "plot_freq": 10,
+        "num_classes": 3,
         "checkpoint_dir": "/path/to/checkpoints",
         "do_load_checkpoint": False,
         "name": "Basic_UNet",
@@ -85,6 +86,20 @@ class UNetExperiment3D:
         self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_last.pt")))
         print("Checkpoint loaded.")
 
+    def preprocess_input(self, data):
+
+        # move to GPU and change data types
+        data = data.long()
+
+        # create one-hot label map
+        label_map = data
+        bs, _, t, h, w = label_map.size()
+        nc = self.config['num_classes']
+        input_label = torch.FloatTensor(bs, nc, t, h, w).zero_().to(self.device)
+        input_semantics = input_label.scatter_(1, label_map, 1.0)
+
+        return input_semantics
+
     def train(self):
         for epoch in range(self.config['n_epochs']):
             print(f"===== TRAINING - EPOCH {epoch+1} =====")
@@ -95,6 +110,7 @@ class UNetExperiment3D:
                 self.optimizer.zero_grad()
                 data = data_batch['image'].float().to(self.device)
                 target = data_batch['label'].long().to(self.device)
+                target = self.preprocess_input(target)
                 print(data.shape)
                 print(target.shape)
                 # 前向传播
