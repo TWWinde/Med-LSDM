@@ -50,31 +50,25 @@ def get_config():
     return c
 
 
-# 定义UNet训练类
 class UNetExperiment3D:
     def __init__(self, config):
         self.config = config
         self.device = torch.device(self.config['device'])
 
-        # 加载数据集
         train_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
         val_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
         self.train_data_loader = DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
         self.val_data_loader = DataLoader(val_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
 
-        # 初始化模型
         self.model = UNet3D(num_classes=3, in_channels=1)
         self.model.to(self.device)
 
-        # 初始化损失函数
         self.loss = DC_and_CE_loss({'batch_dice': True, 'smooth': 1e-5, 'smooth_in_nom': True,
                                     'do_bg': False, 'rebalance_weights': None, 'background_weight': 1}, OrderedDict())
 
-        # 初始化优化器和学习率调度器
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min')
 
-        # 加载模型检查点（如果需要）
         if self.config['do_load_checkpoint']:
             self.load_checkpoint(self.config['checkpoint_dir'])
 
@@ -116,7 +110,7 @@ class UNetExperiment3D:
                 pred = self.model(data)
                 print(pred.shape)
 
-                loss = self.loss(pred, target.squeeze())
+                loss = self.loss(pred, target)
                 loss.backward()
                 self.optimizer.step()
 
