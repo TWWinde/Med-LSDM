@@ -16,15 +16,16 @@
 # limitations under the License.
 
 import os
+from collections import OrderedDict
+import numpy as np
 import torch
 import torch.optim as optim
-from torch.utils.data import DataLoader
-import numpy as np
-from collections import OrderedDict
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from unet_model import UNet3D  # 假设你有 UNet3D 模型的实现
-from custom_dataset import DUKEDataset  # 假设你有自定义数据集类 DUKEDataset
-from loss import DC_and_CE_loss  # 假设你有定义的损失函数
+from torch.utils.data import DataLoader
+from dataset import DUKEDataset
+from u_net.RecursiveUnet3D import UNet3D
+from u_net.dice_loss import DC_and_CE_loss
+
 
 # 获取配置
 def get_config():
@@ -147,4 +148,3 @@ if __name__ == '__main__':
     c = get_config()
     experiment = UNetExperiment3D(config=c)
     experiment.train()
-
