@@ -45,6 +45,7 @@ def get_config():
         "plot_freq": 10,
         "image_freq": 50,
         "num_classes": 3,
+        "root_dir": "/data/private/autoPET/medicaldiffusion_results/unet",
         "checkpoint_dir": "/data/private/autoPET/medicaldiffusion_results/unet/checkpoint",
         "image_dir": "/data/private/autoPET/medicaldiffusion_results/unet/image",
         "do_load_checkpoint": False,
@@ -151,7 +152,11 @@ class UNetExperiment3D:
                                 pad_inches=0)
                     plt.close()
 
+                if batch_idx % self.config['image_freq']*2 == 0:
+                    self.plot_loss(epoch, loss.item())
+
             avg_loss = total_loss / len(self.train_data_loader)
+            print(f"Epoch {epoch + 1}, Average Loss: {avg_loss}")
             print(f"Epoch {epoch+1}, Average Loss: {avg_loss}")
 
             # 保存模型检查点
@@ -179,13 +184,28 @@ class UNetExperiment3D:
         avg_val_loss = total_val_loss / len(self.val_data_loader)
         print(f"Epoch {epoch+1}, Validation Loss: {avg_val_loss}")
 
-        # 学习率调度器更新
         self.scheduler.step(avg_val_loss)
 
     def test(self):
         print("===== TESTING =====")
         # TODO: 实现测试逻辑
         pass
+
+    def plot_loss(self, epoch, epoch_loss):
+        """
+        在每个 epoch 结束时绘制并保存 loss 曲线图
+        """
+        plt.figure()
+        plt.plot(range(1, len(epoch_loss) + 1), epoch_loss, marker='o')
+        plt.xlabel('Batch')
+        plt.ylabel('Loss')
+        plt.title(f'Training Loss - Epoch {epoch + 1}')
+        plt.grid(True)
+
+        path_images = os.path.join(self.config['root_dir'], f'loss.png')
+        os.makedirs(self.config['root_dir'], exist_ok=True)
+        plt.savefig(path_images)
+        plt.close()
 
 
 if __name__ == '__main__':
