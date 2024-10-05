@@ -3,7 +3,7 @@ import numpy as np
 from torch import nn
 
 
-class CrossentropyND(torch.nn.CrossEntropyLoss):
+class CrossentropyND1(torch.nn.CrossEntropyLoss):
     """
     Network has to have NO NONLINEARITY!
     """
@@ -23,6 +23,22 @@ class CrossentropyND(torch.nn.CrossEntropyLoss):
         inp = inp.view(-1, num_classes)
 
         target = target.view(-1,)
+
+        return super(CrossentropyND1, self).forward(inp, target)
+
+
+class CrossentropyND(torch.nn.CrossEntropyLoss):
+    """
+    Network has to have NO NONLINEARITY!
+    """
+    def forward(self, inp, target):
+        target = target.long()
+        num_classes = inp.size(1)
+
+        inp = inp.permute(0, 2, 3, 4, 1).contiguous()
+        inp = inp.view(-1, num_classes)
+
+        target = target.view(-1)
 
         return super(CrossentropyND, self).forward(inp, target)
 
