@@ -124,9 +124,9 @@ class UNetExperiment3D:
                     # Path to save images
                     path_images = os.path.join(self.config['image_dir'])
                     os.makedirs(path_images, exist_ok=True)
-                    image_np = data.detach().numpy()
-                    label_np = target.detach().numpy()
-                    pred_np = pred.detach().numpy()
+                    image_np = data.detach().cpu().numpy()
+                    label_np = target.detach().cpu().numpy()
+                    pred_np = pred.detach().cpu().numpy()
 
                     # For image_np
                     plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
