@@ -27,6 +27,7 @@ from torch.utils.data import DataLoader
 from dataset import DUKEDataset
 from u_net.RecursiveUnet3D import UNet3D
 from u_net.dice_loss import DC_and_CE_loss
+import matplotlib.pyplot as plt
 
 
 # 获取配置
@@ -43,7 +44,8 @@ def get_config():
         "learning_rate": 0.0002,
         "plot_freq": 10,
         "num_classes": 3,
-        "checkpoint_dir": "/path/to/checkpoints",
+        "checkpoint_dir": "/data/private/autoPET/medicaldiffusion_results/unet/checkpoint",
+        "image_dir": "/data/private/autoPET/medicaldiffusion_results/unet/image",
         "do_load_checkpoint": False,
         "name": "Basic_UNet",
     }
@@ -117,6 +119,34 @@ class UNetExperiment3D:
 
                 if batch_idx % self.config['plot_freq'] == 0:
                     print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}")
+                    slice_index = 16  # Specify which slice you want to save
+
+                    # Path to save images
+                    path_images = os.path.join(self.config['image_dir'])
+                    os.makedirs(path_images, exist_ok=True)
+                    image_np = data.cpu().numpy()
+                    label_np = target.cpu().numpy()
+                    pred_np = pred.cpu().numpy()
+
+                    # For image_np
+                    plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{batch_idx}_image_slice_{slice_index}.png'), bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+
+                    # For label_np (assuming RGB)
+                    plt.imshow(label_np[0, 0, slice_index, :, :])  # Color image, transpose (H, W, C)
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{batch_idx}_label_slice_{slice_index}.png'), bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
+
+                    plt.imshow(pred_np[0, 0, slice_index, :, :])  # Color image, transpose (H, W, C)
+                    plt.axis('off')
+                    plt.savefig(os.path.join(path_images, f'{batch_idx}_pred_slice_{slice_index}.png'), bbox_inches='tight',
+                                pad_inches=0)
+                    plt.close()
 
             avg_loss = total_loss / len(self.train_data_loader)
             print(f"Epoch {epoch+1}, Average Loss: {avg_loss}")
