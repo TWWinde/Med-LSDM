@@ -126,7 +126,7 @@ class UNetExperiment3D:
 
                 if batch_idx % self.config['image_freq']*2 == 0:
 
-                    self.plot_loss(loss)
+                    self.plot_loss(loss_image)
 
                 if batch_idx % self.config['image_freq'] == 0:
                     slice_index = 16  # Specify which slice you want to save
