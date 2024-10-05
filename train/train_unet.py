@@ -99,6 +99,8 @@ class UNetExperiment3D:
         return input_semantics
 
     def train(self):
+        loss_image = []
+        step = 0
         for epoch in range(self.config['n_epochs']):
             print(f"===== TRAINING - EPOCH {epoch+1} =====")
             self.model.train()
@@ -106,21 +108,25 @@ class UNetExperiment3D:
 
             for batch_idx, data_batch in enumerate(self.train_data_loader):
                 self.optimizer.zero_grad()
-                data = data_batch['image'].float().to(self.device)
-                target = data_batch['label'].long().to(self.device)
-                target = self.preprocess_input(target)
+                image = data_batch['image'].float().to(self.device)
+                label = data_batch['label'].long().to(self.device)
+                target = self.preprocess_input(label)
                 #print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
 
-                pred = self.model(data)
+                pred = self.model(image)
 
                 loss = self.loss(pred, target)
                 loss.backward()
                 self.optimizer.step()
-
                 total_loss += loss.item()
-
+                pred_save = torch.argmax(pred, dim=1, keepdim=True)
+                loss_image.append(loss.item())
                 if batch_idx % self.config['plot_freq'] == 0:
                     print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}")
+
+                if batch_idx % self.config['image_freq']*2 == 0:
+
+                    self.plot_loss(step, loss)
 
                 if batch_idx % self.config['image_freq'] == 0:
                     slice_index = 16  # Specify which slice you want to save
@@ -128,9 +134,9 @@ class UNetExperiment3D:
                     # Path to save images
                     path_images = os.path.join(self.config['image_dir'])
                     os.makedirs(path_images, exist_ok=True)
-                    image_np = data.detach().cpu().numpy()
-                    label_np = target.detach().cpu().numpy()
-                    pred_np = pred.detach().cpu().numpy()
+                    image_np = image.detach().cpu().numpy()
+                    label_np = label.detach().cpu().numpy()
+                    pred_np = pred_save.detach().cpu().numpy()
 
                     # For image_np
                     plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
@@ -152,8 +158,7 @@ class UNetExperiment3D:
                                 pad_inches=0)
                     plt.close()
 
-                if batch_idx % self.config['image_freq']*2 == 0:
-                    self.plot_loss(epoch, loss.item())
+                step += 1
 
             avg_loss = total_loss / len(self.train_data_loader)
             print(f"Epoch {epoch + 1}, Average Loss: {avg_loss}")
@@ -191,15 +196,15 @@ class UNetExperiment3D:
         # TODO: 实现测试逻辑
         pass
 
-    def plot_loss(self, epoch, epoch_loss):
+    def plot_loss(self, loss):
         """
         在每个 epoch 结束时绘制并保存 loss 曲线图
         """
         plt.figure()
-        plt.plot(range(1, len(epoch_loss) + 1), epoch_loss, marker='o')
+        plt.plot(range(1, len(loss) + 1), loss, marker='o')
         plt.xlabel('Batch')
         plt.ylabel('Loss')
-        plt.title(f'Training Loss - Epoch {epoch + 1}')
+        plt.title(f'Training Loss ')
         plt.grid(True)
 
         path_images = os.path.join(self.config['root_dir'], f'loss.png')
