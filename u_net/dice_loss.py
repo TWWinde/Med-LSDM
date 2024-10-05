@@ -32,7 +32,7 @@ class CrossentropyND(torch.nn.CrossEntropyLoss):
     Network has to have NO NONLINEARITY!
     """
     def forward(self, inp, target):
-        target = target.long()
+        target = target.float()
         num_classes = inp.size(1)
 
         inp = inp.permute(0, 2, 3, 4, 1).contiguous()
