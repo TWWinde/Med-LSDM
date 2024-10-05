@@ -111,12 +111,11 @@ class UNetExperiment3D:
                 data = data_batch['image'].float().to(self.device)
                 target = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(target)
-                print(data.shape)
-                print(target.shape)
-                # 前向传播
-                pred = self.model(data)
+                #print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
 
-                # 计算损失并反向传播
+                pred = self.model(data)
+                print(pred.shape)
+
                 loss = self.loss(pred, target.squeeze())
                 loss.backward()
                 self.optimizer.step()
