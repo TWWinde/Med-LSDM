@@ -108,7 +108,6 @@ class UNetExperiment3D:
                 #print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
 
                 pred = self.model(data)
-                print(pred.shape)
 
                 loss = self.loss(pred, target)
                 loss.backward()
