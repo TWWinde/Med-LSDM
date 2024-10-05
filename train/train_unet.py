@@ -43,6 +43,7 @@ def get_config():
         "n_epochs": 10,
         "learning_rate": 0.0002,
         "plot_freq": 10,
+        "image_freq": 50,
         "num_classes": 3,
         "checkpoint_dir": "/data/private/autoPET/medicaldiffusion_results/unet/checkpoint",
         "image_dir": "/data/private/autoPET/medicaldiffusion_results/unet/image",
@@ -119,6 +120,8 @@ class UNetExperiment3D:
 
                 if batch_idx % self.config['plot_freq'] == 0:
                     print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}")
+
+                if batch_idx % self.config['image_freq'] == 0:
                     slice_index = 16  # Specify which slice you want to save
 
                     # Path to save images
