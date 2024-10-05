@@ -16,26 +16,22 @@
 # limitations under the License.
 
 import os
-import pickle
 from collections import OrderedDict
-import hydra
 import numpy as np
 import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from omegaconf import DictConfig, open_dict
-from datasets.three_dim.NumpyDataLoader import NumpyDataSet
 from trixi.experiment.pytorchexperiment import PytorchExperiment
 from torch.utils.data import DataLoader
-
+from trixi.util import Config
 from dataset import DUKEDataset
 from u_net.RecursiveUnet3D import UNet3D
 from u_net.dice_loss import DC_and_CE_loss
-from train.get_dataset import get_dataset
+
 
 def get_config():
     # Set your own path, if needed.
-    data_root_dir = os.path.abspath('/misc/data/private/')  # The path where the downloaded dataset is stored.
+    data_root_dir = os.path.abspath('/data/private/autoPET/duke')  # The path where the downloaded dataset is stored.
 
     c = Config(
         update_from_argv=True,  # If set 'True', it allows to update each configuration by a cmd/terminal parameter.
@@ -65,21 +61,20 @@ def get_config():
         # Adapt to your own path, if needed.
         #google_drive_id='1RzPB1_bqzQhlWvU-YGvZzhx2omcDh38C',  # This id is used to download the example dataset.
         dataset_name='Duke_breast',
-        base_dir=os.path.abspath('/data/private/autoPET/medicaldiffusion_results'),  # Where to log the output of the experiment.
+        base_dir=os.path.abspath('/data/private/autoPET/medicaldiffusion_results/unet'),  # Where to log the output of the experiment.
 
         data_root_dir='/data/private/autoPET/duke',  # The path where the downloaded dataset is stored.
         data_dir=os.path.join(data_root_dir, '/final_labeled_mr'),  # This is where your training and validation data is stored
-        data_test_dir=os.path.join(data_root_dir, 'autoPET/preprocessed'),  # This is where your test data is stored
+        data_test_dir=os.path.join(data_root_dir, '/final_label'),  # This is where your test data is stored
 
         split_dir=os.path.join(data_root_dir, 'autoPET'),  # This is where the 'splits.pkl' file is located, that holds your splits.
 
         # execute a segmentation process on a specific image using the model
-        model_dir=os.path.join(os.path.abspath('output_experiment'), 'model'),  # the model being used for segmentation
+        model_dir=os.path.join(os.path.abspath('/data/private/autoPET/medicaldiffusion_results/unet/u-net_output_experiment'), 'model'),  # the model being used for segmentation
     )
 
     print(c)
     return c
-
 
 
 class UNetExperiment3D(PytorchExperiment):
@@ -103,7 +98,7 @@ class UNetExperiment3D(PytorchExperiment):
 
     def setup(self):
         # 读取配置文件
-        train_dataset, val_dataset, _ = get_dataset(self.cfg)
+
         train_dataset = DUKEDataset(
             root_dir=self.config.data_dir, sem_map=True)
         val_dataset = DUKEDataset(
@@ -204,16 +199,6 @@ class UNetExperiment3D(PytorchExperiment):
         # TODO
         print('TODO: Implement your test() method here')
 
-@hydra.main(config_path='/misc/no_backups/d1502/medicaldiffusion/config', config_name='base_cfg', version_base=None)
-def run(cfg: DictConfig):
-    with open_dict(cfg):
-        cfg.model.results_folder = os.path.join(
-            cfg.model.results_folder, cfg.dataset.name, cfg.model.results_folder_postfix)
-
-    exp = UNetExperiment3D(cfg)
-    exp.run()
-    exp.run_test(setup=False)
-
 
 if __name__ == '__main__':
     c = get_config()
@@ -221,8 +206,6 @@ if __name__ == '__main__':
                            seed=42, append_rnd_to_name=c.append_rnd_string, globs=globals())
     exp.run()
     exp.run_test(setup=False)
-
-    run()
 
 
 
