@@ -16,196 +16,135 @@
 # limitations under the License.
 
 import os
-from collections import OrderedDict
-import numpy as np
 import torch
 import torch.optim as optim
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from trixi.experiment.pytorchexperiment import PytorchExperiment
 from torch.utils.data import DataLoader
-from trixi.util import Config
-from dataset import DUKEDataset
-from u_net.RecursiveUnet3D import UNet3D
-from u_net.dice_loss import DC_and_CE_loss
+import numpy as np
+from collections import OrderedDict
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from unet_model import UNet3D  # 假设你有 UNet3D 模型的实现
+from custom_dataset import DUKEDataset  # 假设你有自定义数据集类 DUKEDataset
+from loss import DC_and_CE_loss  # 假设你有定义的损失函数
 
-
+# 获取配置
 def get_config():
-    # Set your own path, if needed.
-    data_root_dir = os.path.abspath('/data/private/autoPET/duke')  # The path where the downloaded dataset is stored.
-
-    c = Config(
-        update_from_argv=True,  # If set 'True', it allows to update each configuration by a cmd/terminal parameter.
-
-        # Train parameters
-        num_classes=1,
-        in_channels=1,
-        batch_size=8,
-        patch_size=64,
-        n_epochs=10,
-        learning_rate=0.0002,
-        fold=0,  # The 'splits.pkl' may contain multiple folds. Here we choose which one we want to use.
-
-        device="cuda",  # 'cuda' is the default CUDA device, you can use also 'cpu'. For more information, see https://pytorch.org/docs/stable/notes/cuda.html
-
-        # Logging parameters
-        name='Basic_Unet',
-        author='wenwu',  # Author of this project
-        plot_freq=10,  # How often should stuff be shown in visdom
-        append_rnd_string=False,  # Appends a random string to the experiment name to make it unique.
-        start_visdom=True,  # You can either start a visom server manually or have trixi start it for you.
-
-        do_instancenorm=True,  # Defines whether or not the UNet does a instance normalization in the contracting path
-        do_load_checkpoint=False,
-        checkpoint_dir='',
-
-        # Adapt to your own path, if needed.
-        #google_drive_id='1RzPB1_bqzQhlWvU-YGvZzhx2omcDh38C',  # This id is used to download the example dataset.
-        dataset_name='Duke_breast',
-        base_dir=os.path.abspath('/data/private/autoPET/medicaldiffusion_results/unet'),  # Where to log the output of the experiment.
-
-        data_root_dir='/data/private/autoPET/duke',  # The path where the downloaded dataset is stored.
-        data_dir=os.path.join(data_root_dir, '/final_labeled_mr'),  # This is where your training and validation data is stored
-        data_test_dir=os.path.join(data_root_dir, '/final_label'),  # This is where your test data is stored
-
-        split_dir=os.path.join(data_root_dir, 'autoPET'),  # This is where the 'splits.pkl' file is located, that holds your splits.
-
-        # execute a segmentation process on a specific image using the model
-        model_dir=os.path.join(os.path.abspath('/data/private/autoPET/medicaldiffusion_results/unet/u-net_output_experiment'), 'model'),  # the model being used for segmentation
-    )
-
-    print(c)
+    c = {
+        "data_root_dir": "/data/private/autoPET/duke",
+        "data_dir": "/data/private/autoPET/duke/final_labeled_mr",
+        "data_test_dir": "/data/private/autoPET/duke/final_label",
+        "split_dir": "/data/private/autoPET/duke/autoPET",
+        "device": "cuda" if torch.cuda.is_available() else "cpu",
+        "batch_size": 4,
+        "patch_size": (64, 64, 64),
+        "n_epochs": 10,
+        "learning_rate": 0.0002,
+        "plot_freq": 10,
+        "checkpoint_dir": "/path/to/checkpoints",
+        "do_load_checkpoint": False,
+        "name": "Basic_UNet",
+    }
     return c
 
 
-class UNetExperiment3D(PytorchExperiment):
-    """
-    The UnetExperiment is inherited from the PytorchExperiment. It implements the basic life cycle for a segmentation task with UNet(https://arxiv.org/abs/1505.04597).
-    It is optimized to work with the provided NumpyDataLoader.
+# 定义UNet训练类
+class UNetExperiment3D:
+    def __init__(self, config):
+        self.config = config
+        self.device = torch.device(self.config['device'])
 
-    The basic life cycle of a UnetExperiment is the same s PytorchExperiment:
+        # 加载数据集
+        train_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
+        val_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
+        self.train_data_loader = DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
+        self.val_data_loader = DataLoader(val_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
 
-        setup()
-        (--> Automatically restore values if a previous checkpoint is given)
-        prepare()
-
-        for epoch in n_epochs:
-            train()
-            validate()
-            (--> save current checkpoint)
-
-        end()
-    """
-
-    def setup(self):
-        # 读取配置文件
-
-        train_dataset = DUKEDataset(
-            root_dir=self.config.data_dir, sem_map=True)
-        val_dataset = DUKEDataset(
-            root_dir=self.config.data_dir, sem_map=True)
-
-        self.train_data_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=4)
-        self.val_data_loader = DataLoader(val_dataset, batch_size=4, shuffle=True, num_workers=4)
-        self.test_data_loader = DataLoader(val_dataset, batch_size=4, shuffle=True, num_workers=4)
-        self.device = torch.device(self.config.device if torch.cuda.is_available() else "cpu")
-
+        # 初始化模型
         self.model = UNet3D(num_classes=3, in_channels=1)
-
         self.model.to(self.device)
 
-        # We use a combination of DICE-loss and CE-Loss in this example.
-        # This proved good in the medical segmentation decathlon.
+        # 初始化损失函数
         self.loss = DC_and_CE_loss({'batch_dice': True, 'smooth': 1e-5, 'smooth_in_nom': True,
                                     'do_bg': False, 'rebalance_weights': None, 'background_weight': 1}, OrderedDict())
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config.learning_rate)
+        # 初始化优化器和学习率调度器
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min')
 
-        # If directory for checkpoint is provided, we load it.
-        if self.config.do_load_checkpoint:
-            if self.config.checkpoint_dir == '':
-                print('checkpoint_dir is empty, please provide directory to load checkpoint.')
-            else:
-                self.load_checkpoint(name=self.config.checkpoint_dir, save_types=("model",))
+        # 加载模型检查点（如果需要）
+        if self.config['do_load_checkpoint']:
+            self.load_checkpoint(self.config['checkpoint_dir'])
 
-        self.save_checkpoint(name="checkpoint_start")
-        self.elog.print('Experiment set up.')
+    def save_checkpoint(self, epoch):
+        os.makedirs(self.config['checkpoint_dir'], exist_ok=True)
+        torch.save(self.model.state_dict(), os.path.join(self.config['checkpoint_dir'], f"checkpoint_epoch_{epoch}.pt"))
 
-    def train(self, epoch):
-        self.elog.print('=====TRAIN=====')
-        self.model.train()
+    def load_checkpoint(self, checkpoint_dir):
+        self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_last.pt")))
+        print("Checkpoint loaded.")
 
-        batch_counter = 0
-        for i, data_batch in self.train_data_loader:
+    def train(self):
+        for epoch in range(self.config['n_epochs']):
+            print(f"===== TRAINING - EPOCH {epoch+1} =====")
+            self.model.train()
+            total_loss = 0.0
 
-            self.optimizer.zero_grad()
+            for batch_idx, data_batch in enumerate(self.train_data_loader):
+                self.optimizer.zero_grad()
+                data = data_batch['image'].float().to(self.device)
+                target = data_batch['label'].long().to(self.device)
 
-            # Shape of data_batch = [1, b, c, w, h]
-            # Desired shape = [b, c, w, h]
-            # Move data and target to the GPU
-            data = data_batch['image'].float().to(self.device)
-            target = data_batch['label'].long().to(self.device)
-
-            pred = self.model(data)
-
-            loss = self.loss(pred, target.squeeze())
-            # loss = self.ce_loss(pred, target.squeeze())
-            loss.backward()
-            self.optimizer.step()
-
-            # Some logging and plotting
-            if (batch_counter % self.config.plot_freq) == 0:
-                self.elog.print('Epoch: %d Loss: %.4f' % (self._epoch_idx, loss))
-
-                self.add_result(value=loss.item(), name='Train_Loss', tag='Loss', counter=epoch + (batch_counter / len(self.train_data_loader)/4))
-
-                self.clog.show_image_grid(data[:,:,30].float(), name="data", normalize=True, scale_each=True, n_iter=epoch)
-                self.clog.show_image_grid(target[:,:,30].float(), name="mask", title="Mask", n_iter=epoch)
-                self.clog.show_image_grid(torch.argmax(pred.cpu(), dim=1, keepdim=True)[:,:,30], name="unt_argmax", title="Unet", n_iter=epoch)
-
-            batch_counter += 1
-
-    def validate(self, epoch):
-        if epoch % 5 != 0:
-            return
-        self.elog.print('VALIDATE')
-        self.model.eval()
-
-        data = None
-        loss_list = []
-
-        with torch.no_grad():
-            for data_batch in self.val_data_loader:
-                data = data_batch['data'][0].float().to(self.device)
-                target = data_batch['seg'][0].long().to(self.device)
-
+                # 前向传播
                 pred = self.model(data)
 
+                # 计算损失并反向传播
                 loss = self.loss(pred, target.squeeze())
-                loss_list.append(loss.item())
+                loss.backward()
+                self.optimizer.step()
 
-        assert data is not None, 'data is None. Please check if your dataloader works properly'
-        self.scheduler.step(np.mean(loss_list))
+                total_loss += loss.item()
 
-        self.elog.print('Epoch: %d Loss: %.4f' % (self._epoch_idx, float(np.mean(loss_list))))
+                if batch_idx % self.config['plot_freq'] == 0:
+                    print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}")
 
-        self.add_result(value=np.mean(loss_list), name='Val_Loss', tag='Loss', counter=epoch+1)
+            avg_loss = total_loss / len(self.train_data_loader)
+            print(f"Epoch {epoch+1}, Average Loss: {avg_loss}")
 
-        self.clog.show_image_grid(data[:,:,30].float(), name="data_val", normalize=True, scale_each=True, n_iter=epoch)
-        self.clog.show_image_grid(target[:,:,30].float(), name="mask_val", title="Mask", n_iter=epoch)
-        self.clog.show_image_grid(torch.argmax(pred.data.cpu()[:,:,30], dim=1, keepdim=True), name="unt_argmax_val", title="Unet", n_iter=epoch)
+            # 保存模型检查点
+            self.save_checkpoint(epoch)
+
+            # 验证
+            self.validate(epoch)
+
+    def validate(self, epoch):
+        print("===== VALIDATING =====")
+        self.model.eval()
+        total_val_loss = 0.0
+        with torch.no_grad():
+            for data_batch in self.val_data_loader:
+                data = data_batch['image'].float().to(self.device)
+                target = data_batch['label'].long().to(self.device)
+
+                # 前向传播
+                pred = self.model(data)
+
+                # 计算验证损失
+                loss = self.loss(pred, target.squeeze())
+                total_val_loss += loss.item()
+
+        avg_val_loss = total_val_loss / len(self.val_data_loader)
+        print(f"Epoch {epoch+1}, Validation Loss: {avg_val_loss}")
+
+        # 学习率调度器更新
+        self.scheduler.step(avg_val_loss)
 
     def test(self):
-        # TODO
-        print('TODO: Implement your test() method here')
+        print("===== TESTING =====")
+        # TODO: 实现测试逻辑
+        pass
 
 
 if __name__ == '__main__':
     c = get_config()
-    exp = UNetExperiment3D(config=c, name=c.name, n_epochs=c.n_epochs,
-                           seed=42, append_rnd_to_name=c.append_rnd_string, globs=globals())
-    exp.run()
-    exp.run_test(setup=False)
-
-
+    experiment = UNetExperiment3D(config=c)
+    experiment.train()
 
