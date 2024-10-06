@@ -250,9 +250,8 @@ class UNetExperiment3D:
                 total_test_loss_fake += fake_loss.item()
                 total_dice_fake += dice_fake.item()
 
-                if batch_idx % self.config['image_freq'] == 0:
-                    self.save_results_slices(mr_real, label, pred_save_real, batch_idx, self.image_dir_test, mode="real")
-                    self.save_results_slices(mr_fake, label, pred_save_fake, batch_idx, self.image_dir_test, mode="fake")
+                self.save_results_slices(mr_real, label, pred_save_real, batch_idx, self.image_dir_test, mode="real")
+                self.save_results_slices(mr_fake, label, pred_save_fake, batch_idx, self.image_dir_test, mode="fake")
                 batch_idx += 1
         avg_val_loss_real = total_test_loss_real / len(self.test_data_loader)
         avg_val_loss_fake = total_test_loss_fake / len(self.test_data_loader)
