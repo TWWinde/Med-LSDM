@@ -198,12 +198,36 @@ class UNetExperiment3D:
 
         self.scheduler.step(avg_val_loss)
 
+    def dice_coefficient(self, pred, target, smooth=1.):
+        """
+        计算Dice系数
+        :param pred:  (B, C, X, Y, Z) (B, C, X, Y) (batch, channels, depth, height, width)
+        :param target:
+        :param smooth:
+        :return: Dice
+        """
+        pred = torch.sigmoid(pred)
+        pred = (pred > 0.5).float()
+
+        pred_flat = pred.view(-1)
+        target_flat = target.view(-1)
+
+        intersection = (pred_flat * target_flat).sum()
+
+        dice = (2. * intersection + smooth) / (pred_flat.sum() + target_flat.sum() + smooth)
+        return dice
+
     def test(self):
 
         print("===== TESTING =====")
         self.model.eval()
         total_val_loss = 0.0
         batch_idx = 0
+        total_test_loss_real = 0.0
+        total_test_loss_fake = 0.0
+        total_dice_real = 0.0
+        total_dice_fake = 0.0
+
         with torch.no_grad():
             for data_batch in self.test_data_loader:
                 image_fake = data_batch['mr_fake'].float().to(self.device)
@@ -217,8 +241,16 @@ class UNetExperiment3D:
                 pred_save = torch.argmax(pred, dim=1, keepdim=True)
                 loss, ce_loss, dc_loss = self.loss(pred, target)
                 total_val_loss += loss.item()
+
+                pred_save_real = torch.argmax(image_real, dim=1, keepdim=True)
+                real_loss, real_ce_loss, real_dc_loss = self.loss(pred_real, target)
+                dice_real = self.dice_coefficient(pred_real, target, smooth=1.)
+                total_test_loss_real += real_loss.item()
+                total_dice_real += dice_real.item()
+
+
                 if batch_idx % (self.config['image_freq']/10) == 0:
-                    self.save_results_slices(image_fake, label, pred_save, batch_idx, self.image_dir_test)
+                    self.save_results_slices(image_fake, label, pred_save_real, batch_idx, self.image_dir_test)
                 batch_idx += 1
         avg_val_loss = total_val_loss / len(self.test_data_loader)
         print(
