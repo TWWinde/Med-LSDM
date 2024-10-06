@@ -137,7 +137,7 @@ class UNetExperiment3D:
 
             self.validate(epoch)
 
-    def save_results_slices(self, image, label, pred_save, batch_idx, save_dir):
+    def save_results_slices(self, image, label, pred_save, batch_idx, save_dir, mode):
         slice_index = 16  # Specify which slice you want to save
 
         # Path to save images
@@ -150,7 +150,7 @@ class UNetExperiment3D:
         # For image_np
         plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
         plt.axis('off')
-        plt.savefig(os.path.join(path_images, f'{batch_idx}_image_slice_{slice_index}.png'), bbox_inches='tight',
+        plt.savefig(os.path.join(path_images, f'{batch_idx}_{mode}_image_slice_{slice_index}.png'), bbox_inches='tight',
                     pad_inches=0)
         plt.close()
 
@@ -173,7 +173,7 @@ class UNetExperiment3D:
         plt.imshow(pred_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
                    vmax=vmax)  # Grayscale or color image
         plt.axis('off')
-        plt.savefig(os.path.join(path_images, f'{batch_idx}_pred_slice_{slice_index}.png'),
+        plt.savefig(os.path.join(path_images, f'{batch_idx}_{mode}_pred_slice_{slice_index}.png'),
                     bbox_inches='tight', pad_inches=0)
         plt.close()
 
@@ -198,29 +198,69 @@ class UNetExperiment3D:
 
         self.scheduler.step(avg_val_loss)
 
+    def dice_coefficient(self, pred, target, smooth=1.):
+        """
+        计算Dice系数
+        :param pred:  (B, C, X, Y, Z) (B, C, X, Y) (batch, channels, depth, height, width)
+        :param target:
+        :param smooth:
+        :return: Dice
+        """
+        pred = torch.sigmoid(pred)
+        pred = (pred > 0.5).float()
+
+        pred_flat = pred.view(-1)
+        target_flat = target.view(-1)
+
+        intersection = (pred_flat * target_flat).sum()
+
+        dice = (2. * intersection + smooth) / (pred_flat.sum() + target_flat.sum() + smooth)
+        return dice
+
     def test(self):
 
         print("===== TESTING =====")
         self.model.eval()
-        total_val_loss = 0.0
+        total_test_loss_real = 0.0
+        total_test_loss_fake = 0.0
+        total_dice_real = 0.0
+        total_dice_fake = 0.0
+
         batch_idx = 0
         with torch.no_grad():
             for data_batch in self.test_data_loader:
-                image = data_batch['image'].float().to(self.device)
+                mr_real = data_batch['mr_real'].float().to(self.device)
+                mr_fake = data_batch['mr_fake'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
                 # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
+                pred_real = self.model(mr_real)
+                pred_fake = self.model(mr_fake)
 
-                pred = self.model(image)
-                pred_save = torch.argmax(pred, dim=1, keepdim=True)
-                loss, ce_loss, dc_loss = self.loss(pred, target)
-                total_val_loss += loss.item()
+                pred_save_real = torch.argmax(mr_real, dim=1, keepdim=True)
+                real_loss, real_ce_loss, real_dc_loss = self.loss(pred_real, target)
+                dice_real = self.dice_coefficient(pred_real, target, smooth=1.)
+                total_test_loss_real += real_loss.item()
+                total_dice_real += dice_real.item()
+
+                pred_save_fake = torch.argmax(mr_fake, dim=1, keepdim=True)
+                fake_loss, fake_ce_loss, fake_dc_loss = self.loss(pred_fake, target)
+                dice_fake = self.dice_coefficient(pred_real, target, smooth=1.)
+                total_test_loss_fake += fake_loss.item()
+                total_dice_fake += dice_fake.item()
+
                 if batch_idx % self.config['image_freq'] == 0:
-                    self.save_results_slices(image, label, pred_save, batch_idx, self.image_dir_test)
+                    self.save_results_slices(mr_real, label, pred_save_real, batch_idx, self.image_dir_test, mode="real")
+                    self.save_results_slices(mr_fake, label, pred_save_fake, batch_idx, self.image_dir_test, mode="fake")
                 batch_idx += 1
-        avg_val_loss = total_val_loss / len(self.test_data_loader)
+        avg_val_loss_real = total_test_loss_real / len(self.test_data_loader)
+        avg_val_loss_fake = total_test_loss_fake / len(self.test_data_loader)
+        avg_dice_real = total_dice_real / len(self.test_data_loader)
+        avg_dice_fake = total_dice_fake / len(self.test_data_loader)
         print(
-            f" Test Loss: {avg_val_loss}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
+            f" Test Loss real: {avg_val_loss_real}, Dice_Loss real: {avg_dice_real}")
+        print(
+            f" Test Loss fake: {avg_val_loss_fake}, Dice_Loss real: {avg_dice_fake}")
         pass
 
     def plot_loss(self, loss, name):
