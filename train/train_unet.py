@@ -138,7 +138,7 @@ class UNetExperiment3D:
 
             self.validate(epoch)
 
-    def save_results_slices(self, image, label, pred_save, batch_idx, save_dir, mode):
+    def save_results_slices(self, image, label, pred_save, batch_idx, save_dir, mode="train"):
         slice_index = 16  # Specify which slice you want to save
 
         # Path to save images
