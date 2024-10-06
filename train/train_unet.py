@@ -246,7 +246,7 @@ class UNetExperiment3D:
 
                 pred_save_fake = torch.argmax(pred_fake, dim=1, keepdim=True)
                 fake_loss, fake_ce_loss, fake_dc_loss = self.loss(pred_fake, target)
-                dice_fake = self.dice_coefficient(pred_real, target, smooth=1.)
+                dice_fake = self.dice_coefficient(pred_fake, target, smooth=1.)
                 total_test_loss_fake += fake_loss.item()
                 total_dice_fake += dice_fake.item()
 
