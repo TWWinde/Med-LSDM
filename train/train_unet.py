@@ -30,7 +30,6 @@ from u_net.dice_loss import DC_and_CE_loss
 import matplotlib.pyplot as plt
 
 
-# 获取配置
 def get_config():
     c = {
         "data_root_dir": "/data/private/autoPET/duke",
@@ -41,7 +40,7 @@ def get_config():
         "batch_size": 4,
         "patch_size": (64, 64, 64),
         "n_epochs": 10,
-        "learning_rate": 0.0002,
+        "learning_rate": 0.00005,
         "plot_freq": 10,
         "image_freq": 50,
         "num_classes": 3,
@@ -86,10 +85,8 @@ class UNetExperiment3D:
 
     def preprocess_input(self, data):
 
-        # move to GPU and change data types
         data = data.long()
 
-        # create one-hot label map
         label_map = data
         bs, _, t, h, w = label_map.size()
         nc = self.config['num_classes']
@@ -115,14 +112,14 @@ class UNetExperiment3D:
 
                 pred = self.model(image)
 
-                loss = self.loss(pred, target)
+                loss, ce_loss, dc_loss = self.loss(pred, target)
                 loss.backward()
                 self.optimizer.step()
                 total_loss += loss.item()
                 pred_save = torch.argmax(pred, dim=1, keepdim=True)
                 loss_image.append(loss.item())
                 if batch_idx % self.config['plot_freq'] == 0:
-                    print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}")
+                    print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
 
                 if batch_idx % self.config['image_freq']*2 == 0:
 
@@ -164,10 +161,8 @@ class UNetExperiment3D:
             print(f"Epoch {epoch + 1}, Average Loss: {avg_loss}")
             print(f"Epoch {epoch+1}, Average Loss: {avg_loss}")
 
-            # 保存模型检查点
             self.save_checkpoint(epoch)
 
-            # 验证
             self.validate(epoch)
 
     def validate(self, epoch):
@@ -176,29 +171,46 @@ class UNetExperiment3D:
         total_val_loss = 0.0
         with torch.no_grad():
             for data_batch in self.val_data_loader:
-                data = data_batch['image'].float().to(self.device)
-                target = data_batch['label'].long().to(self.device)
+                image = data_batch['image'].float().to(self.device)
+                label = data_batch['label'].long().to(self.device)
+                target = self.preprocess_input(label)
+                # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
 
-                # 前向传播
-                pred = self.model(data)
+                pred = self.model(image)
 
-                # 计算验证损失
-                loss = self.loss(pred, target.squeeze())
+                loss, ce_loss, dc_loss = self.loss(pred, target)
                 total_val_loss += loss.item()
 
         avg_val_loss = total_val_loss / len(self.val_data_loader)
-        print(f"Epoch {epoch+1}, Validation Loss: {avg_val_loss}")
+        print(f"Epoch {epoch+1}, Validation Loss: {avg_val_loss}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
 
         self.scheduler.step(avg_val_loss)
 
     def test(self):
         print("===== TESTING =====")
-        # TODO: 实现测试逻辑
+        self.model.eval()
+        total_val_loss = 0.0
+        with torch.no_grad():
+            for data_batch in self.val_data_loader:
+                image = data_batch['image'].float().to(self.device)
+                label = data_batch['label'].long().to(self.device)
+                target = self.preprocess_input(label)
+                # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
+
+                pred = self.model(image)
+
+                loss, ce_loss, dc_loss = self.loss(pred, target)
+                total_val_loss += loss.item()
+
+        avg_val_loss = total_val_loss / len(self.val_data_loader)
+        print(
+            f" Test Loss: {avg_val_loss}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
+
         pass
 
     def plot_loss(self, loss):
         """
-        在每个 epoch 结束时绘制并保存 loss 曲线图
+        save loss figure after every epoch
         """
         plt.figure()
         plt.plot(range(1, len(loss) + 1), loss, marker='o')

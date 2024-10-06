@@ -287,7 +287,7 @@ class DC_and_topk_loss(nn.Module):
             result = ce_loss + dc_loss
         else:
             raise NotImplementedError("nah son") # reserved for other stuff (later?)
-        return result
+        return result, ce_loss, dc_loss
 
 
 class CrossentropyWithLossMask(nn.CrossEntropyLoss):
