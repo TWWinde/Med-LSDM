@@ -82,8 +82,8 @@ class UNetExperiment3D:
 
     def train(self):
         loss_image = []
-        dice_loss = []
-        ce_loss = []
+        dice_loss_list = []
+        ce_loss_list = []
         step = 0
         for epoch in range(self.config['n_epochs']):
             print(f"===== TRAINING - EPOCH {epoch+1} =====")
@@ -105,16 +105,16 @@ class UNetExperiment3D:
                 total_loss += loss.item()
                 pred_save = torch.argmax(pred, dim=1, keepdim=True)
                 loss_image.append(loss.item())
-                dice_loss.append(dc_loss.item())
-                ce_loss.append(ce_loss.item())
+                dice_loss_list.append(dc_loss.item())
+                ce_loss_list.append(ce_loss.item())
                 if batch_idx % self.config['plot_freq'] == 0:
                     print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
 
                 if batch_idx % self.config['image_freq']*2 == 0:
 
                     self.plot_loss(loss_image, "Total_Loss")
-                    self.plot_loss(dice_loss, "Dice_Loss")
-                    self.plot_loss(ce_loss, "CrossEntropy_Loss")
+                    self.plot_loss(dice_loss_list, "Dice_Loss")
+                    self.plot_loss(ce_loss_list, "CrossEntropy_Loss")
 
                 if batch_idx % self.config['image_freq'] == 0:
                     slice_index = 16  # Specify which slice you want to save
