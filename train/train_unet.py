@@ -285,5 +285,5 @@ class UNetExperiment3D:
 if __name__ == '__main__':
     c = get_config()
     experiment = UNetExperiment3D(config=c, percentage=0.2)
-    experiment.train()
-    #experiment.test()
+    #experiment.train()
+    experiment.test()
