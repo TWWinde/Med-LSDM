@@ -217,7 +217,7 @@ class UNetExperiment3D:
                 pred_save = torch.argmax(pred, dim=1, keepdim=True)
                 loss, ce_loss, dc_loss = self.loss(pred, target)
                 total_val_loss += loss.item()
-                if batch_idx % self.config['image_freq']/10 == 0:
+                if batch_idx % (self.config['image_freq']/10) == 0:
                     self.save_results_slices(image_fake, label, pred_save, batch_idx, self.image_dir_test)
                 batch_idx += 1
         avg_val_loss = total_val_loss / len(self.test_data_loader)
