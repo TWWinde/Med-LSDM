@@ -1122,7 +1122,8 @@ class SemanticGaussianDiffusion(nn.Module):
         # Sample slice
         plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Choose the colormap as needed
         plt.axis('off')  # Optional: Turn off axes
-        plt.savefig(os.path.join(results_folder, f'{random.randint(0, 100)}_sample_slice_{slice_index}.png'),
+        number = random.randint(0, 100)
+        plt.savefig(os.path.join(results_folder, f'{number}_sample_slice_{slice_index}.png'),
                     bbox_inches='tight',
                     pad_inches=0)
         plt.close()
@@ -1149,6 +1150,22 @@ class SemanticGaussianDiffusion(nn.Module):
 
         else:
             unnormalize_img(_sample)
+
+        slice_index = 16
+        image_np = _sample.cpu().numpy()
+
+        results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/",
+                                      self.cfg.model.name,
+                                      self.cfg.dataset.name, "diffusion_latent_diffusion_slices")
+        os.makedirs(results_folder, exist_ok=True)
+        # Sample slice
+        plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Choose the colormap as needed
+        plt.axis('off')  # Optional: Turn off axes
+        plt.savefig(os.path.join(results_folder, f'{number}_sample_output__slice_{slice_index}.png'),
+                    bbox_inches='tight',
+                    pad_inches=0)
+        plt.close()
+
 
         return _sample
 
