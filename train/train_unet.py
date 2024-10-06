@@ -149,16 +149,28 @@ class UNetExperiment3D:
                     plt.close()
 
                     # For label_np (assuming RGB)
-                    plt.imshow(label_np[0, 0, slice_index, :, :])  # Color image, transpose (H, W, C)
+                    slice_index = 16  # Specify the slice you want to save
+                    vmin = min(label_np.min(), pred_np.min())  # Get the minimum value from both images
+                    vmax = max(label_np.max(), pred_np.max())  # Get the maximum value from both images
+
+                    # Path to save images
+                    path_images = os.path.join(self.config['image_dir'])
+                    os.makedirs(path_images, exist_ok=True)
+
+                    # Plot label image with the same colormap and value range
+                    plt.imshow(label_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
+                               vmax=vmax)  # Grayscale or color image
                     plt.axis('off')
-                    plt.savefig(os.path.join(path_images, f'{batch_idx}_label_slice_{slice_index}.png'), bbox_inches='tight',
-                                pad_inches=0)
+                    plt.savefig(os.path.join(path_images, f'{batch_idx}_label_slice_{slice_index}.png'),
+                                bbox_inches='tight', pad_inches=0)
                     plt.close()
 
-                    plt.imshow(pred_np[0, 0, slice_index, :, :])  # Color image, transpose (H, W, C)
+                    # Plot predicted image with the same colormap and value range
+                    plt.imshow(pred_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
+                               vmax=vmax)  # Grayscale or color image
                     plt.axis('off')
-                    plt.savefig(os.path.join(path_images, f'{batch_idx}_pred_slice_{slice_index}.png'), bbox_inches='tight',
-                                pad_inches=0)
+                    plt.savefig(os.path.join(path_images, f'{batch_idx}_pred_slice_{slice_index}.png'),
+                                bbox_inches='tight', pad_inches=0)
                     plt.close()
 
                 step += 1
