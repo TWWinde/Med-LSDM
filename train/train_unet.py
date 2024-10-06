@@ -50,7 +50,9 @@ class UNetExperiment3D:
         self.model = UNet3D(num_classes=3, in_channels=1)
         self.model.to(self.device)
         self.checkpoint_dir = os.path.join(self.config['root_dir'], self.name, "checkpoint")
+        os.makedirs(self.checkpoint_dir, exist_ok=True)
         self.image_dir = os.path.join(self.config['root_dir'], self.name, "image")
+        os.makedirs(self.image_dir, exist_ok=True)
         self.loss = DC_and_CE_loss({'batch_dice': True, 'smooth': 1e-5, 'smooth_in_nom': True,
                                     'do_bg': False, 'rebalance_weights': None, 'background_weight': 1}, OrderedDict())
 
