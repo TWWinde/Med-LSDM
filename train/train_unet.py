@@ -73,7 +73,7 @@ class UNetExperiment3D:
         torch.save(self.model.state_dict(), os.path.join(self.checkpoint_dir, f"checkpoint_epoch_{epoch}.pt"))
 
     def load_checkpoint(self, checkpoint_dir):
-        self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_epoche_3.pt")))
+        self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_epoch_3.pt")))
         print("Checkpoint loaded.")
 
     def preprocess_input(self, data):
