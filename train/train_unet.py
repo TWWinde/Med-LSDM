@@ -208,7 +208,6 @@ class UNetExperiment3D:
         batch_idx = 0
         with torch.no_grad():
             for data_batch in self.test_data_loader:
-                print(data_batch)
                 image = data_batch['image'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
