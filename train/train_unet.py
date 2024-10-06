@@ -54,18 +54,20 @@ def get_config():
 
 
 class UNetExperiment3D:
-    def __init__(self, config):
+    def __init__(self, config, percentage=1.0):
         self.config = config
         self.device = torch.device(self.config['device'])
-
-        train_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
+        self.percentage = percentage
+        self.name = f'without_pretrain_{self.percentage*100}%_data'
+        train_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True, percentage=self.percentage)
         val_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
         self.train_data_loader = DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
         self.val_data_loader = DataLoader(val_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
 
         self.model = UNet3D(num_classes=3, in_channels=1)
         self.model.to(self.device)
-
+        self.checkpoint_dir = os.path.join(self.config['root_dir'], self.name, "checkpoint")
+        self.image_dir = os.path.join(self.config['root_dir'], self.name, "image")
         self.loss = DC_and_CE_loss({'batch_dice': True, 'smooth': 1e-5, 'smooth_in_nom': True,
                                     'do_bg': False, 'rebalance_weights': None, 'background_weight': 1}, OrderedDict())
 
@@ -73,11 +75,11 @@ class UNetExperiment3D:
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min')
 
         if self.config['do_load_checkpoint']:
-            self.load_checkpoint(self.config['checkpoint_dir'])
+            self.load_checkpoint(self.checkpoint_dir)
 
     def save_checkpoint(self, epoch):
-        os.makedirs(self.config['checkpoint_dir'], exist_ok=True)
-        torch.save(self.model.state_dict(), os.path.join(self.config['checkpoint_dir'], f"checkpoint_epoch_{epoch}.pt"))
+        os.makedirs(self.checkpoint_dir, exist_ok=True)
+        torch.save(self.model.state_dict(), os.path.join(self.checkpoint_dir, f"checkpoint_epoch_{epoch}.pt"))
 
     def load_checkpoint(self, checkpoint_dir):
         self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_last.pt")))
@@ -135,7 +137,7 @@ class UNetExperiment3D:
                     slice_index = 16  # Specify which slice you want to save
 
                     # Path to save images
-                    path_images = os.path.join(self.config['image_dir'])
+                    path_images = os.path.join(self.image_dir)
                     os.makedirs(path_images, exist_ok=True)
                     image_np = image.detach().cpu().numpy()
                     label_np = label.detach().cpu().numpy()
@@ -154,7 +156,7 @@ class UNetExperiment3D:
                     vmax = max(label_np.max(), pred_np.max())  # Get the maximum value from both images
 
                     # Path to save images
-                    path_images = os.path.join(self.config['image_dir'])
+                    path_images = os.path.join(self.image_dir)
                     os.makedirs(path_images, exist_ok=True)
 
                     # Plot label image with the same colormap and value range
@@ -237,7 +239,7 @@ class UNetExperiment3D:
         plt.title(f'{name}')
         plt.grid(True)
 
-        path_images = os.path.join(self.config['root_dir'], f'{name}.png')
+        path_images = os.path.join(self.config['root_dir'], self.name, f'{name}.png')
         os.makedirs(self.config['root_dir'], exist_ok=True)
         plt.savefig(path_images)
         plt.close()

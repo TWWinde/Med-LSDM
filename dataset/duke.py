@@ -89,12 +89,13 @@ class DUKEDataset1(Dataset):
 
 class DUKEDataset(Dataset):
 
-    def __init__(self, root_dir: str, sem_map=False):
+    def __init__(self, root_dir: str, sem_map=False, percentage=1.0):
         super().__init__()
         self.root_dir = root_dir
         self.sem_map = sem_map
         self.Norm = normalization
         self.Crop = crop
+        self.percentage = percentage
         if self.sem_map:
             self.mr_paths, self.label_paths = self.get_data_files()
         else:
@@ -102,7 +103,7 @@ class DUKEDataset(Dataset):
 
     def get_data_files(self):
 
-        mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(self.root_dir)
+        mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in sorted(os.listdir(self.root_dir))
                     if subfolder.endswith('nii.gz')]
 
         if self.sem_map:
@@ -113,6 +114,9 @@ class DUKEDataset(Dataset):
                     mr_names_.append(mr_path)
                     label_names.append(label_path)
 
+            n = len(label_names)
+            mr_names_ = mr_names_[:int(n * self.percentage)]
+            label_names = label_names[:int(n * self.percentage)]
             return mr_names_, label_names
         else:
 
