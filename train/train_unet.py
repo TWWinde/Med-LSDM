@@ -206,17 +206,19 @@ class UNetExperiment3D:
         batch_idx = 0
         with torch.no_grad():
             for data_batch in self.test_data_loader:
-                image = data_batch['mr_fake'].float().to(self.device)
+                image_fake = data_batch['mr_fake'].float().to(self.device)
+                image_real = data_batch['mr_real'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
                 # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
 
-                pred = self.model(image)
+                pred = self.model(image_fake)
+                pred_real = self.model(image_real)
                 pred_save = torch.argmax(pred, dim=1, keepdim=True)
                 loss, ce_loss, dc_loss = self.loss(pred, target)
                 total_val_loss += loss.item()
-                if batch_idx % self.config['image_freq'] == 0:
-                    self.save_results_slices(image, label, pred_save, batch_idx, self.image_dir_test)
+                if batch_idx % self.config['image_freq']/10 == 0:
+                    self.save_results_slices(image_fake, label, pred_save, batch_idx, self.image_dir_test)
                 batch_idx += 1
         avg_val_loss = total_val_loss / len(self.test_data_loader)
         print(
