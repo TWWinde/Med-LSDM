@@ -97,6 +97,8 @@ class UNetExperiment3D:
 
     def train(self):
         loss_image = []
+        dice_loss = []
+        ce_loss = []
         step = 0
         for epoch in range(self.config['n_epochs']):
             print(f"===== TRAINING - EPOCH {epoch+1} =====")
@@ -118,12 +120,16 @@ class UNetExperiment3D:
                 total_loss += loss.item()
                 pred_save = torch.argmax(pred, dim=1, keepdim=True)
                 loss_image.append(loss.item())
+                dice_loss.append(dc_loss.item())
+                ce_loss.append(ce_loss.item())
                 if batch_idx % self.config['plot_freq'] == 0:
                     print(f"Epoch {epoch+1}, Batch {batch_idx}, Loss: {loss.item()}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
 
                 if batch_idx % self.config['image_freq']*2 == 0:
 
-                    self.plot_loss(loss_image)
+                    self.plot_loss(loss_image, "Total_Loss")
+                    self.plot_loss(dice_loss, "Dice_Loss")
+                    self.plot_loss(ce_loss, "CrossEntropy_Loss")
 
                 if batch_idx % self.config['image_freq'] == 0:
                     slice_index = 16  # Specify which slice you want to save
@@ -208,18 +214,18 @@ class UNetExperiment3D:
 
         pass
 
-    def plot_loss(self, loss):
+    def plot_loss(self, loss, name):
         """
         save loss figure after every epoch
         """
         plt.figure()
         plt.plot(range(1, len(loss) + 1), loss, marker='o')
         plt.xlabel('Batch')
-        plt.ylabel('Loss')
-        plt.title(f'Training Loss ')
+        plt.ylabel(f'{name}')
+        plt.title(f'{name}')
         plt.grid(True)
 
-        path_images = os.path.join(self.config['root_dir'], f'loss.png')
+        path_images = os.path.join(self.config['root_dir'], f'{name}.png')
         os.makedirs(self.config['root_dir'], exist_ok=True)
         plt.savefig(path_images)
         plt.close()
