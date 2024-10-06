@@ -1112,6 +1112,21 @@ class SemanticGaussianDiffusion(nn.Module):
             (batch_size, channels, num_frames, image_size, image_size), cond=cond, cond_scale=self.cond_scale,
             get_middle_process=get_middle_process)
 
+        slice_index = 4
+        image_np = _sample.cpu().numpy()
+
+        results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/",
+                                      self.cfg.model.name,
+                                      self.cfg.dataset.name, "diffusion_latent_diffusion_slices")
+        os.makedirs(results_folder, exist_ok=True)
+        # Sample slice
+        plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Choose the colormap as needed
+        plt.axis('off')  # Optional: Turn off axes
+        plt.savefig(os.path.join(results_folder, f'{random.randint(0, 100)}_sample_slice_{slice_index}.png'),
+                    bbox_inches='tight',
+                    pad_inches=0)
+        plt.close()
+
         assert not isinstance(self.vqgan, VQGAN) or not isinstance(self.vqgan_spade, VQGAN_SPADE)
         if isinstance(self.vqgan, VQGAN):
             # denormalize TODO: Remove eventually
@@ -1219,6 +1234,21 @@ class SemanticGaussianDiffusion(nn.Module):
         else:
             print("Hi")
             x = normalize_img(x)  # (-1,1)
+
+        slice_index = 4
+        image_np = x.cpu().numpy()
+
+        results_folder = os.path.join("/data/private/autoPET/medicaldiffusion_results/",
+                                      self.cfg.model.name,
+                                      self.cfg.dataset.name, "diffusion_latent_slices")
+        os.makedirs(results_folder, exist_ok=True)
+        # Sample slice
+        plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Choose the colormap as needed
+        plt.axis('off')  # Optional: Turn off axes
+        plt.savefig(os.path.join(results_folder, f'{random.randint(0, 100)}_sample_slice_{slice_index}.png'),
+                    bbox_inches='tight',
+                    pad_inches=0)
+        plt.close()
 
         b, device, img_size, = x.shape[0], x.device, self.image_size
         check_shape(x, 'b c f h w', c=self.channels, f=self.num_frames, h=img_size, w=img_size)
