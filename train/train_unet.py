@@ -119,46 +119,7 @@ class UNetExperiment3D:
                     self.plot_loss(ce_loss_list, "CrossEntropy_Loss")
 
                 if batch_idx % self.config['image_freq'] == 0:
-                    slice_index = 16  # Specify which slice you want to save
-
-                    # Path to save images
-                    path_images = os.path.join(self.image_dir)
-                    os.makedirs(path_images, exist_ok=True)
-                    image_np = image.detach().cpu().numpy()
-                    label_np = label.detach().cpu().numpy()
-                    pred_np = pred_save.detach().cpu().numpy()
-
-                    # For image_np
-                    plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
-                    plt.axis('off')
-                    plt.savefig(os.path.join(path_images, f'{batch_idx}_image_slice_{slice_index}.png'), bbox_inches='tight',
-                                pad_inches=0)
-                    plt.close()
-
-                    # For label_np (assuming RGB)
-                    slice_index = 16  # Specify the slice you want to save
-                    vmin = min(label_np.min(), pred_np.min())  # Get the minimum value from both images
-                    vmax = max(label_np.max(), pred_np.max())  # Get the maximum value from both images
-
-                    # Path to save images
-                    path_images = os.path.join(self.image_dir)
-                    os.makedirs(path_images, exist_ok=True)
-
-                    # Plot label image with the same colormap and value range
-                    plt.imshow(label_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
-                               vmax=vmax)  # Grayscale or color image
-                    plt.axis('off')
-                    plt.savefig(os.path.join(path_images, f'{batch_idx}_label_slice_{slice_index}.png'),
-                                bbox_inches='tight', pad_inches=0)
-                    plt.close()
-
-                    # Plot predicted image with the same colormap and value range
-                    plt.imshow(pred_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
-                               vmax=vmax)  # Grayscale or color image
-                    plt.axis('off')
-                    plt.savefig(os.path.join(path_images, f'{batch_idx}_pred_slice_{slice_index}.png'),
-                                bbox_inches='tight', pad_inches=0)
-                    plt.close()
+                    self.save_results_slices(image, label, pred_save, batch_idx)
 
                 step += 1
 
@@ -169,6 +130,48 @@ class UNetExperiment3D:
             self.save_checkpoint(epoch)
 
             self.validate(epoch)
+
+    def save_results_slices(self, image, label, pred_save, batch_idx):
+        slice_index = 16  # Specify which slice you want to save
+
+        # Path to save images
+        path_images = os.path.join(self.image_dir)
+        os.makedirs(path_images, exist_ok=True)
+        image_np = image.detach().cpu().numpy()
+        label_np = label.detach().cpu().numpy()
+        pred_np = pred_save.detach().cpu().numpy()
+
+        # For image_np
+        plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
+        plt.axis('off')
+        plt.savefig(os.path.join(path_images, f'{batch_idx}_image_slice_{slice_index}.png'), bbox_inches='tight',
+                    pad_inches=0)
+        plt.close()
+
+        # For label_np (assuming RGB)
+        slice_index = 16  # Specify the slice you want to save
+        vmin = min(label_np.min(), pred_np.min())  # Get the minimum value from both images
+        vmax = max(label_np.max(), pred_np.max())  # Get the maximum value from both images
+
+        # Path to save images
+        path_images = os.path.join(self.image_dir)
+        os.makedirs(path_images, exist_ok=True)
+
+        # Plot label image with the same colormap and value range
+        plt.imshow(label_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
+                   vmax=vmax)  # Grayscale or color image
+        plt.axis('off')
+        plt.savefig(os.path.join(path_images, f'{batch_idx}_label_slice_{slice_index}.png'),
+                    bbox_inches='tight', pad_inches=0)
+        plt.close()
+
+        # Plot predicted image with the same colormap and value range
+        plt.imshow(pred_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
+                   vmax=vmax)  # Grayscale or color image
+        plt.axis('off')
+        plt.savefig(os.path.join(path_images, f'{batch_idx}_pred_slice_{slice_index}.png'),
+                    bbox_inches='tight', pad_inches=0)
+        plt.close()
 
     def validate(self, epoch):
         print("===== VALIDATING =====")
@@ -196,16 +199,18 @@ class UNetExperiment3D:
         self.model.eval()
         total_val_loss = 0.0
         with torch.no_grad():
-            for data_batch in self.val_data_loader:
+            for batch_idx, data_batch in self.val_data_loader:
                 image = data_batch['image'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
                 # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
 
                 pred = self.model(image)
-
+                pred_save = torch.argmax(pred, dim=1, keepdim=True)
                 loss, ce_loss, dc_loss = self.loss(pred, target)
                 total_val_loss += loss.item()
+                if batch_idx % self.config['image_freq'] == 0:
+                    self.save_results_slices(image, label, pred_save, batch_idx)
 
         avg_val_loss = total_val_loss / len(self.val_data_loader)
         print(
