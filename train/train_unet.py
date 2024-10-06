@@ -17,7 +17,7 @@ def get_config():
     c = {
         "data_root_dir": "/data/private/autoPET/duke",
         "data_dir": "/data/private/autoPET/duke/final_labeled_mr",
-        "data_test_dir": "/data/private/autoPET/duke/final_label",
+        #"data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results",
         "split_dir": "/data/private/autoPET/duke/autoPET",
         "device": "cuda" if torch.cuda.is_available() else "cpu",
         "batch_size": 4,
@@ -67,7 +67,7 @@ class UNetExperiment3D:
         torch.save(self.model.state_dict(), os.path.join(self.checkpoint_dir, f"checkpoint_epoch_{epoch}.pt"))
 
     def load_checkpoint(self, checkpoint_dir):
-        self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_last.pt")))
+        self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_epoche_3.pt")))
         print("Checkpoint loaded.")
 
     def preprocess_input(self, data):
@@ -210,7 +210,6 @@ class UNetExperiment3D:
         avg_val_loss = total_val_loss / len(self.val_data_loader)
         print(
             f" Test Loss: {avg_val_loss}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
-
         pass
 
     def plot_loss(self, loss, name):
@@ -233,4 +232,5 @@ class UNetExperiment3D:
 if __name__ == '__main__':
     c = get_config()
     experiment = UNetExperiment3D(config=c)
-    experiment.train()
+    #experiment.train()
+    experiment.test()
