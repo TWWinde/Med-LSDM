@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from dataset import DUKEDataset_unet
+from dataset import DUKEDataset
 from u_net.RecursiveUnet3D import UNet3D
 from u_net.dice_loss import DC_and_CE_loss
 import matplotlib.pyplot as plt
@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 def get_config():
     c = {
         "data_root_dir": "/data/private/autoPET/duke",
-        #"data_dir": "/data/private/autoPET/duke/final_labeled_mr",
-        "data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results/final_labeled_mr",
+        "data_dir": "/data/private/autoPET/duke/final_labeled_mr",
+        #"data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results/final_labeled_mr",
         "split_dir": "/data/private/autoPET/duke/autoPET",
         "device": "cuda" if torch.cuda.is_available() else "cpu",
         "batch_size": 4,
@@ -42,8 +42,8 @@ class UNetExperiment3D:
         self.device = torch.device(self.config['device'])
         self.percentage = percentage
         self.name = f'without_pretrain_{self.percentage*100}%_data'
-        train_dataset = DUKEDataset_unet(root_dir=self.config['data_dir'], sem_map=True, percentage=self.percentage)
-        val_dataset = DUKEDataset_unet(root_dir=self.config['data_dir'], sem_map=True)
+        train_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True, percentage=self.percentage)
+        val_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
         self.train_data_loader = DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
         self.val_data_loader = DataLoader(val_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
 
@@ -202,7 +202,6 @@ class UNetExperiment3D:
         total_val_loss = 0.0
         with torch.no_grad():
             for batch_idx, data_batch in self.val_data_loader:
-                print(data_batch['image'])
                 image = data_batch['image'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
