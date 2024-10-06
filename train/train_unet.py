@@ -8,6 +8,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from dataset import DUKEDataset
+from dataset import DUKEDataset_unet
 from u_net.RecursiveUnet3D import UNet3D
 from u_net.dice_loss import DC_and_CE_loss
 import matplotlib.pyplot as plt
@@ -197,11 +198,15 @@ class UNetExperiment3D:
         self.scheduler.step(avg_val_loss)
 
     def test(self):
+        test_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
+        self.test_data_loader = DataLoader(test_dataset, batch_size=self.config['batch_size'], shuffle=True,
+                                          num_workers=4)
         print("===== TESTING =====")
         self.model.eval()
         total_val_loss = 0.0
         with torch.no_grad():
-            for batch_idx, data_batch in self.train_data_loader:
+            for batch_idx, data_batch in self.test_data_loader:
+                print(data_batch)
                 image = data_batch['image'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
@@ -214,7 +219,7 @@ class UNetExperiment3D:
                 if batch_idx % self.config['image_freq'] == 0:
                     self.save_results_slices(image, label, pred_save, batch_idx, self.image_dir_test)
 
-        avg_val_loss = total_val_loss / len(self.val_data_loader)
+        avg_val_loss = total_val_loss / len(self.test_data_loader)
         print(
             f" Test Loss: {avg_val_loss}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
         pass
