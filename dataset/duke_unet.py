@@ -48,7 +48,7 @@ class DUKEDataset_unet(Dataset):
             label_names, mr_names_ = [], []
             for mr_path in mr_names:
                 label_path = mr_path.replace('final_labeled_mr', 'final_label')
-                label_path = label_path.replace('image', 'label')
+                label_path = label_path.replace('sample', 'label')
                 if os.path.exists(mr_path) and os.path.exists(label_path):
                     mr_names_.append(mr_path)
                     label_names.append(label_path)
