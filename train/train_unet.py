@@ -74,7 +74,7 @@ class UNetExperiment3D:
 
     def load_checkpoint(self, checkpoint_dir):
         self.model.load_state_dict(torch.load(os.path.join(checkpoint_dir, "checkpoint_epoch_3.pt")))
-        print("Checkpoint loaded.")
+        print(f"{}_Checkpoint loaded.")
 
     def preprocess_input(self, data):
 
@@ -235,7 +235,7 @@ class UNetExperiment3D:
                 target = self.preprocess_input(label)
                 # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
                 pred_real = self.model(mr_real)
-                pred_fake = self.model(mr_fake)
+                #pred_fake = self.model(mr_fake)
 
                 pred_save_real = torch.argmax(mr_real, dim=1, keepdim=True)
                 real_loss, real_ce_loss, real_dc_loss = self.loss(pred_real, target)
@@ -243,15 +243,15 @@ class UNetExperiment3D:
                 total_test_loss_real += real_loss.item()
                 total_dice_real += dice_real.item()
 
-                pred_save_fake = torch.argmax(mr_fake, dim=1, keepdim=True)
-                fake_loss, fake_ce_loss, fake_dc_loss = self.loss(pred_fake, target)
-                dice_fake = self.dice_coefficient(pred_real, target, smooth=1.)
-                total_test_loss_fake += fake_loss.item()
-                total_dice_fake += dice_fake.item()
+                #pred_save_fake = torch.argmax(mr_fake, dim=1, keepdim=True)
+                #fake_loss, fake_ce_loss, fake_dc_loss = self.loss(pred_fake, target)
+                #dice_fake = self.dice_coefficient(pred_real, target, smooth=1.)
+                #total_test_loss_fake += fake_loss.item()
+                #total_dice_fake += dice_fake.item()
 
                 if batch_idx % self.config['image_freq'] == 0:
                     self.save_results_slices(mr_real, label, pred_save_real, batch_idx, self.image_dir_test, mode="real")
-                    self.save_results_slices(mr_fake, label, pred_save_fake, batch_idx, self.image_dir_test, mode="fake")
+                    #self.save_results_slices(mr_fake, label, pred_save_fake, batch_idx, self.image_dir_test, mode="fake")
                 batch_idx += 1
         avg_val_loss_real = total_test_loss_real / len(self.test_data_loader)
         avg_val_loss_fake = total_test_loss_fake / len(self.test_data_loader)
