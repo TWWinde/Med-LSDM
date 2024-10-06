@@ -61,7 +61,6 @@ class DUKEDataset_unet(Dataset):
         mr_fake = self.Norm(mr_fake)
 
         label = tio.ScalarImage(self.label_names[idx])
-
         label = self.Crop(label)
 
-        return {'mr_real': mr_real.data.permute(0, -1, 1, 2).float(), 'mr_fake': mr_fake.data.permute(0, -1, 1, 2).float(),'label': label.data.permute(0, -1, 1, 2).float()}
+        return {'mr_real': mr_real.data.permute(0, -1, 1, 2).float(), 'mr_fake': mr_fake.data.permute(0, -1, 1, 2).float(), 'label': label.data.permute(0, -1, 1, 2).float()}
