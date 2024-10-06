@@ -73,6 +73,6 @@ class DUKEDataset_unet(Dataset):
             label = tio.ScalarImage(self.label_paths[idx])
            # print(self.label_paths[idx])
             label = self.Crop(label)
-            return {'image': img.data.permute(0, -1, 2, 1).float(), 'label': label.data.permute(0, -1, 1, 2).float()}
+            return {'image': img.data.permute(0, -1, 1, 2).float(), 'label': label.data.permute(0, -1, 1, 2).float()}
         else:
             return {'image': img.data.permute(0, -1, 1, 2)}
