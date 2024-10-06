@@ -145,7 +145,7 @@ class UNetExperiment3D:
         path_images = os.path.join(save_dir)
         os.makedirs(path_images, exist_ok=True)
         image_np = image.detach().cpu().numpy()
-        label_np = label.detach().cpu().numpy()
+        label_np = label.detach().cpu().numpy()[0, 0:1, :, :, :]
         pred_np = pred_save.detach().cpu().numpy()
 
         # For image_np
