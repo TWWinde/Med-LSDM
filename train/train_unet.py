@@ -18,7 +18,7 @@ def get_config():
     c = {
         "data_root_dir": "/data/private/autoPET/duke",
         "data_dir": "/data/private/autoPET/duke/final_labeled_mr",
-        "test_data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results/final_labeled_mr",
+        "test_data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results/",
         "split_dir": "/data/private/autoPET/duke/autoPET",
         "device": "cuda" if torch.cuda.is_available() else "cpu",
         "batch_size": 4,
