@@ -31,7 +31,7 @@ def get_config():
         "root_dir": "/data/private/autoPET/medicaldiffusion_results/unet",
         "checkpoint_dir": "/data/private/autoPET/medicaldiffusion_results/unet/checkpoint",
         "image_dir": "/data/private/autoPET/medicaldiffusion_results/unet/image",
-        "do_load_checkpoint": False,
+        "do_load_checkpoint": True,
         "name": "Basic_UNet",
     }
     return c
