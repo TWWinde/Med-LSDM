@@ -18,7 +18,7 @@ def get_config():
     c = {
         "data_root_dir": "/data/private/autoPET/duke",
         "data_dir": "/data/private/autoPET/duke/final_labeled_mr",
-        #"data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results/final_labeled_mr",
+        "test_data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results/final_labeled_mr",
         "split_dir": "/data/private/autoPET/duke/autoPET",
         "device": "cuda" if torch.cuda.is_available() else "cpu",
         "batch_size": 4,
@@ -47,6 +47,9 @@ class UNetExperiment3D:
         val_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
         self.train_data_loader = DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
         self.val_data_loader = DataLoader(val_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
+        test_dataset = DUKEDataset_unet(root_dir=self.config['test_data_dir'], sem_map=True)
+        self.test_data_loader = DataLoader(test_dataset, batch_size=self.config['batch_size'], shuffle=True,
+                                           num_workers=4)
 
         self.model = UNet3D(num_classes=3, in_channels=1)
         self.model.to(self.device)
@@ -198,14 +201,13 @@ class UNetExperiment3D:
         self.scheduler.step(avg_val_loss)
 
     def test(self):
-        test_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
-        self.test_data_loader = DataLoader(test_dataset, batch_size=self.config['batch_size'], shuffle=True,
-                                          num_workers=4)
+
         print("===== TESTING =====")
         self.model.eval()
         total_val_loss = 0.0
+        batch_idx = 0
         with torch.no_grad():
-            for batch_idx, data_batch in self.test_data_loader:
+            for data_batch in self.test_data_loader:
                 print(data_batch)
                 image = data_batch['image'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
@@ -218,7 +220,7 @@ class UNetExperiment3D:
                 total_val_loss += loss.item()
                 if batch_idx % self.config['image_freq'] == 0:
                     self.save_results_slices(image, label, pred_save, batch_idx, self.image_dir_test)
-
+                batch_idx += 1
         avg_val_loss = total_val_loss / len(self.test_data_loader)
         print(
             f" Test Loss: {avg_val_loss}, CrossEntropy_Loss: {ce_loss.item()}, Dice_Loss: {dc_loss.item()}")
