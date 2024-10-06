@@ -160,8 +160,6 @@ class UNetExperiment3D:
         vmax = max(label_np.max(), pred_np.max())  # Get the maximum value from both images
 
         # Path to save images
-        path_images = os.path.join(self.image_dir)
-        os.makedirs(path_images, exist_ok=True)
 
         # Plot label image with the same colormap and value range
         plt.imshow(label_np[0, 0, slice_index, :, :], cmap='viridis', vmin=vmin,
