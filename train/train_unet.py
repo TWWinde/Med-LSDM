@@ -206,7 +206,7 @@ class UNetExperiment3D:
         batch_idx = 0
         with torch.no_grad():
             for data_batch in self.test_data_loader:
-                image = data_batch['mr_real'].float().to(self.device)
+                image = data_batch['mr_fake'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
                 # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
