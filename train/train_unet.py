@@ -145,8 +145,10 @@ class UNetExperiment3D:
         path_images = os.path.join(save_dir)
         os.makedirs(path_images, exist_ok=True)
         image_np = image.detach().cpu().numpy()
-        label_np = label.detach().cpu().numpy()[0, 0:1, :, :, :]
+        label_np = label.detach().cpu().numpy()
+        label_np[label_np != 0] = 1
         pred_np = pred_save.detach().cpu().numpy()
+        pred_np[pred_np != 0] = 1
 
         # For image_np
         plt.imshow(image_np[0, 0, slice_index, :, :], cmap='gray')  # Grayscale image
