@@ -201,7 +201,7 @@ class UNetExperiment3D:
         self.model.eval()
         total_val_loss = 0.0
         with torch.no_grad():
-            for batch_idx, data_batch in self.val_data_loader:
+            for batch_idx, data_batch in self.train_data_loader:
                 image = data_batch['image'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
                 target = self.preprocess_input(label)
