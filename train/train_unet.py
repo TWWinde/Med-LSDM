@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from dataset import DUKEDataset
+from dataset import DUKEDataset_unet
 from u_net.RecursiveUnet3D import UNet3D
 from u_net.dice_loss import DC_and_CE_loss
 import matplotlib.pyplot as plt
@@ -42,8 +42,8 @@ class UNetExperiment3D:
         self.device = torch.device(self.config['device'])
         self.percentage = percentage
         self.name = f'without_pretrain_{self.percentage*100}%_data'
-        train_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True, percentage=self.percentage)
-        val_dataset = DUKEDataset(root_dir=self.config['data_dir'], sem_map=True)
+        train_dataset = DUKEDataset_unet(root_dir=self.config['data_dir'], sem_map=True, percentage=self.percentage)
+        val_dataset = DUKEDataset_unet(root_dir=self.config['data_dir'], sem_map=True)
         self.train_data_loader = DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
         self.val_data_loader = DataLoader(val_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=4)
 
@@ -51,8 +51,10 @@ class UNetExperiment3D:
         self.model.to(self.device)
         self.checkpoint_dir = os.path.join(self.config['root_dir'], self.name, "checkpoint")
         os.makedirs(self.checkpoint_dir, exist_ok=True)
-        self.image_dir = os.path.join(self.config['root_dir'], self.name, "image")
+        self.image_dir = os.path.join(self.config['root_dir'], self.name, "image_train")
         os.makedirs(self.image_dir, exist_ok=True)
+        self.image_dir_test = os.path.join(self.config['root_dir'], self.name, "image_test")
+        os.makedirs(self.image_dir_test, exist_ok=True)
         self.loss = DC_and_CE_loss({'batch_dice': True, 'smooth': 1e-5, 'smooth_in_nom': True,
                                     'do_bg': False, 'rebalance_weights': None, 'background_weight': 1}, OrderedDict())
 
@@ -119,7 +121,7 @@ class UNetExperiment3D:
                     self.plot_loss(ce_loss_list, "CrossEntropy_Loss")
 
                 if batch_idx % self.config['image_freq'] == 0:
-                    self.save_results_slices(image, label, pred_save, batch_idx)
+                    self.save_results_slices(image, label, pred_save, batch_idx, self.image_dir)
 
                 step += 1
 
@@ -131,11 +133,11 @@ class UNetExperiment3D:
 
             self.validate(epoch)
 
-    def save_results_slices(self, image, label, pred_save, batch_idx):
+    def save_results_slices(self, image, label, pred_save, batch_idx, save_dir):
         slice_index = 16  # Specify which slice you want to save
 
         # Path to save images
-        path_images = os.path.join(self.image_dir)
+        path_images = os.path.join(save_dir)
         os.makedirs(path_images, exist_ok=True)
         image_np = image.detach().cpu().numpy()
         label_np = label.detach().cpu().numpy()
@@ -210,7 +212,7 @@ class UNetExperiment3D:
                 loss, ce_loss, dc_loss = self.loss(pred, target)
                 total_val_loss += loss.item()
                 if batch_idx % self.config['image_freq'] == 0:
-                    self.save_results_slices(image, label, pred_save, batch_idx)
+                    self.save_results_slices(image, label, pred_save, batch_idx, self.image_dir_test)
 
         avg_val_loss = total_val_loss / len(self.val_data_loader)
         print(

@@ -9,3 +9,4 @@ from dataset.synthrad2023 import SynthRAD2023Dataset
 from dataset.autopet import AutoPETDataset
 from dataset.semanticmap import SemanticMapDataset
 from dataset.totalsegmentator_mri import TotalSegmentator_mri_Dataset
+from dataset.duke_unet import DUKEDataset_unet
