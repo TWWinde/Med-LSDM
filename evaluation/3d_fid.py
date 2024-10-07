@@ -86,7 +86,7 @@ def png_to_3d_npy(real_input, fake_input, real_output, fake_output, data_amount=
 def load_and_normalize_image(image_path):
     image = Image.open(image_path).convert('L')  # Open image in grayscale
     image_np = np.array(image).astype(np.float32)  # Convert to NumPy array
-    image_np = (image_np / 127.5) - 1  # Normalize to [-1, 1]
+    #image_np = (image_np / 127.5) - 1  # Normalize to [-1, 1]
     return image_np
 
 
@@ -573,8 +573,8 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 
 
 if __name__ == '__main__':
-    input_path = "/data/private/autoPET/duke/synthetic_data"
-    output_path = "/data/private/autoPET/duke/baseline_nifti"
+    input_path = "/data/private/autoPET/duke/segmentations"
+    output_path = "/data/private/autoPET/duke/baseline_seg_nifti"
 
     png_to_nifti(input_path, output_path)
 
