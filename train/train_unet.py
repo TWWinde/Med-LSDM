@@ -235,6 +235,8 @@ class UNetExperiment3D:
                 mr_real = data_batch['mr_real'].float().to(self.device)
                 mr_fake = data_batch['mr_fake'].float().to(self.device)
                 label = data_batch['label'].long().to(self.device)
+                print(mr_fake.shape)
+                print(label.shape)
                 target = self.preprocess_input(label)
                 # print(data.shape) torch.Size([4, 1, 32, 256, 256]) torch.Size([4, 3, 32, 256, 256])
                 pred_real = self.model(mr_real)
