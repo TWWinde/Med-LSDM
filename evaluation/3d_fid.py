@@ -17,6 +17,7 @@ from torch.utils.data import Dataset
 import pytorch_msssim
 import lpips
 from fid_folder.inception import InceptionV3
+import nibabel as nib
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 torch.backends.cudnn.benchmark = True
@@ -79,6 +80,35 @@ def png_to_3d_npy(real_input, fake_input, real_output, fake_output, data_amount=
                 print("scheiße!")
             if n == data_amount:
                 break
+        print("finished", name)
+
+
+def load_and_normalize_image(image_path):
+    image = Image.open(image_path).convert('L')  # Open image in grayscale
+    image_np = np.array(image).astype(np.float32)  # Convert to NumPy array
+    image_np = (image_np / 127.5) - 1  # Normalize to [-1, 1]
+    return image_np
+
+
+def png_to_nifti(input_path, output_path):
+
+    os.makedirs(output_path, exist_ok=True)
+
+    for i in range(828):
+        number=str(i).zfill(3)
+        name = f"condon_Breast_MRI_" + number
+        path_list = [k for k in os.listdir(input_path) if k.startswith(name)]
+        if len(path_list) != 0:
+            images =[]
+            for k in range(len(path_list)):
+                full_name = name + f"_{k}.png"
+                abs_path = os.path.join(input_path, full_name)
+                image_np = load_and_normalize_image(abs_path)
+                images.append(image_np)
+                images_3d = np.stack(images, axis=-1)
+                nifti = nib.Nifti1Image(images_3d, affine=np.eye(4))
+                nifti_path = os.path.join(output_path, f"Breast_MRI_" + number + ".nii.gz")
+                nib.save(nifti, nifti_path)
         print("finished", name)
 
 
@@ -543,6 +573,12 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 
 
 if __name__ == '__main__':
+    input_path = "/data/private/autoPET/duke/synthetic_data"
+    output_path = "/data/private/autoPET/duke/baseline_nifti"
+
+    png_to_nifti(input_path, output_path)
+
+    """
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
     #path0 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET/autopet_tanh"
     #path1 = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/AutoPET/results_autopet"
@@ -564,9 +600,9 @@ if __name__ == '__main__':
 
     path_list = [path5 ]#, path6, path7, path8, path9, path10, path11, path12]
     if "medicaldiffusion_results/test_results" in path:
-        """
-        evaluate 3d images our model
-        """
+     
+        #evaluate 3d images our model
+  
         for path in path_list:
             args = parser.parse_args()
             start_time = time.time()
@@ -585,9 +621,9 @@ if __name__ == '__main__':
             print("Done. Using", (time.time() - start_time) // 60, "minutes.")
 
     else:
-        """
-        evaluate 2d images from png to npy baseline model
-        """
+
+        #evaluate 2d images from png to npy baseline model
+
         save_root_path ="/data/private/autoPET/ddim-Synthrad2023-256-segguided"
         real_png_path = "/data/private/autoPET/synthrad2023_2d/image/test"
         fake_png_path = "/data/private/autoPET/ddim-Synthrad2023-256-segguided/samples_many_3200"
@@ -611,5 +647,9 @@ if __name__ == '__main__':
         fid_value = calculate_frechet_distance(m1, s1, m2, s2)
         print('FID: ', fid_value)
         print("Done. Using", (time.time() - start_time) // 60, "minutes.")
+    
+    
+    """
+
 
 
