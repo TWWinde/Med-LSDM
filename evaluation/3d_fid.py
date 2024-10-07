@@ -101,7 +101,7 @@ def png_to_nifti(input_path, output_path):
         if len(path_list) != 0:
             images =[]
             for k in range(len(path_list)):
-                full_name = name + f"_{k}.png"
+                full_name = name + f"_slice_{k}.png"
                 abs_path = os.path.join(input_path, full_name)
                 image_np = load_and_normalize_image(abs_path)
                 images.append(image_np)
