@@ -831,6 +831,34 @@ def final_rescale_crop_duke(root_path):
     print('all finished')
 
 
+def final_rescale_crop_baseline_duke(root_path):
+
+    label_input = os.path.join(root_path, 'SEG')
+    labeled_mr_input = os.path.join(root_path, 'baseline_nifti')
+
+    label_output = os.path.join(root_path, 'baseline_croped_label')
+    labeled_mr_output = os.path.join(root_path, 'baseline_croped_mr')
+
+    os.makedirs(label_output, exist_ok=True)
+    os.makedirs(labeled_mr_output, exist_ok=True)
+
+    label_files = os.listdir(labeled_mr_input)
+    for label_name in sorted(label_files):
+
+        image_path = os.path.join(labeled_mr_input, label_name)
+        label_path = os.path.join(label_input, label_name)
+        label = sitk.ReadImage(label_path)
+        image = sitk.ReadImage(image_path)
+
+        image = rescale(image)
+        label = rescale(label, label=True)
+        sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{label_name}'))
+        sitk.WriteImage(label, os.path.join(label_output, f'scaled_{label_name}'))
+        crop_save(label_name, os.path.join(labeled_mr_output, f'scaled_{label_name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{label_name}'), label_out_files=label_output, crop_size=(256, 256), length=32, labelandimage=True)
+        print("finished", labeled_mr_output)
+
+    print('all finished')
+
 def crop_save(name, image_path, image_out_files,  label_path=None, label_out_files=None, crop_size=(256, 256), length=32, labelandimage=False):
 
     niffti_data = nib.load(image_path)
@@ -956,7 +984,8 @@ if __name__ == '__main__':
             #rescale_crop_duke_t1_all(duke_output_root)
             #final_rescale_crop_duke(duke_output_root)
         if rescale_crop2blocks:
-            rescale_crop_duke(duke_output_root)
+            final_rescale_crop_baseline_duke(duke_input_root)
+            #rescale_crop_duke(duke_output_root)
             #rescale_crop_duke(duke_output_root, both_label_image=True)
 
 
