@@ -21,7 +21,7 @@ def get_config():
         "test_data_dir": "/data/private/autoPET/duke",
         "split_dir": "/data/private/autoPET/duke/autoPET",
         "device": "cuda" if torch.cuda.is_available() else "cpu",
-        "batch_size": 4,
+        "batch_size": 1,
         "patch_size": (64, 64, 64),
         "n_epochs": 10,
         "learning_rate": 0.00005,
