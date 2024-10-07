@@ -18,7 +18,7 @@ def get_config():
     c = {
         "data_root_dir": "/data/private/autoPET/duke",
         "data_dir": "/data/private/autoPET/duke/final_labeled_mr",
-        "test_data_dir": "/data/private/autoPET/medicaldiffusion_results/test_results/ddpm/DUKE/results_duke_final_8/video_results",
+        "test_data_dir": "/data/private/autoPET/duke/baseline_nifti",
         "split_dir": "/data/private/autoPET/duke/autoPET",
         "device": "cuda" if torch.cuda.is_available() else "cpu",
         "batch_size": 4,
@@ -284,6 +284,6 @@ class UNetExperiment3D:
 
 if __name__ == '__main__':
     c = get_config()
-    experiment = UNetExperiment3D(config=c, percentage=0.2)
+    experiment = UNetExperiment3D(config=c)
     #experiment.train()
     experiment.test()
