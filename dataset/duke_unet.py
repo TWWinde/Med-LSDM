@@ -43,7 +43,7 @@ class DUKEDataset_unet(Dataset):
                     if subfolder.endswith('nii.gz')]
         mr_fake_names = [os.path.join(self.root_dir, "baseline_nifti", subfolder) for subfolder in sorted(os.listdir(os.path.join(self.root_dir,"baseline_nifti")))
                     if subfolder.endswith('nii.gz')]
-        label_names = [os.path.join(self.root_dir, "baseline_seg_nifti ", subfolder) for subfolder in sorted(os.listdir(os.path.join(self.root_dir,"final_label")))
+        label_names = [os.path.join(self.root_dir, "baseline_seg_nifti", subfolder) for subfolder in sorted(os.listdir(os.path.join(self.root_dir,"final_label")))
                     if subfolder.endswith('nii.gz')]
 
         return mr_fake_names, mr_real_names, label_names
