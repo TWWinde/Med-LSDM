@@ -86,30 +86,52 @@ def png_to_3d_npy(real_input, fake_input, real_output, fake_output, data_amount=
 def load_and_normalize_image(image_path):
     image = Image.open(image_path).convert('L')  # Open image in grayscale
     image_np = np.array(image).astype(np.float32)  # Convert to NumPy array
-    #image_np = (image_np / 127.5) - 1  # Normalize to [-1, 1]
+    image_np = (image_np / 127.5) - 1  # Normalize to [-1, 1]
     return image_np
 
 
-def png_to_nifti(input_path, output_path):
+def load_image(image_path):
+    image = Image.open(image_path).convert('L')  # Open image in grayscale
+    image_np = np.array(image).astype(np.float32)  # Convert to NumPy array
+    return image_np
 
+
+def png_to_nifti(input_path, input_path_seg, output_path, output_path_seg):
+    image_np_path = output_path.replace("nifti", "npy")
+    seg_np_path = output_path_seg.replace("nifti", "npy")
     os.makedirs(output_path, exist_ok=True)
-
+    os.makedirs(output_path_seg, exist_ok=True)
     for i in range(828):
         number=str(i).zfill(3)
         name = f"condon_Breast_MRI_" + number
         path_list = [k for k in os.listdir(input_path) if k.startswith(name)]
         if len(path_list) != 0:
             images =[]
+            segs =[]
+            n=0
             for k in range(len(path_list)):
                 full_name = name + f"_slice_{k}.png"
                 abs_path = os.path.join(input_path, full_name)
+                abs_path_seg = os.path.join(input_path_seg, full_name)
                 image_np = load_and_normalize_image(abs_path)
+                seg_np = load_image(abs_path_seg)
                 images.append(image_np)
-                images_3d = np.stack(images, axis=-1)
-                nifti = nib.Nifti1Image(images_3d, affine=np.eye(4))
-                nifti_path = os.path.join(output_path, f"Breast_MRI_" + number + ".nii.gz")
-                nib.save(nifti, nifti_path)
-        print("finished", name)
+                segs.append(seg_np)
+                if len(images) == 32:
+                    images_3d = np.stack(images, axis=-1)
+                    np.save(image_np_path, images_3d, allow_pickle=True, fix_imports=True)
+                    nifti = nib.Nifti1Image(images_3d, affine=np.eye(4))
+                    nifti_path = os.path.join(output_path, f"Breast_MRI_" + number + f"_{n}.nii.gz")
+                    nib.save(nifti, nifti_path)
+                    segs_3d = np.stack(segs, axis=-1)
+                    np.save(seg_np_path, segs_3d , allow_pickle=True, fix_imports=True)
+                    nifti_seg = nib.Nifti1Image(segs_3d, affine=np.eye(4))
+                    nifti_path_seg = os.path.join(output_path_seg, f"Breast_MRI_" + number + f"_{n}.nii.gz")
+                    nib.save(nifti_seg, nifti_path_seg)
+                    images = []
+                    segs = []
+                    n+=1
+            print("finished", name)
 
 
 def compute_metrics_2d(path_real_root, path_fake_root):
@@ -574,9 +596,10 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 
 if __name__ == '__main__':
     input_path = "/data/private/autoPET/duke/segmentations"
-    output_path = "/data/private/autoPET/duke/baseline_seg_nifti"
-
-    png_to_nifti(input_path, output_path)
+    output_path = "/data/private/autoPET/duke/baseline_nifti"
+    input_path_seg = "/data/private/autoPET/duke/segmentations"
+    output_path_seg = "/data/private/autoPET/duke/baseline_seg_nifti "
+    png_to_nifti(input_path, input_path_seg, output_path, output_path_seg)
 
     """
     path = "/data/private/autoPET/medicaldiffusion_results/test_results/vq_gan_3d/SynthRAD2023"
