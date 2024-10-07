@@ -102,7 +102,7 @@ def png_to_nifti(input_path, input_path_seg, output_path, output_path_seg):
     os.makedirs(output_path, exist_ok=True)
     os.makedirs(output_path_seg, exist_ok=True)
     for i in range(828):
-        number=str(i).zfill(3)
+        number = str(i).zfill(3)
         name = f"condon_Breast_MRI_" + number
         path_list = [k for k in os.listdir(input_path) if k.startswith(name)]
         if len(path_list) != 0:
@@ -595,7 +595,7 @@ def load_and_preprocess_images(image_dir, batch_size=32, save_dir='output_batche
 
 
 if __name__ == '__main__':
-    input_path = "/data/private/autoPET/duke/segmentations"
+    input_path = "/data/private/autoPET/duke/synthetic_data"
     output_path = "/data/private/autoPET/duke/baseline_nifti"
     input_path_seg = "/data/private/autoPET/duke/segmentations"
     output_path_seg = "/data/private/autoPET/duke/baseline_seg_nifti "
