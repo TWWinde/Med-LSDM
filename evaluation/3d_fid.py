@@ -104,6 +104,7 @@ def png_to_nifti(input_path, input_path_seg, output_path, output_path_seg):
     for i in range(828):
         number = str(i).zfill(3)
         name = f"condon_Breast_MRI_" + number
+        name_seg = f"Breast_MRI_" + number
         path_list = [k for k in os.listdir(input_path) if k.startswith(name)]
         if len(path_list) != 0:
             images =[]
@@ -111,8 +112,9 @@ def png_to_nifti(input_path, input_path_seg, output_path, output_path_seg):
             n=0
             for k in range(len(path_list)):
                 full_name = name + f"_slice_{k}.png"
+                full_name_seg = name_seg + f"_slice_{k}.png"
                 abs_path = os.path.join(input_path, full_name)
-                abs_path_seg = os.path.join(input_path_seg, full_name)
+                abs_path_seg = os.path.join(input_path_seg, full_name_seg)
                 image_np = load_and_normalize_image(abs_path)
                 seg_np = load_image(abs_path_seg)
                 images.append(image_np)
