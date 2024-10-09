@@ -110,9 +110,9 @@ class Metrics:
         pips, ssim, psnr, rmse, fid = [], [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
-        save_npy=False
-        save_slice_image = False
-        save_gif = False
+        save_npy=True
+        save_slice_image = True
+        save_gif = True
         save_nifti = True
 
         with torch.no_grad():
