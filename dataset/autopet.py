@@ -135,7 +135,7 @@ class AutoPETDataset(Dataset):
 
     def get_data_files(self):
 
-        ct_names = [os.path.join(self.root_dir, 'ct', subfolder) for subfolder in os.listdir(os.path.join(self.root_dir, 'ct'))
+        ct_names = [os.path.join(self.root_dir, 'ct', subfolder) for subfolder in sorted(os.listdir(os.path.join(self.root_dir, 'ct')))
                     if subfolder.endswith('nii.gz')]
         if self.sem_map:
             label_names, ct_names_ = [], []
@@ -195,12 +195,12 @@ class AutoPETDataset2(Dataset):
                     label_names.append(label_path)
 
         """
-        subfolder_names = os.listdir(os.path.join(self.root_dir, 'ct'))
+        subfolder_names = sorted(os.listdir(os.path.join(self.root_dir, 'ct')))
         ct_names = [os.path.join(self.root_dir, 'ct', subfolder) for subfolder in subfolder_names
                     if subfolder.endswith('nii.gz')]
         if self.sem_map:
             label_names, ct_names_ = [], []
-            for ct_path in ct_names:
+            for ct_path in sorted(ct_names):
                 label_path = ct_path.replace('ct', 'label')
                 if os.path.exists(ct_path) and os.path.exists(label_path):
                     ct_names_.append(ct_path)
@@ -285,7 +285,7 @@ class AutoPETDataset1(Dataset):
     def get_data_files(self):
         if self.sem_map:
             mr_names, label_names = [], []
-            subfolder_names = os.listdir(self.root_dir)
+            subfolder_names = sorted(os.listdir(self.root_dir))
             for item in subfolder_names:
                 mr_path = os.path.join(self.root_dir, item, 'mr.nii.gz')
                 label_path = os.path.join(self.root_dir, item, 'label.nii.gz')
