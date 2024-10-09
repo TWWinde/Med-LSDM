@@ -115,7 +115,7 @@ python -c "import torch; print(torch.__version__)"
 #model.diffusion_num_channels=8 model.dim_mults=[1,2,4,8] model.batch_size=1 model.gpus=0 model.segconv=1 model.load_milestone=0
 
 # diffusion synthrad with segconv 64 condition
-python train/train_ddpm.py model=ddpm dataset=synthrad2023 model.results_folder_postfix='output_mr_segconv_64_tanh' dataset.label_nc=31 \
+python /misc/no_backups/d1502/medicaldiffusion/test/test_ddpm.py model=ddpm dataset=synthrad2023 model.results_folder_postfix='output_mr_segconv_64_tanh' dataset.label_nc=31 \
 model.vqgan_ckpt='/data/private/autoPET/medicaldiffusion_results/results/checkpoints/vq_gan/SynthRAD2023/mr_final/lightning_logs/version_144347/checkpoints/latest_checkpoint.ckpt' \
 model.vqvae_ckpt=0 model.spade_input_channel=64 model.add_seg_to_noise=0 \
 model.diffusion_img_size=64 model.diffusion_depth_size=8 model.denoising_fn=Unet3D_SPADE model.diffusion=SemanticGaussianDiffusion \
