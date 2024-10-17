@@ -104,11 +104,11 @@ class DUKEDataset(Dataset):
     def get_data_files(self):
 
         mr_names = [os.path.join(self.root_dir, subfolder) for subfolder in os.listdir(self.root_dir)
-                    if subfolder.endswith('nii.gz')]
+                    if subfolder.endswith('nii.gz') and not subfolder.startswith('scaled')]
 
         if self.sem_map:
             label_names, mr_names_ = [], []
-            for mr_path in mr_names:
+            for mr_path in sorted(mr_names):
                 label_path = mr_path.replace('final_labeled_mr', 'final_label')
                 if os.path.exists(mr_path) and os.path.exists(label_path):
                     mr_names_.append(mr_path)

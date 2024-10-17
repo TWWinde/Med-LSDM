@@ -972,6 +972,29 @@ def rescale(image, label=False):
 
     return resampled_image
 
+def post_process():
+    imgs = [nib.load(f"image_{i}.nii.gz").get_fdata() for i in range(5)]
+
+    result_imgs = [imgs[0][:, :, :16]]
+
+    for i in range(len(imgs) - 1):
+
+        current_img_part = imgs[i][:, :, 16:32]
+
+        next_img_part = imgs[i + 1][:, :, 0:16]
+
+        average_part = (current_img_part + next_img_part) / 2
+
+        result_imgs.append(average_part)
+        result_imgs.append(imgs[i + 1][:, :, 16:32])
+
+    final_combined_image = np.concatenate(result_imgs, axis=2)
+
+    nifti_img = nib.Nifti1Image(final_combined_image, affine=np.eye(4))  # affine 矩阵可以根据需求调整
+
+    nib.save(nifti_img, "combined_image.nii.gz")
+
+
 
 if __name__ == '__main__':
 

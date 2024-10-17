@@ -110,9 +110,9 @@ class Metrics:
         pips, ssim, psnr, rmse, fid = [], [], [], [], []
         model.eval()
         total_samples = len(self.val_dataloader)
-        save_npy=True
-        save_slice_image = True
-        save_gif = True
+        save_npy= False
+        save_slice_image = False
+        save_gif = False
         save_nifti = True
 
         with torch.no_grad():
@@ -152,12 +152,12 @@ class Metrics:
                         save_npy = False
 
                 if save_nifti:
-                    sample_nifti_path = os.path.join(path_video, 'fake_nifti', f'{i}_sample.nii.gz')
-                    image_nifti_path = os.path.join(path_video, 'real_nifti', f'{i}_image.nii.gz')
-                    label_nifti_path = os.path.join(path_video, 'label_nifti', f'{i}_label.nii.gz')
-                    os.makedirs(os.path.join(path_video, 'fake_nifti'), exist_ok=True)
-                    os.makedirs(os.path.join(path_video, 'real_nifti'), exist_ok=True)
-                    os.makedirs(os.path.join(path_video, 'label_nifti'), exist_ok=True)
+                    sample_nifti_path = os.path.join(path_video, 'fake_nifti_test', f'{i}_sample.nii.gz')
+                    image_nifti_path = os.path.join(path_video, 'real_nifti_test', f'{i}_image.nii.gz')
+                    label_nifti_path = os.path.join(path_video, 'label_nifti_test', f'{i}_label.nii.gz')
+                    os.makedirs(os.path.join(path_video, 'fake_nifti_test'), exist_ok=True)
+                    os.makedirs(os.path.join(path_video, 'real_nifti_test'), exist_ok=True)
+                    os.makedirs(os.path.join(path_video, 'label_nifti_test'), exist_ok=True)
                     nifti_generated = np.squeeze(generated_np, axis=0)
                     nifti_generated = np.squeeze(nifti_generated, axis=0)
                     nifti_generated = np.transpose(nifti_generated, (1, 2, 0))
