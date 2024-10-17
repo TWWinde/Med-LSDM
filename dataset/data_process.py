@@ -831,6 +831,35 @@ def final_rescale_crop_duke(root_path):
     print('all finished')
 
 
+def final_rescale_crop_duke_for_test(root_path):
+
+    label_input = os.path.join(root_path, 'SEG')
+    labeled_mr_input = os.path.join(root_path, 'T1_MR_real_all')
+
+    label_output = os.path.join(root_path, 'final_label_test')
+    labeled_mr_output = os.path.join(root_path, 'final_mr_test')
+
+    os.makedirs(label_output, exist_ok=True)
+    os.makedirs(labeled_mr_output, exist_ok=True)
+
+    label_files = os.listdir(label_input)
+    for label_name in sorted(label_files):
+
+        image_path = os.path.join(labeled_mr_input, label_name)
+        label_path = os.path.join(label_input, label_name)
+        label = sitk.ReadImage(label_path)
+        image = sitk.ReadImage(image_path)
+
+        image = rescale(image)
+        label = rescale(label, label=True)
+        sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{label_name}'))
+        sitk.WriteImage(label, os.path.join(label_output, f'scaled_{label_name}'))
+        crop_save_for_test(label_name, os.path.join(labeled_mr_output, f'scaled_{label_name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{label_name}'), label_out_files=label_output, crop_size=(256, 256), length=32, labelandimage=True)
+        print("finished", labeled_mr_output)
+
+    print('all finished')
+
+
 def final_rescale_crop_baseline_duke(root_path):
 
     label_input = os.path.join(root_path, 'SEG')
@@ -888,6 +917,32 @@ def crop_save(name, image_path, image_out_files,  label_path=None, label_out_fil
         cropped_image = nib.Nifti1Image(cropped_image, affine=niffti_data.affine)
         nib.save(cropped_image, image_output_path)
         n += 1
+
+
+def crop_save_for_test(name, image_path, image_out_files,  label_path=None, label_out_files=None, crop_size=(256, 256), length=32):
+
+    niffti_data = nib.load(image_path)
+    image_data = niffti_data.get_fdata()
+    n = 0
+    x = image_data.shape[2] - image_data.shape[2] % 16
+    for i in range(0, x):
+        if image_data.shape[2] < 32:
+            continue
+        label_niffti_data = nib.load(label_path)
+        label_data = label_niffti_data.get_fdata()
+
+        assert image_data.shape == label_data.shape, f"Error: The shapes of arrayys do not match.{image_data.shape},{label_data.shape},{name}"
+        if (i+1) % 16 == 0:
+            cropped_image, cropped_label = crop_block(image_data, label_data, *crop_size, i, length)
+
+            label_output_path = os.path.join(label_out_files, name.replace('.nii.gz', '') + f'_{n}.' + 'nii.gz')
+            cropped_label = nib.Nifti1Image(cropped_label, affine=label_niffti_data.affine)
+            nib.save(cropped_label, label_output_path)
+
+            image_output_path = os.path.join(image_out_files,  name.replace('.nii.gz', '') + f'_{n}.' + 'nii.gz')
+            cropped_image = nib.Nifti1Image(cropped_image, affine=niffti_data.affine)
+            nib.save(cropped_image, image_output_path)
+            n += 1
 
 
 def rescale(image, label=False):
@@ -984,7 +1039,7 @@ if __name__ == '__main__':
             #rescale_crop_duke_t1_all(duke_output_root)
             #final_rescale_crop_duke(duke_output_root)
         if rescale_crop2blocks:
-            final_rescale_crop_baseline_duke(duke_input_root)
+            final_rescale_crop_duke_for_test(duke_input_root)
             #rescale_crop_duke(duke_output_root)
             #rescale_crop_duke(duke_output_root, both_label_image=True)
 
