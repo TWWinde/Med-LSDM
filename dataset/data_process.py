@@ -854,7 +854,7 @@ def final_rescale_crop_duke_for_test(root_path):
         label = rescale(label, label=True)
         sitk.WriteImage(image, os.path.join(labeled_mr_output, f'scaled_{label_name}'))
         sitk.WriteImage(label, os.path.join(label_output, f'scaled_{label_name}'))
-        crop_save_for_test(label_name, os.path.join(labeled_mr_output, f'scaled_{label_name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{label_name}'), label_out_files=label_output, crop_size=(256, 256), length=32, labelandimage=True)
+        crop_save_for_test(label_name, os.path.join(labeled_mr_output, f'scaled_{label_name}'), labeled_mr_output, label_path=os.path.join(label_output, f'scaled_{label_name}'), label_out_files=label_output, crop_size=(256, 256), length=32)
         print("finished", labeled_mr_output)
 
     print('all finished')
