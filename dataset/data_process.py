@@ -834,7 +834,7 @@ def final_rescale_crop_duke(root_path):
 def final_rescale_crop_duke_for_test(root_path):
 
     label_input = os.path.join(root_path, 'SEG')
-    labeled_mr_input = os.path.join(root_path, 'T1_MR_real_all')
+    labeled_mr_input = os.path.join(root_path, 'labeled_MR')
 
     label_output = os.path.join(root_path, 'final_label_test')
     labeled_mr_output = os.path.join(root_path, 'final_mr_test')
