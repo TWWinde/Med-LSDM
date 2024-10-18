@@ -932,7 +932,7 @@ def crop_save_for_test(name, image_path, image_out_files,  label_path=None, labe
         label_data = label_niffti_data.get_fdata()
 
         assert image_data.shape == label_data.shape, f"Error: The shapes of arrayys do not match.{image_data.shape},{label_data.shape},{name}"
-        if (i+1) % 16 == 0:
+        if i % 16 == 0:
             cropped_image, cropped_label = crop_block(image_data, label_data, *crop_size, i, length)
 
             label_output_path = os.path.join(label_out_files, name.replace('.nii.gz', '') + f'_{n}.' + 'nii.gz')
@@ -973,7 +973,7 @@ def rescale(image, label=False):
     return resampled_image
 
 def post_process():
-    imgs = [nib.load(f"image_{i}.nii.gz").get_fdata() for i in range(5)]
+    imgs = [nib.load(f"{i}_sample.nii.gz").get_fdata() for i in range(5)]
 
     result_imgs = [imgs[0][:, :, :16]]
 
@@ -992,7 +992,7 @@ def post_process():
 
     nifti_img = nib.Nifti1Image(final_combined_image, affine=np.eye(4))  # affine 矩阵可以根据需求调整
 
-    nib.save(nifti_img, "combined_image.nii.gz")
+    nib.save(nifti_img, "combined_image_real.nii.gz")
 
 
 
