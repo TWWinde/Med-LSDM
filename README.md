@@ -53,16 +53,16 @@ You again need to specify the path to the VQ-GAN checkpoint from before (e.g. ``
 ### Qualitative Results
 The images are real images, labels and synthetic images(from left to right)
 
-|![Image 1](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/75_image.gif) <br/>|![Image 2]( /Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/75_label.gif)|![Image 3](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/75_sample.gif)|
-|---|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+|![Image 1](assets/75_image.gif) <br/>|![Image 2]( assets/75_label.gif)|![Image 3](assets/75_sample.gif)|
+|---|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 
-| ![Image 1](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/95_image.gif) <br/> | ![Image 2]( /Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/95_label.gif) | ![Image 3](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/95_sample.gif) |
+| ![Image 1](assets/95_image.gif) <br/> | ![Image 2]( assets/95_label.gif) | ![Image 3](assets/95_sample.gif) |
 |------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
 
-| ![Image 1](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/13_image.gif) <br/> | ![Image 2]( /Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/13_label.gif) | ![Image 3](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/13_sample.gif) |
+| ![Image 1](assets/13_image.gif) <br/> | ![Image 2](assets/13_label.gif) | ![Image 3](assets/13_sample.gif) |
 |------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
 
-| ![Image 1](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/1_image.gif) <br/> | ![Image 2]( /Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/1_label.gif) | ![Image 3](/Users/tangwenwu/Documents/GitHub/medicaldiffusion/assets/1_sample.gif) |
+| ![Image 1](assets/1_image.gif) <br/> | ![Image 2]( assets/1_label.gif) | ![Image 3](assets/1_sample.gif) |
 |-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
 
 ### Progressive Denosing
