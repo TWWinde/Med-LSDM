@@ -3,10 +3,10 @@
 In the medical domain, acquiring large datasets is challenging due to both accessibility issues and stringent privacy regulations. Consequently, data availability and privacy protection are major obstacles to applying machine learning in medical imaging. To address this, our study proposes the Med-LSDM (Latent Semantic Diffusion Model), which operates directly in the 3D domain and leverages de-identified semantic maps to generate synthetic data as a method of privacy preservation and data augmentation. Unlike many existing methods that focus on generating 2D slices, Med-LSDM is designed specifically for 3D semantic image synthesis, making it well-suited for applications requiring full volumetric data. Med-LSDM incorporates a guiding mechanism that controls the 3D image generation process by applying a diffusion model within the latent space of a pre-trained VQ-GAN. By operating in the compressed latent space, the model significantly reduces computational complexity while still preserving critical 3D spatial details. Our approach demonstrates strong performance in 3D semantic medical image synthesis, achieving a 3D-FID score of 0.0054 on the conditional Duke Breast dataset and similar Dice scores (0.70964) to those of real images (0.71496). These results prove the synthetic data from our model has small domain gap with real data and is useful for data augmentation.
 
 ## Med-LSDM Framework
-we utilize Med-LSDM (Latent Semantic Diffusion Model) architecture for 3D Semantic Medical Image Synthesis. First, we present the whole
-architecture, then we introduce 3D VQ-GAN and Semantic Diffusion model in detail. To the
+we propose Med-LSDM (Latent Semantic Diffusion Model) architecture for 3D Semantic Medical Image Synthesis. The architecture consists of two components: a 3D VQ-GAN and a 3D Semantic Diffusion Model, which works
+on the latent space of the VQ-GAN. To the
 best of our knowledge, it is the first work to generate 3D medical images from semantic maps
-using latent diffusion.
+using latent diffusion. 
 ![model.png](assets//model.png)
 
 ## System Requirements
