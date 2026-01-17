@@ -1,4 +1,4 @@
-# Med-LSDM: 3D Semantic Medical Images Synthesis via Latent Diffusion Model
+# (Med-LSDM: 3D Semantic Medical Images Synthesis via Latent Diffusion Model)[https://arxiv.org/abs/2507.00206]
 
 In the medical domain, acquiring large datasets is challenging due to both accessibility issues and stringent privacy regulations. Consequently, data availability and privacy protection are major obstacles to applying machine learning in medical imaging. To address this, our study proposes the Med-LSDM (Latent Semantic Diffusion Model), which operates directly in the 3D domain and leverages de-identified semantic maps to generate synthetic data as a method of privacy preservation and data augmentation. Unlike many existing methods that focus on generating 2D slices, Med-LSDM is designed specifically for 3D semantic image synthesis, making it well-suited for applications requiring full volumetric data. Med-LSDM incorporates a guiding mechanism that controls the 3D image generation process by applying a diffusion model within the latent space of a pre-trained VQ-GAN. By operating in the compressed latent space, the model significantly reduces computational complexity while still preserving critical 3D spatial details. Our approach demonstrates strong performance in 3D semantic medical image synthesis, achieving a 3D-FID score of 0.0054 on the conditional Duke Breast dataset and similar Dice scores (0.70964) to those of real images (0.71496). These results prove the synthetic data from our model has small domain gap with real data and is useful for data augmentation.
 
@@ -102,3 +102,16 @@ In this study, we propose a framework Med-LSDM (Latent Semantic Diffusion Model)
 The effect of our framework was validated on three challenging datasets: AutoPET, SynthRAD2023 and Duke Breast dataset. The proposed framework achieves a  promising results. According to ablation study, we observed that the model performed significantly better on CT images compared to MR images in terms of performance metrics.
 
 Our experiments prove that the model could effectively bridge the domain gap between real and generated data, as evidenced by the high similarity in segmentation results on both real and synthetic images. This finding highlights the potential of using synthetic data to augment real datasets in medical image analysis tasks.
+
+## Citation
+
+If you find this work useful for your research, please consider citing:
+
+```bibtex
+@article{tang2025medlsdm,
+  title   = {Towards 3D Semantic Image Synthesis for Medical Imaging},
+  author  = {Tang, Wenwu and Seyam, Khaled and Yang, Bin},
+  journal = {arXiv preprint arXiv:2507.00206},
+  year    = {2025},
+  doi     = {10.48550/arXiv.2507.00206}
+}
